@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="480" viewBox="0 0 240 240" role="img" aria-label="Kasa Bot, a pine green rounded card with big friendly eyes and a push pin antenna, holding a tiny photo">
+<ellipse cx="120" cy="214" rx="70" ry="8" fill="#1F1D1A" fill-opacity="0.08"></ellipse>
+<line x1="120" y1="72" x2="120" y2="50" stroke="#1F1D1A" stroke-width="3" stroke-linecap="round"></line>
+<circle cx="120" cy="42" r="11" fill="#B3372A" stroke="#1F1D1A" stroke-width="3"></circle>
+<circle cx="116" cy="38" r="3" fill="#FFFFFF"></circle>
+<ellipse cx="100" cy="206" rx="12" ry="7" fill="#1F1D1A"></ellipse>
+<ellipse cx="140" cy="206" rx="12" ry="7" fill="#1F1D1A"></ellipse>
+<rect x="60" y="72" width="120" height="130" rx="26" fill="#2E5B4F" stroke="#1F1D1A" stroke-width="3"></rect>
+<rect x="74" y="92" width="92" height="62" rx="18" fill="#F1F5F2" stroke="#1F1D1A" stroke-width="3"></rect>
+<ellipse cx="102" cy="122" rx="8" ry="10" fill="#1F1D1A"></ellipse>
+<ellipse cx="138" cy="122" rx="8" ry="10" fill="#1F1D1A"></ellipse>
+<circle cx="104.5" cy="118" r="2.8" fill="#FFFFFF"></circle>
+<circle cx="140.5" cy="118" r="2.8" fill="#FFFFFF"></circle>
+<path d="M112 140 Q120 147 128 140" fill="none" stroke="#1F1D1A" stroke-width="3" stroke-linecap="round"></path>
+<ellipse cx="86" cy="140" rx="7" ry="4.5" fill="#F4A9A0"></ellipse>
+<ellipse cx="154" cy="140" rx="7" ry="4.5" fill="#F4A9A0"></ellipse>
+<text x="120" y="186" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-size="26" font-weight="600" fill="#FFFFFF">k</text>
+<path d="M180 150 C 192 146, 198 138, 200 128" fill="none" stroke="#1F1D1A" stroke-width="3" stroke-linecap="round"></path>
+<g transform="rotate(10 204 112)"><rect x="188" y="92" width="34" height="38" fill="#FFFFFF" stroke="#1F1D1A" stroke-width="2.5"></rect><rect x="192" y="96" width="26" height="22" fill="#D98A3D"></rect></g>
+<path d="M60 150 C 48 152, 40 160, 38 170" fill="none" stroke="#1F1D1A" stroke-width="3" stroke-linecap="round"></path>
+</svg>

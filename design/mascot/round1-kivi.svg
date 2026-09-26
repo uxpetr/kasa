@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="480" viewBox="0 0 240 240" role="img" aria-label="Kivi, a cairn of three stacked stones with a sleepy happy face and a lingonberry sprig on top">
+<ellipse cx="120" cy="216" rx="84" ry="9" fill="#1F1D1A" fill-opacity="0.08"></ellipse>
+<ellipse cx="120" cy="184" rx="80" ry="30" fill="#C9BFB0" stroke="#1F1D1A" stroke-width="3"></ellipse>
+<ellipse cx="116" cy="136" rx="60" ry="26" fill="#D8CFC2" stroke="#1F1D1A" stroke-width="3"></ellipse>
+<ellipse cx="122" cy="92" rx="40" ry="24" fill="#E7E0D4" stroke="#1F1D1A" stroke-width="3"></ellipse>
+<path d="M84 186 C 96 180, 110 180, 122 184" fill="none" stroke="#7A8B5A" stroke-width="5" stroke-linecap="round"></path>
+<path d="M106 92 Q111 85 116 92" fill="none" stroke="#1F1D1A" stroke-width="3" stroke-linecap="round"></path>
+<path d="M128 92 Q133 85 138 92" fill="none" stroke="#1F1D1A" stroke-width="3" stroke-linecap="round"></path>
+<ellipse cx="100" cy="101" rx="7" ry="4.5" fill="#F4A9A0"></ellipse>
+<ellipse cx="144" cy="101" rx="7" ry="4.5" fill="#F4A9A0"></ellipse>
+<path d="M117 101 Q122 106 127 101" fill="none" stroke="#1F1D1A" stroke-width="3" stroke-linecap="round"></path>
+<path d="M122 68 C 124 58, 130 50, 138 46" fill="none" stroke="#2E5B4F" stroke-width="3" stroke-linecap="round"></path>
+<ellipse cx="116" cy="56" rx="10" ry="5" fill="#2E5B4F" stroke="#1F1D1A" stroke-width="2.5" transform="rotate(-30 116 56)"></ellipse>
+<circle cx="140" cy="50" r="7" fill="#B3372A" stroke="#1F1D1A" stroke-width="2.5"></circle>
+<circle cx="130" cy="44" r="6" fill="#B3372A" stroke="#1F1D1A" stroke-width="2.5"></circle>
+<circle cx="138" cy="48" r="2" fill="#FFFFFF"></circle>
+</svg>

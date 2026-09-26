@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kasa extension, comment mode</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&amp;family=Instrument+Sans:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',system-ui,sans-serif;color:#1F1D1A;background:#FFFFFF}
+a{color:#B3372A}a:hover{color:#8E2A20}
+button,textarea,select{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden; background: #FFFFFF">
+<div style="height: 44px; background: #E9E6DF; display: flex; align-items: center; padding: 0 16px; gap: 12px">
+<div style="flex-grow: 1; max-width: 560px; height: 28px; border-radius: 14px; background: #FFFFFF; display: flex; align-items: center; padding: 0 14px; font-size: 13px; color: #5E5A52">ryokan-in-gion.jp/rooms/garden</div>
+<div style="width: 28px; height: 28px; border-radius: 8px; background: #B3372A; color: #FFFFFF; font-family: Fraunces, Georgia, serif; font-size: 16px; font-weight: 600; display: flex; align-items: center; justify-content: center">k</div>
+</div>
+<div style="padding: 40px 80px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; opacity: 0.55">
+<div style="height: 380px; border-radius: 6px; background: #D9D2C4; display: flex; align-items: flex-end; padding: 12px; box-sizing: border-box; font-size: 12px; color: #5C4F3A">[Room photo]</div>
+<div style="display: flex; flex-direction: column; gap: 16px">
+<div style="font-family: Georgia, serif; font-size: 34px">Garden room</div>
+<div style="font-size: 15px; line-height: 1.6; color: #4A463F">[Room description from the site]</div>
+<div style="display: flex; flex-direction: column; gap: 10px; font-size: 15px">
+<div style="padding: 10px 0; border-bottom: 1px solid #E6E1D8">Tatami floor, sleeps 4</div>
+<div style="padding: 10px 0; border-bottom: 1px solid #E6E1D8; visibility: hidden">Private open-air bath</div>
+<div style="padding: 10px 0; border-bottom: 1px solid #E6E1D8">Breakfast included</div>
+</div>
+<div style="font-size: 22px">[PRICE] / night</div>
+<div style="width: 160px; height: 44px; border-radius: 4px; background: #333333; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 15px">Book now</div>
+</div>
+</div>
+<div style="position: absolute; left: 660px; top: 239px; width: 540px; height: 45px; box-sizing: border-box; padding: 0 12px; display: flex; align-items: center; font-size: 15px; background: #FFFFFF; outline: 2px solid #B3372A; outline-offset: 0; border-radius: 6px">Private open-air bath</div>
+<div style="position: absolute; left: 1172px; top: 222px; width: 32px; height: 32px; border-radius: 16px 16px 16px 2px; background: #B3372A; color: #FFFFFF; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center">1</div>
+<div style="position: absolute; left: 820px; top: 300px; width: 380px; box-sizing: border-box; padding: 16px; background: #FFFFFF; border-radius: 16px; border: 1px solid #D6D0C3; display: flex; flex-direction: column; gap: 12px">
+<label for="c-note" style="font-size: 13px; font-weight: 600">Comment on this</label>
+<textarea id="c-note" rows="3" style="border: 1px solid #D6D0C3; border-radius: 10px; padding: 10px 12px; font-size: 15px; line-height: 1.45; resize: none; color: #1F1D1A">This room has its own onsen. One splurge night?</textarea>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+<label for="c-project" style="font-size: 13px; color: #5E5A52">To</label>
+<select id="c-project" style="flex-grow: 1; height: 44px; border: 1px solid #D6D0C3; border-radius: 10px; padding: 0 10px; font-size: 15px; background: #FFFFFF; color: #1F1D1A"><option>Japan 2027</option><option>Wedding planning</option><option>Talk ideas</option></select>
+<a href="Main.dc.html" style="height: 44px; padding: 0 18px; border-radius: 22px; background: #B3372A; color: #FFFFFF; font-size: 15px; font-weight: 600; text-decoration: none; display: flex; align-items: center; justify-content: center">Send</a>
+</div>
+</div>
+<div style="position: absolute; right: 24px; top: 60px; display: flex; align-items: center; gap: 6px; padding: 6px; background: #1F1D1A; border-radius: 28px">
+<div style="font-family: Fraunces, Georgia, serif; font-size: 18px; font-weight: 600; color: #FFFFFF; padding: 0 10px">kasa</div>
+<button type="button" aria-pressed="true" style="height: 44px; padding: 0 16px; border-radius: 22px; border: 0; background: #FFFFFF; color: #1F1D1A; font-size: 14px; font-weight: 600; cursor: pointer">Comment</button>
+<a href="Draw.dc.html"  style="height: 44px; padding: 0 16px; border-radius: 22px; background: transparent; color: #FFFFFF; font-size: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center">Draw</a>
+<a href="Send.dc.html"  style="height: 44px; padding: 0 16px; border-radius: 22px; background: transparent; color: #FFFFFF; font-size: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center">Save page</a>
+<a href="Main.dc.html" aria-label="Close Kasa" style="width: 44px; height: 44px; border-radius: 22px; background: transparent; display: flex; align-items: center; justify-content: center; text-decoration: none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></a>
+</div>
+<div style="position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%); padding: 10px 18px; background: #1F1D1A; color: #FFFFFF; border-radius: 20px; font-size: 13px">Click anything on the page to pin a comment</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

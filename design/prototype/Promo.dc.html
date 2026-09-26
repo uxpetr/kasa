@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kasa, plan it together</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&amp;family=Instrument+Sans:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',system-ui,sans-serif;color:#1F1D1A;background:#FBFAF7}
+a{color:#B3372A}a:hover{color:#8E2A20}
+</style>
+</helmet>
+<div style="width: 1440px; height: 5500px; box-sizing: border-box; padding: 0 120px; background: #FBFAF7; display: flex; flex-direction: column; gap: 120px; overflow: hidden">
+<div style="display: flex; flex-direction: column">
+<nav aria-label="Main" style="height: 88px; display: flex; align-items: center; justify-content: space-between">
+<div style="font-family: Fraunces, Georgia, serif; font-size: 34px; font-weight: 600; letter-spacing: -0.5px">kasa</div>
+<div style="display: flex; align-items: center; gap: 36px; font-size: 16px">
+<a href="#how" style="color: #1F1D1A; text-decoration: none">How it works</a>
+<a href="#bot" style="color: #1F1D1A; text-decoration: none">Kasa Bot</a>
+<a href="#piles" style="color: #1F1D1A; text-decoration: none">Use cases</a>
+<a href="#pricing" style="color: #1F1D1A; text-decoration: none">Pricing</a>
+<a href="#" style="color: #1F1D1A; text-decoration: none">Sign in</a>
+<a href="#" style="height: 48px; padding: 0 22px; border-radius: 24px; background: #B3372A; color: #FFFFFF; font-size: 16px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center">Start a pile</a>
+</div>
+</nav>
+<section style="display: flex; align-items: center; gap: 40px; height: 820px">
+<div style="width: 600px; flex-shrink: 0; display: flex; flex-direction: column; gap: 28px">
+<h1 style="margin: 0; font-family: Fraunces, Georgia, serif; font-size: 96px; line-height: 0.98; font-weight: 500; letter-spacing: -3px">Plan it together, <span style="font-style: italic; color: #B3372A">one pile</span> at a time.</h1>
+<div role="group" aria-label="What are you planning?" style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{ cases }}" as="c" hint-placeholder-count="4">
+<button type="button" aria-pressed="{{ c.pressed }}" onClick="{{ c.pick }}" style="{{ c.style }}">{{ c.label }}</button>
+</sc-for>
+</div>
+<p style="margin: 0; font-size: 21px; line-height: 1.5; color: #3E3A34; max-width: 540px">{{ blurb }}</p>
+<div style="display: flex; align-items: center; gap: 12px"><a href="#" style="height: 60px; padding: 0 30px; border-radius: 30px; background: linear-gradient(135deg, #E0664A 0%, #C2412D 45%, #9A2C21 100%); color: #FFFFFF; box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -2px 0 rgba(0,0,0,0.12), 0 6px 16px rgba(179,55,42,0.35), 0 14px 40px rgba(224,102,74,0.35); font-size: 18px; font-weight: 600; letter-spacing: 0.1px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 10px">Start a pile, free<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a><a href="#how" style="height: 56px; padding: 0 22px; border-radius: 28px; color: #1F1D1A; font-size: 17px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px">See how it works<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1F1D1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"></path></svg></a></div>
+<div style="font-size: 14px; color: #5E5A52">Sign in with Google. Friends you invite never pay.</div>
+</div>
+<div style="position: relative; flex-grow: 1; height: 700px">
+<sc-if value="{{isTrip}}" hint-placeholder-val="{{ true }}">
+<div style="position: absolute; left: 20px; top: 40px; z-index: 1; width: 360px; box-sizing: border-box; padding: 10px 10px 18px; background: #FFFFFF; transform: rotate(-4deg); display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"><img src="img/kinkakuji.jpg" alt="Kinkaku-ji reflected in its pond" style="display: block; width: 100%; height: 220px; object-fit: cover"><div style="padding: 2px 4px 0; font-size: 14px; font-weight: 600; color: #1F1D1A">Kinkaku-ji, day 1?</div></div>
+<div style="position: absolute; left: 300px; top: 190px; z-index: 2; width: 380px; box-sizing: border-box; padding: 10px 10px 28px; background: #FFFFFF; transform: rotate(3deg); display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"><img src="img/tokyo-fuji.jpg" alt="Tokyo Tower with Mount Fuji behind it at sunset" style="display: block; width: 100%; height: 250px; object-fit: cover"></div>
+<div style="position: absolute; left: 395px; top: 250px; z-index: 3; width: 34px; height: 34px; border-radius: 17px 17px 17px 3px; background: #B3372A; color: #FFFFFF; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center">1</div>
+<div style="position: absolute; left: 60px; top: 390px; z-index: 3; width: 280px; box-sizing: border-box; padding: 10px 10px 18px; background: #FFFFFF; transform: rotate(-1.5deg); display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"><img src="img/kiyomizu.jpg" alt="Kiyomizu-dera pagoda at dusk" style="display: block; width: 100%; height: 180px; object-fit: cover"><div style="padding: 2px 4px 0; font-size: 14px; font-weight: 600; color: #1F1D1A">Sunset here</div></div>
+<div style="position: absolute; left: 440px; top: 520px; z-index: 4; width: 230px; box-sizing: border-box; padding: 18px 20px 22px; background: #FFF1A8; border-radius: 2px; font-size: 17px; line-height: 1.4; color: #1F1D1A; transform: rotate(4deg); box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)">Last night in Kyoto: somewhere with an onsen? <span style="font-weight: 600">– Mika</span></div>
+<div style="position: absolute; left: 330px; top: 20px; z-index: 5; width: 300px; box-sizing: border-box; padding: 14px 16px; background: #F1F5F2; border: 1px solid #D5E2DB; border-radius: 4px; transform: rotate(1.5deg); display: flex; gap: 10px; align-items: flex-start; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"><div style="width: 36px; height: 36px; flex-shrink: 0; border-radius: 9px; background: #2E5B4F; color: #FFFFFF; font-family: Fraunces, Georgia, serif; font-size: 19px; font-weight: 600; display: flex; align-items: center; justify-content: center">k</div><div style="font-size: 15px; line-height: 1.4"><div style="font-weight: 600; font-size: 13px; color: #2E5B4F">Kasa Bot</div>Sorted 11 things into Sights, Tokyo and Plans.</div></div>
+</sc-if>
+<sc-if value="{{isWed}}" hint-placeholder-val="{{ true }}">
+<div style="position: absolute; left: 30px; top: 50px; z-index: 1; width: 340px; box-sizing: border-box; padding: 10px 10px 18px; background: #FFFFFF; transform: rotate(-3deg); display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"><div style="height: 230px; background: #E8DCCB; display: flex; align-items: flex-end; padding: 8px; box-sizing: border-box; font-size: 12px; color: #6A5236">[Venue photo]</div><div style="padding: 2px 4px 0; font-size: 14px; font-weight: 600; color: #1F1D1A">The barn with long tables</div></div>
+<div style="position: absolute; left: 360px; top: 150px; z-index: 2; width: 250px; box-sizing: border-box; padding: 10px 10px 28px; background: #FFFFFF; transform: rotate(3.5deg); display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"><div style="height: 300px; background: #EFE3E6; display: flex; align-items: flex-end; padding: 8px; box-sizing: border-box; font-size: 12px; color: #6E4852">[Dress photo]</div></div>
+<div style="position: absolute; left: 470px; top: 250px; z-index: 3; width: 34px; height: 34px; border-radius: 17px 17px 17px 3px; background: #B3372A; color: #FFFFFF; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center">1</div>
+<div style="position: absolute; left: 40px; top: 420px; z-index: 3; width: 260px; box-sizing: border-box; padding: 16px 18px; background: #FFFFFF; border-radius: 3px; transform: rotate(-2deg); box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"><div style="font-size: 13px; color: #5E5A52">Caterer quote</div><div style="font-family: Fraunces, Georgia, serif; font-size: 22px; font-weight: 600">[PRICE] for [GUESTS] guests</div></div>
+<div style="position: absolute; left: 400px; top: 500px; z-index: 4; width: 220px; box-sizing: border-box; padding: 18px 20px 22px; background: #FFF1A8; border-radius: 2px; font-size: 17px; line-height: 1.4; color: #1F1D1A; transform: rotate(4.5deg); box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)">Love the sleeves on this one! <span style="font-weight: 600">– Sam</span></div>
+<div style="position: absolute; left: 340px; top: 10px; z-index: 5; width: 300px; box-sizing: border-box; padding: 14px 16px; background: #F1F5F2; border: 1px solid #D5E2DB; border-radius: 4px; transform: rotate(1.2deg); display: flex; gap: 10px; align-items: flex-start; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"><div style="width: 36px; height: 36px; flex-shrink: 0; border-radius: 9px; background: #2E5B4F; color: #FFFFFF; font-family: Fraunces, Georgia, serif; font-size: 19px; font-weight: 600; display: flex; align-items: center; justify-content: center">k</div><div style="font-size: 15px; line-height: 1.4"><div style="font-weight: 600; font-size: 13px; color: #2E5B4F">Kasa Bot</div>Two venues are free on your date. Want a side-by-side?</div></div>
+</sc-if>
+<sc-if value="{{isTalk}}" hint-placeholder-val="{{ true }}">
+<div style="position: absolute; left: 30px; top: 60px; z-index: 1; width: 300px; box-sizing: border-box; padding: 16px 18px; background: #FFFFFF; border-radius: 3px; transform: rotate(-3deg); box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"><div style="font-size: 12px; color: #5E5A52">Article</div><div style="font-family: Fraunces, Georgia, serif; font-size: 22px; font-weight: 600; line-height: 1.2">[Source title]</div><div style="font-size: 13px; color: #5E5A52; margin-top: 6px">[site.org]</div></div>
+<div style="position: absolute; left: 320px; top: 150px; z-index: 2; width: 320px; box-sizing: border-box; padding: 10px 10px 18px; background: #FFFFFF; transform: rotate(2.5deg); display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"><div style="height: 190px; background: #D7DCE6; display: flex; align-items: flex-end; padding: 8px; box-sizing: border-box; font-size: 12px; color: #3A4260">[Video still]</div><div style="padding: 2px 4px 0; font-size: 14px; font-weight: 600; color: #1F1D1A">Talk recording, 12:40</div></div>
+<div style="position: absolute; left: 420px; top: 215px; z-index: 3; width: 34px; height: 34px; border-radius: 17px 17px 17px 3px; background: #B3372A; color: #FFFFFF; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center">1</div>
+<div style="position: absolute; left: 70px; top: 330px; z-index: 3; width: 260px; box-sizing: border-box; padding: 16px 18px; background: #FFFFFF; border-radius: 3px; transform: rotate(1.5deg); box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"><div style="font-size: 12px; color: #5E5A52">Paper</div><div style="font-family: Fraunces, Georgia, serif; font-size: 20px; font-weight: 600; line-height: 1.2">[Paper title]</div></div>
+<div style="position: absolute; left: 400px; top: 480px; z-index: 4; width: 210px; box-sizing: border-box; padding: 18px 20px 22px; background: #FFF1A8; border-radius: 2px; font-size: 17px; line-height: 1.4; color: #1F1D1A; transform: rotate(-4deg); box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)">Open with this chart? <span style="font-weight: 600">– Lina</span></div>
+<div style="position: absolute; left: 300px; top: 10px; z-index: 5; width: 300px; box-sizing: border-box; padding: 14px 16px; background: #F1F5F2; border: 1px solid #D5E2DB; border-radius: 4px; transform: rotate(1.4deg); display: flex; gap: 10px; align-items: flex-start; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"><div style="width: 36px; height: 36px; flex-shrink: 0; border-radius: 9px; background: #2E5B4F; color: #FFFFFF; font-family: Fraunces, Georgia, serif; font-size: 19px; font-weight: 600; display: flex; align-items: center; justify-content: center">k</div><div style="font-size: 15px; line-height: 1.4"><div style="font-weight: 600; font-size: 13px; color: #2E5B4F">Kasa Bot</div>3 sources back your opening point. Shall I list them?</div></div>
+</sc-if>
+<sc-if value="{{isDesign}}" hint-placeholder-val="{{ true }}">
+<div style="position: absolute; left: 20px; top: 60px; z-index: 1; width: 380px; box-sizing: border-box; padding: 10px 10px 18px; background: #FFFFFF; transform: rotate(-2.5deg); display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"><div style="height: 230px; background: #E3E6EA; display: flex; align-items: flex-end; padding: 8px; box-sizing: border-box; font-size: 12px; color: #3E4652">[Screenshot of a signup flow]</div><div style="padding: 2px 4px 0; font-size: 14px; font-weight: 600; color: #1F1D1A">Their onboarding, step 2</div></div>
+<div style="position: absolute; left: 180px; top: 150px; z-index: 3; width: 34px; height: 34px; border-radius: 17px 17px 17px 3px; background: #B3372A; color: #FFFFFF; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center">1</div>
+<div style="position: absolute; left: 390px; top: 180px; z-index: 2; width: 260px; box-sizing: border-box; padding: 16px 18px; background: #FFFFFF; border-radius: 3px; transform: rotate(3deg); box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"><div style="font-size: 13px; color: #5E5A52; margin-bottom: 10px">Palette we liked</div><div style="display: flex; gap: 8px"><div style="width: 44px; height: 44px; border-radius: 4px; background: #1F1D1A"></div><div style="width: 44px; height: 44px; border-radius: 4px; background: #B3372A"></div><div style="width: 44px; height: 44px; border-radius: 4px; background: #E8DCCB"></div><div style="width: 44px; height: 44px; border-radius: 4px; background: #2E5B4F"></div></div></div>
+<div style="position: absolute; left: 90px; top: 380px; z-index: 3; width: 260px; box-sizing: border-box; padding: 10px 10px 28px; background: #FFFFFF; transform: rotate(1.5deg); display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"><div style="height: 170px; background: #EDE7DA; display: flex; align-items: flex-end; padding: 8px; box-sizing: border-box; font-size: 12px; color: #5C4F3A">[Pricing page]</div></div>
+<div style="position: absolute; left: 410px; top: 470px; z-index: 4; width: 220px; box-sizing: border-box; padding: 18px 20px 22px; background: #FFF1A8; border-radius: 2px; font-size: 17px; line-height: 1.4; color: #1F1D1A; transform: rotate(-3.5deg); box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)">This spacing is so calm. Steal it? <span style="font-weight: 600">– Ben</span></div>
+<div style="position: absolute; left: 330px; top: 20px; z-index: 5; width: 300px; box-sizing: border-box; padding: 14px 16px; background: #F1F5F2; border: 1px solid #D5E2DB; border-radius: 4px; transform: rotate(1.2deg); display: flex; gap: 10px; align-items: flex-start; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"><div style="width: 36px; height: 36px; flex-shrink: 0; border-radius: 9px; background: #2E5B4F; color: #FFFFFF; font-family: Fraunces, Georgia, serif; font-size: 19px; font-weight: 600; display: flex; align-items: center; justify-content: center">k</div><div style="font-size: 15px; line-height: 1.4"><div style="font-weight: 600; font-size: 13px; color: #2E5B4F">Kasa Bot</div>Filed under Onboarding. You have 4 of these now.</div></div>
+</sc-if>
+</div>
+</section>
+</div>
+<section id="how" style="display: flex; flex-direction: column; gap: 56px; padding-top: 80px">
+<div style="display: flex; flex-direction: column; gap: 16px"><h2 style="margin: 0; font-family: Fraunces, Georgia, serif; font-size: 60px; line-height: 1.05; font-weight: 500; letter-spacing: -1.5px; max-width: 760px">From “look at this” to “let’s book it”.</h2></div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px">
+<div style="display: flex; flex-direction: column; gap: 20px">
+<div style="position: relative; height: 260px; border-radius: 24px; background: #F4F1EA; overflow: hidden"><div style="position: absolute; left: 36px; top: 36px; width: 300px; height: 190px; background: #FFFFFF; border-radius: 10px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08); overflow: hidden"><div style="height: 26px; background: #E9E6DF"></div><img src="img/higashiyama.jpg" alt="A Higashiyama lane on a travel site" style="display: block; width: 100%; height: 164px; object-fit: cover"></div>
+<div style="position: absolute; left: 190px; top: 110px; z-index: 3; width: 34px; height: 34px; border-radius: 17px 17px 17px 3px; background: #B3372A; color: #FFFFFF; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center">1</div>
+<div style="position: absolute; left: 150px; top: 150px; width: 210px; box-sizing: border-box; padding: 10px 12px; background: #FFFFFF; border-radius: 12px; border: 1px solid #D6D0C3; font-size: 13px; line-height: 1.4; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)">This lane, right after the temple?</div></div>
+<div style="display: flex; align-items: baseline; gap: 12px"><span style="font-family: Fraunces, Georgia, serif; font-size: 40px; font-weight: 500; color: #B3372A">1</span><h3 style="margin: 0; font-family: Fraunces, Georgia, serif; font-size: 28px; font-weight: 600">Catch it anywhere</h3></div>
+<p style="margin: 0; font-size: 17px; line-height: 1.55; color: #3E3A34">Once you’ve signed up, add the Kasa button to your browser. Then on any website, pin a comment on the exact spot, draw over it, or save the whole page. Blur anything private before it leaves your screen.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 20px">
+<div style="position: relative; height: 260px; border-radius: 24px; background: #F4F1EA; overflow: hidden"><div style="position: absolute; left: 30px; top: 40px; z-index: 1; width: 170px; box-sizing: border-box; padding: 18px 20px 22px; background: #FFF1A8; border-radius: 2px; font-size: 16px; line-height: 1.4; color: #1F1D1A; transform: rotate(-3deg); box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)">Booking Friday!</div>
+<div style="position: absolute; left: 150px; top: 70px; width: 170px; box-sizing: border-box; padding: 8px 8px 22px; background: #FFFFFF; transform: rotate(3deg); box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"><img src="img/osaka-castle.jpg" alt="Osaka Castle" style="display: block; width: 100%; height: 120px; object-fit: cover"></div>
+<div style="position: absolute; left: 40px; top: 150px; display: flex; gap: 6px; z-index: 3"><div style="width: 36px; height: 36px; border-radius: 18px; background: #2E5B4F; color: #FFF; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; border: 2px solid #F4F1EA">A</div><div style="width: 36px; height: 36px; border-radius: 18px; background: #B3372A; color: #FFF; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; border: 2px solid #F4F1EA; margin-left: -12px">M</div><div style="width: 36px; height: 36px; border-radius: 18px; background: #6B5B3E; color: #FFF; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; border: 2px solid #F4F1EA; margin-left: -12px">J</div></div></div>
+<div style="display: flex; align-items: baseline; gap: 12px"><span style="font-family: Fraunces, Georgia, serif; font-size: 40px; font-weight: 500; color: #B3372A">2</span><h3 style="margin: 0; font-family: Fraunces, Georgia, serif; font-size: 28px; font-weight: 600">Pile it together</h3></div>
+<p style="margin: 0; font-size: 17px; line-height: 1.55; color: #3E3A34">Everything lands in your group’s pile, oldest to newest, like a chat. Photos land like prints, notes like sticky notes, and replies stay attached to what they’re about.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 20px">
+<div style="position: relative; height: 260px; border-radius: 24px; background: #F4F1EA; overflow: hidden"><div style="position: absolute; left: 30px; top: 40px; display: flex; flex-wrap: wrap; gap: 8px; width: 320px">
+<span style="height: 34px; padding: 0 14px; border-radius: 17px; background: #1F1D1A; color: #FFF; font-size: 14px; display: inline-flex; align-items: center">All 11</span>
+<span style="height: 34px; padding: 0 14px; border-radius: 17px; background: #FFF; border: 1px solid #E2DDD2; font-size: 14px; display: inline-flex; align-items: center">Sights 4</span>
+<span style="height: 34px; padding: 0 14px; border-radius: 17px; background: #FFF; border: 1px solid #E2DDD2; font-size: 14px; display: inline-flex; align-items: center">Tokyo 2</span>
+<span style="height: 34px; padding: 0 14px; border-radius: 17px; background: #FFF; border: 1px solid #E2DDD2; font-size: 14px; display: inline-flex; align-items: center">Food 2</span>
+<span style="height: 34px; padding: 0 14px; border-radius: 17px; background: #FFF; border: 1px solid #E2DDD2; font-size: 14px; display: inline-flex; align-items: center">Plans 3</span>
+</div>
+<div style="position: absolute; left: 40px; top: 140px; width: 300px; box-sizing: border-box; padding: 12px 14px; background: #F1F5F2; border: 1px solid #D5E2DB; border-radius: 4px; transform: rotate(-1deg); display: flex; gap: 10px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"><div style="width: 36px; height: 36px; flex-shrink: 0; border-radius: 9px; background: #2E5B4F; color: #FFFFFF; font-family: Fraunces, Georgia, serif; font-size: 19px; font-weight: 600; display: flex; align-items: center; justify-content: center">k</div><div style="font-size: 14px; line-height: 1.4">Two of these temples are on opposite sides of town. Split them across days?</div></div></div>
+<div style="display: flex; align-items: baseline; gap: 12px"><span style="font-family: Fraunces, Georgia, serif; font-size: 40px; font-weight: 500; color: #B3372A">3</span><h3 style="margin: 0; font-family: Fraunces, Georgia, serif; font-size: 28px; font-weight: 600">Let Kasa sort it</h3></div>
+<p style="margin: 0; font-size: 17px; line-height: 1.55; color: #3E3A34">Kasa Bot files things into categories as they arrive, so the good find from three weeks ago is one tap away. You can rename or move anything.</p>
+</div>
+</div>
+</section>
+<section id="bot" style="display: flex; align-items: center; gap: 80px; padding: 80px; border-radius: 40px; background: #EAF0EC">
+<div style="width: 480px; flex-shrink: 0; display: flex; flex-direction: column; gap: 20px">
+<h2 style="margin: 0; font-family: Fraunces, Georgia, serif; font-size: 60px; line-height: 1.05; font-weight: 500; letter-spacing: -1.5px; max-width: 480px">A friend in the chat who has read every link.</h2>
+<p style="margin: 0; font-size: 19px; line-height: 1.55; color: #33413B">Tag <span style="font-weight: 600; color: #2E5B4F">@kasa</span> to ask what fits, what’s nearby, or what the group already agreed on. Turn on proactive mode and it chimes in, rarely and briefly, when it spots something useful.</p>
+<div style="display: flex; gap: 10px; flex-wrap: wrap; font-size: 15px">
+<span style="height: 36px; padding: 0 14px; border-radius: 18px; background: #FFFFFF; display: inline-flex; align-items: center">Off</span>
+<span style="height: 36px; padding: 0 14px; border-radius: 18px; background: #2E5B4F; color: #FFF; display: inline-flex; align-items: center">Only when tagged</span>
+<span style="height: 36px; padding: 0 14px; border-radius: 18px; background: #FFFFFF; display: inline-flex; align-items: center">Proactive</span>
+</div>
+</div>
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 22px">
+<div style="align-self: flex-start; width: 340px; box-sizing: border-box; padding: 18px 20px 22px; background: #FFF1A8; border-radius: 2px; font-size: 18px; line-height: 1.4; transform: rotate(-1.5deg); box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"><span style="font-weight: 600; color: #2E5B4F">@kasa</span> what else is near Kiyomizu-dera for the same evening?</div>
+<div style="align-self: flex-end; width: 520px; box-sizing: border-box; padding: 18px 20px 20px; background: #F7FAF8; border: 1px solid #D5E2DB; border-radius: 4px; transform: rotate(0.8deg); display: flex; flex-direction: column; gap: 14px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)">
+<div style="display: flex; align-items: center; gap: 10px"><div style="width: 36px; height: 36px; flex-shrink: 0; border-radius: 9px; background: #2E5B4F; color: #FFFFFF; font-family: Fraunces, Georgia, serif; font-size: 19px; font-weight: 600; display: flex; align-items: center; justify-content: center">k</div><span style="font-weight: 600">Kasa Bot</span></div>
+<div style="font-size: 17px; line-height: 1.5">Walk down through Higashiyama afterwards. Sannenzaka and Ninenzaka are the old stone lanes just below the temple.</div>
+<div style="display: flex; gap: 14px; align-items: center"><div style="width: 170px; box-sizing: border-box; padding: 6px 6px 18px; background: #FFFFFF; transform: rotate(-2deg); box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"><img src="img/higashiyama.jpg" alt="A Higashiyama lane under cherry blossoms" style="display: block; width: 100%; height: 110px; object-fit: cover"></div><a href="#" style="height: 40px; padding: 0 16px; border-radius: 20px; background: #2E5B4F; color: #FFF; font-size: 15px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center">Add to pile</a></div>
+</div>
+</div>
+</section>
+<section id="piles" style="display: flex; flex-direction: column; gap: 56px">
+<div style="display: flex; flex-direction: column; gap: 16px"><h2 style="margin: 0; font-family: Fraunces, Georgia, serif; font-size: 60px; line-height: 1.05; font-weight: 500; letter-spacing: -1.5px; max-width: 760px">Big trips, big days, big ideas.</h2></div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 48px">
+<div style="display: flex; flex-direction: column; gap: 18px">
+<div style="position: relative; height: 340px">
+<div style="position: absolute; left: 10px; top: 14px; right: 10px; bottom: 0; background: #FFFFFF; transform: rotate(2.4000000000000004deg); box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"></div>
+<div style="position: absolute; left: 0; top: 0; right: 0; bottom: 10px; background: #FFFFFF; transform: rotate(-1.5deg); padding: 14px; box-sizing: border-box; overflow: hidden; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"><img src="img/kiyomizu.jpg" alt="Kiyomizu-dera at dusk" style="display: block; width: 100%; height: 240px; object-fit: cover"><div style="padding-top: 14px; font-family: Fraunces, Georgia, serif; font-size: 20px; font-weight: 600">Japan 2027</div><div style="font-size: 14px; color: #5E5A52">4 friends · 11 things</div></div>
+</div>
+<h3 style="margin: 0; font-family: Fraunces, Georgia, serif; font-size: 28px; font-weight: 600">A trip with friends</h3>
+<p style="margin: 0; font-size: 17px; line-height: 1.5; color: #3E3A34">Hotels, sights and train routes from four people’s phones, in one place you can actually decide from.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 18px">
+<div style="position: relative; height: 340px">
+<div style="position: absolute; left: 10px; top: 14px; right: 10px; bottom: 0; background: #FFFFFF; transform: rotate(-1.92deg); box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"></div>
+<div style="position: absolute; left: 0; top: 0; right: 0; bottom: 10px; background: #FFFFFF; transform: rotate(1.2deg); padding: 14px; box-sizing: border-box; overflow: hidden; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"><div style="display: flex; flex-direction: column; gap: 12px; height: 100%; background: #FBF4EE; padding: 18px; box-sizing: border-box">
+<div style="font-family: Fraunces, Georgia, serif; font-size: 22px; font-weight: 600">Venues, shortlist</div>
+<div style="font-size: 16px; line-height: 1.6; color: #3E3A34">1. The one with the long tables<br>2. Garden with the lanterns<br>3. [Venue name]</div>
+<div style="align-self: flex-end; margin-top: auto; width: 170px; box-sizing: border-box; padding: 12px 14px 16px; background: #FFF1A8; transform: rotate(3deg); font-size: 15px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)">Visit both on Saturday?</div>
+</div></div>
+</div>
+<h3 style="margin: 0; font-family: Fraunces, Georgia, serif; font-size: 28px; font-weight: 600">A wedding for two</h3>
+<p style="margin: 0; font-size: 17px; line-height: 1.5; color: #3E3A34">Venues, dresses and caterers, with the exact detail you liked circled, not just another link.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 18px">
+<div style="position: relative; height: 340px">
+<div style="position: absolute; left: 10px; top: 14px; right: 10px; bottom: 0; background: #FFFFFF; transform: rotate(1.2800000000000002deg); box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"></div>
+<div style="position: absolute; left: 0; top: 0; right: 0; bottom: 10px; background: #FFFFFF; transform: rotate(-0.8deg); padding: 14px; box-sizing: border-box; overflow: hidden; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"><div style="display: flex; flex-direction: column; gap: 10px; height: 100%; padding: 8px; box-sizing: border-box">
+<div style="padding: 14px 16px; border: 1px solid #E2DDD2; border-radius: 3px; transform: rotate(-1deg)"><div style="font-size: 12px; color: #5E5A52">Article</div><div style="font-size: 16px; font-weight: 600">[Source title]</div></div>
+<div style="padding: 14px 16px; border: 1px solid #E2DDD2; border-radius: 3px; transform: rotate(1.2deg)"><div style="font-size: 12px; color: #5E5A52">Talk recording</div><div style="font-size: 16px; font-weight: 600">[Video title]</div></div>
+<div style="padding: 14px 16px; background: #F1F5F2; border: 1px solid #D5E2DB; border-radius: 4px; font-size: 15px; line-height: 1.4">Kasa Bot: 3 sources back your opening point.</div>
+</div></div>
+</div>
+<h3 style="margin: 0; font-family: Fraunces, Georgia, serif; font-size: 28px; font-weight: 600">A talk with classmates</h3>
+<p style="margin: 0; font-size: 17px; line-height: 1.5; color: #3E3A34">Papers, videos and slide references gathered as a group, sorted by Kasa Bot into the story you’re telling.</p>
+</div>
+</div>
+</section>
+<section style="display: flex; align-items: center; justify-content: space-between; gap: 60px; padding: 56px 64px; border-radius: 32px; background: #FFFFFF; border: 1px solid #ECE8E0">
+<div style="display: flex; flex-direction: column; gap: 12px; max-width: 700px">
+<h2 style="margin: 0; font-family: Fraunces, Georgia, serif; font-size: 40px; line-height: 1.1; font-weight: 500; letter-spacing: -1px">Your group already lives in Telegram? Keep it there.</h2>
+<p style="margin: 0; font-size: 18px; line-height: 1.55; color: #3E3A34">Link a project to a Telegram group and everything syncs both ways. Post a link in the chat and it lands in the pile; reply in Kasa and it shows up in the chat.</p>
+</div>
+<div style="display: flex; align-items: center; gap: 14px; flex-shrink: 0">
+<div style="width: 72px; height: 72px; border-radius: 36px; background: #2F8FD1; display: flex; align-items: center; justify-content: center"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4L3 11l6 2 2 6 3-4 5 4z"></path></svg></div>
+<svg width="40" height="20" viewBox="0 0 40 20" fill="none" stroke="#5E5A52" stroke-width="2" stroke-linecap="round"><path d="M4 7h30l-5-4M36 13H6l5 4"></path></svg>
+<div style="width: 72px; height: 72px; border-radius: 18px; background: #B3372A; color: #FFF; font-family: Fraunces, Georgia, serif; font-size: 36px; font-weight: 600; display: flex; align-items: center; justify-content: center">k</div>
+</div>
+</section>
+<section id="pricing" style="display: flex; flex-direction: column; gap: 56px">
+<div style="display: flex; flex-direction: column; gap: 16px; align-items: center; text-align: center"><h2 style="margin: 0; font-family: Fraunces, Georgia, serif; font-size: 60px; line-height: 1.05; font-weight: 500; letter-spacing: -1.5px; max-width: 880px">The person who starts the pile pays. Everyone else joins free.</h2></div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 36px; align-items: stretch">
+<div style="display: flex; flex-direction: column; gap: 20px; padding: 36px; background: #FFFFFF; border-radius: 3px; transform: rotate(-0.8deg); box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)">
+<div style="font-size: 15px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #5E5A52">Free</div>
+<div style="font-family: Fraunces, Georgia, serif; font-size: 48px; font-weight: 500; letter-spacing: -1px">€0</div>
+<div style="font-size: 16px; line-height: 1.5; color: #3E3A34; min-height: 48px">Everything you collect on your own, and joining any shared pile.</div>
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; font-size: 16px; line-height: 1.45"><li style="display: flex; gap: 10px; align-items: flex-start"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E5B4F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 3px"><path d="M5 12l5 5 9-10"></path></svg>Unlimited personal piles</li><li style="display: flex; gap: 10px; align-items: flex-start"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E5B4F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 3px"><path d="M5 12l5 5 9-10"></path></svg>Chrome extension</li><li style="display: flex; gap: 10px; align-items: flex-start"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E5B4F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 3px"><path d="M5 12l5 5 9-10"></path></svg>Search and categories</li><li style="display: flex; gap: 10px; align-items: flex-start"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E5B4F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 3px"><path d="M5 12l5 5 9-10"></path></svg>Join friends’ piles</li></ul>
+<div style="margin-top: auto; padding-top: 8px"><a href="#" style="height: 48px; padding: 0 22px; border-radius: 24px; background: #B3372A; color: #FFFFFF; font-size: 16px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center">Get started</a></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 20px; padding: 36px; background: #FFF1A8; border-radius: 3px; transform: rotate(0.6deg); box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)">
+<div style="font-size: 15px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #5E5A52">Owner</div>
+<div style="font-family: Fraunces, Georgia, serif; font-size: 48px; font-weight: 500; letter-spacing: -1px">[PRICE]<span style="font-size: 20px; color: #5E5A52"> / month</span></div>
+<div style="font-size: 16px; line-height: 1.5; color: #3E3A34; min-height: 48px">For people who plan things with others all the time.</div>
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; font-size: 16px; line-height: 1.45"><li style="display: flex; gap: 10px; align-items: flex-start"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E5B4F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 3px"><path d="M5 12l5 5 9-10"></path></svg>Start unlimited shared piles</li><li style="display: flex; gap: 10px; align-items: flex-start"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E5B4F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 3px"><path d="M5 12l5 5 9-10"></path></svg>Invite as many people as you like</li><li style="display: flex; gap: 10px; align-items: flex-start"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E5B4F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 3px"><path d="M5 12l5 5 9-10"></path></svg>Telegram sync</li><li style="display: flex; gap: 10px; align-items: flex-start"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E5B4F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 3px"><path d="M5 12l5 5 9-10"></path></svg>Kasa Bot in every pile</li></ul>
+<div style="margin-top: auto; padding-top: 8px"><a href="#" style="height: 48px; padding: 0 22px; border-radius: 24px; background: #B3372A; color: #FFFFFF; font-size: 16px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center">Get started</a></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 20px; padding: 36px; background: #FFFFFF; border-radius: 3px; transform: rotate(-0.4deg); box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)">
+<div style="font-size: 15px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #5E5A52">Project pass</div>
+<div style="font-family: Fraunces, Georgia, serif; font-size: 48px; font-weight: 500; letter-spacing: -1px">[PRICE]<span style="font-size: 20px; color: #5E5A52"> once</span></div>
+<div style="font-size: 16px; line-height: 1.5; color: #3E3A34; min-height: 48px">For one big thing with an end date, like a trip or a wedding.</div>
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; font-size: 16px; line-height: 1.45"><li style="display: flex; gap: 10px; align-items: flex-start"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E5B4F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 3px"><path d="M5 12l5 5 9-10"></path></svg>One shared pile for a few months</li><li style="display: flex; gap: 10px; align-items: flex-start"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E5B4F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 3px"><path d="M5 12l5 5 9-10"></path></svg>Everything in Owner, for that pile</li><li style="display: flex; gap: 10px; align-items: flex-start"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E5B4F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 3px"><path d="M5 12l5 5 9-10"></path></svg>No subscription</li></ul>
+<div style="margin-top: auto; padding-top: 8px"><a href="#" style="height: 48px; padding: 0 22px; border-radius: 24px; background: #FFFFFF; color: #1F1D1A; border: 1px solid #D6D0C3; font-size: 16px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center">Get started</a></div>
+</div>
+</div>
+</section>
+<div style="display: flex; flex-direction: column; gap: 0">
+<section style="position: relative; height: 520px; border-radius: 40px; background: #1F1D1A; overflow: hidden; display: flex; align-items: center; padding: 0 96px">
+<div style="position: relative; z-index: 2; display: flex; flex-direction: column; gap: 28px; max-width: 640px">
+<h2 style="margin: 0; font-family: Fraunces, Georgia, serif; font-size: 80px; line-height: 1; font-weight: 500; letter-spacing: -2.5px; color: #FFFFFF">Start your first pile.</h2>
+<p style="margin: 0; font-size: 20px; line-height: 1.5; color: #D6D0C3">Free for you, free for everyone you invite. Takes about as long as sending a group message.</p>
+<div style="display: flex; gap: 12px"><a href="#" style="height: 60px; padding: 0 30px; border-radius: 30px; background: linear-gradient(135deg, #E0664A 0%, #C2412D 45%, #9A2C21 100%); color: #FFFFFF; box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -2px 0 rgba(0,0,0,0.12), 0 6px 16px rgba(179,55,42,0.35), 0 14px 40px rgba(224,102,74,0.35); font-size: 18px; font-weight: 600; letter-spacing: 0.1px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 10px">Start a pile, free<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a></div>
+</div>
+<div style="position: absolute; left: 860px; top: 60px; z-index: 1; width: 300px; box-sizing: border-box; padding: 10px 10px 28px; background: #FFFFFF; transform: rotate(6deg); display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"><img src="img/kinkakuji.jpg" alt="Kinkaku-ji" style="display: block; width: 100%; height: 190px; object-fit: cover"></div>
+<div style="position: absolute; left: 1000px; top: 250px; z-index: 1; width: 280px; box-sizing: border-box; padding: 10px 10px 28px; background: #FFFFFF; transform: rotate(-5deg); display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)"><img src="img/tokyo-fuji.jpg" alt="Tokyo Tower and Mount Fuji" style="display: block; width: 100%; height: 180px; object-fit: cover"></div>
+<div style="position: absolute; left: 800px; top: 330px; z-index: 2; width: 200px; box-sizing: border-box; padding: 18px 20px 22px; background: #FFF1A8; border-radius: 2px; font-size: 18px; line-height: 1.4; color: #1F1D1A; transform: rotate(-4deg); box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 10px 24px rgba(31,29,26,0.08)">See you in the pile!</div>
+</section>
+<footer style="display: flex; align-items: center; justify-content: space-between; height: 120px; border-top: 1px solid #ECE8E0; font-size: 15px; color: #5E5A52">
+<div style="display: flex; align-items: baseline; gap: 14px"><span style="font-family: Fraunces, Georgia, serif; font-size: 26px; font-weight: 600; color: #1F1D1A">kasa</span><span>Made in Helsinki</span></div>
+<div style="display: flex; gap: 28px"><a href="#" style="color: #5E5A52; text-decoration: none">Privacy</a><a href="#" style="color: #5E5A52; text-decoration: none">Terms</a><a href="#" style="color: #5E5A52; text-decoration: none">Contact</a></div>
+</footer>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":5500}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { pick: 'trip' }; }
+  renderVals() {
+    const p = this.state.pick;
+    const on = 'height: 44px; padding: 0 18px; border-radius: 22px; border: 1px solid #1F1D1A; background: #1F1D1A; color: #FFFFFF; font-size: 16px; font-weight: 600; cursor: pointer';
+    const off = 'height: 44px; padding: 0 18px; border-radius: 22px; border: 1px solid #D6D0C3; background: #FFFFFF; color: #1F1D1A; font-size: 16px; font-weight: 500; cursor: pointer';
+    const defs = [
+      { id: 'trip', label: 'A trip', word: 'the trip', blurb: 'Hotels, sights and train routes from everyone’s phones, in one pile you can actually decide from. Point at the exact room you mean and talk it through like a group chat.' },
+      { id: 'wed', label: 'A wedding', word: 'the wedding', blurb: 'Venues, dresses and caterer quotes in one shared pile. Circle the detail you love, not just the link, and decide together without a hundred screenshots.' },
+      { id: 'talk', label: 'A talk', word: 'the talk', blurb: 'Papers, videos and slide references gathered as a group. Pin the exact chart you mean, and let Kasa Bot sort sources into the story you’re telling.' },
+      { id: 'design', label: 'A redesign', word: 'the redesign', blurb: 'Screens, flows and palettes from around the web, with comments on the exact element. Your team’s inspiration, finally in one place.' }
+    ];
+    const cur = defs.find((d) => d.id === p) || defs[0];
+    return {
+      cases: defs.map((d) => ({ label: d.label, pressed: d.id === p ? 'true' : 'false', style: d.id === p ? on : off, pick: () => this.setState({ pick: d.id }) })),
+      blurb: cur.blurb,
+      isTrip: p === 'trip', isWed: p === 'wed', isTalk: p === 'talk', isDesign: p === 'design'
+    };
+  }
+}
+</script>
+</body>
+</html>

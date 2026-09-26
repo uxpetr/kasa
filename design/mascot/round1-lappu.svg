@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="480" viewBox="0 0 240 240" role="img" aria-label="Lappu, a waving yellow sticky note with a curled corner and a strip of tape on top">
+<ellipse cx="120" cy="214" rx="70" ry="8" fill="#1F1D1A" fill-opacity="0.08"></ellipse>
+<path d="M64 124 C 46 118, 38 104, 40 88" fill="none" stroke="#1F1D1A" stroke-width="3" stroke-linecap="round"></path>
+<circle cx="40" cy="84" r="6" fill="#FFF1A8" stroke="#1F1D1A" stroke-width="3"></circle>
+<path d="M176 140 C 190 146, 198 156, 198 166" fill="none" stroke="#1F1D1A" stroke-width="3" stroke-linecap="round"></path>
+<path d="M104 196 L 100 210" stroke="#1F1D1A" stroke-width="3" stroke-linecap="round"></path>
+<path d="M136 196 L 140 210" stroke="#1F1D1A" stroke-width="3" stroke-linecap="round"></path>
+<path d="M62 62 H178 V160 Q178 190 150 196 H62 Z" fill="#FFF1A8" stroke="#1F1D1A" stroke-width="3" stroke-linejoin="round"></path>
+<path d="M178 160 Q170 184 150 196 Q160 172 178 160 Z" fill="#EFD66B" stroke="#1F1D1A" stroke-width="3" stroke-linejoin="round"></path>
+<rect x="94" y="50" width="52" height="22" fill="#E6DECD" fill-opacity="0.95" transform="rotate(-6 120 61)"></rect>
+<circle cx="100" cy="116" r="9" fill="#1F1D1A"></circle>
+<circle cx="140" cy="116" r="9" fill="#1F1D1A"></circle>
+<circle cx="103" cy="112.5" r="3" fill="#FFFFFF"></circle>
+<circle cx="143" cy="112.5" r="3" fill="#FFFFFF"></circle>
+<ellipse cx="84" cy="136" rx="10" ry="6" fill="#F4A9A0"></ellipse>
+<ellipse cx="156" cy="136" rx="10" ry="6" fill="#F4A9A0"></ellipse>
+<path d="M109 134 Q120 150 131 134 Z" fill="#B3372A" stroke="#1F1D1A" stroke-width="3" stroke-linejoin="round"></path>
+</svg>
