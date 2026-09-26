@@ -241,7 +241,7 @@ Depends on: F-04
 - [x] Session design supports the extension: a short-lived token exchange from the web session, no separate extension login (D-010). See D-128.
 - [x] Analytics: `signed_up`, `signed_in`.
 
-### F-06 · Uploads and media pipeline · `todo`
+### F-06 · Uploads and media pipeline · `in-progress` · branch `f-06-media`
 Depends on: F-03, F-04
 - [ ] Presigned uploads for images and screenshots; size and type limits enforced server-side.
 - [ ] Worker generates thumbnails and strips EXIF location data.
