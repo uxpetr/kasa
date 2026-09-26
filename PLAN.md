@@ -4,7 +4,7 @@ This is the living plan for building Kasa. Humans and Claude Code agents both re
 
 - Product source: [`docs/PRD.md`](docs/PRD.md), exported from Petr's Claude Doc. If this plan and the PRD disagree, the PRD wins for product behaviour; raise the conflict under [Open decisions](#open-decisions).
 - Design source: [`design/`](design/). See [`design/README.md`](design/README.md) for what each screen is, the design tokens, and the mascot art.
-- Last updated: 2026-09-26 · by: Claude (initial version)
+- Last updated: 2026-09-26 · by: Claude (F-01)
 
 ---
 
@@ -48,13 +48,13 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 
 | Phase | Goal | Status | Gate |
 | --- | --- | --- | --- |
-| 0. Foundations | Repo, CI, auth, database, storage | `todo` | none |
+| 0. Foundations | Repo, CI, auth, database, storage | `in-progress` | none |
 | 1. Prototype | The capture → discuss loop, tested with one trip-planning group | `todo` | G1: captures get replies |
 | 2. v1 launch | Full web app, Kasa Bot, Telegram, billing | `todo` | G2: week-4 retention holds |
 | 3. v2 | Pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** F-01 (stack and monorepo).
+**Next up:** F-02 (CI pipeline). F-03 to F-08 are also unblocked.
 **Blocked:** nothing yet.
 
 ---
@@ -108,6 +108,10 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 
 - **D-110** · 2026-09-26 · D-100 to D-109 confirmed as proposed; each "Proposed" entry above is now locked. The extension uses **WXT** (resolves the WXT/CRXJS choice in D-105). · Petr, OD-01
 - **D-111** · 2026-09-26 · Hosting in the **EU**: web app on Vercel (`fra1`), Postgres on Neon (EU region), object storage on an EU S3-compatible bucket (Cloudflare R2 EU jurisdiction or AWS `eu-central-1`, chosen in F-03), realtime and worker services on Fly.io or Railway in an EU region (chosen in F-03). · Petr, OD-02
+- **D-112** · 2026-09-26 · Monorepo tooling: pnpm 11 workspaces, Turborepo 2, Node 22+ (`engines`). Internal packages are source-only TypeScript (`exports` points at `src/index.ts`); the web app transpiles them via `transpilePackages`. · F-01
+- **D-113** · 2026-09-26 · TypeScript pinned to **6.0** through the pnpm `catalog:`, because typescript-eslint 8 doesn't support TS 7 yet. Revisit when it does. · F-01
+- **D-114** · 2026-09-26 · Linting is one root ESLint 10 flat config (`eslint.config.js`, typescript-eslint recommended) run as `pnpm lint`; typecheck and test run per workspace through Turbo. Vitest 5 is the unit test runner. · F-01
+- **D-115** · 2026-09-26 · Versions at scaffold time: Next.js 16, React 19, WXT (MV3, manifest permissions `["activeTab"]` only). Build scripts are allowed only for `esbuild` and `sharp` (`allowBuilds` in `pnpm-workspace.yaml`). · F-01
 
 ---
 
@@ -171,11 +175,11 @@ packages/
 
 Goal: an empty but real product skeleton that every later task builds on.
 
-### F-01 · Stack decision and monorepo · `in-progress` · branch `setup-kasa-repo`
+### F-01 · Stack decision and monorepo · `done` · branch `setup-kasa-repo`
 Depends on: OD-01
-- [ ] Record the confirmed stack as decisions (supersede D-100 to D-109 as needed).
-- [ ] Monorepo created with the layout under [Architecture](#architecture); `pnpm install`, `pnpm lint`, `pnpm typecheck`, and `pnpm test` all run from the root.
-- [ ] README explains how to run everything locally in under 5 commands.
+- [x] Record the confirmed stack as decisions (supersede D-100 to D-109 as needed).
+- [x] Monorepo created with the layout under [Architecture](#architecture); `pnpm install`, `pnpm lint`, `pnpm typecheck`, and `pnpm test` all run from the root.
+- [x] README explains how to run everything locally in under 5 commands.
 
 ### F-02 · CI pipeline · `todo`
 Depends on: F-01
@@ -423,3 +427,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 
 - 2026-09-26 · — · Plan created from the PRD and prototype. · —
 - 2026-09-26 · — · Handoff folder assembled: PRD, prototype screens, tokens, mascot art. · —
+- 2026-09-26 · F-01 · Stack confirmed (D-110, D-111); pnpm + Turborepo monorepo with web, realtime, worker, extension, and db/shared/ui/bot packages; lint, typecheck, test, and build pass from the root. · branch `setup-kasa-repo`

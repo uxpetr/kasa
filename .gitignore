@@ -3,3 +3,10 @@ node_modules/
 .env
 .env.*
 !.env.example
+.turbo/
+.next/
+.output/
+.wxt/
+dist/
+*.tsbuildinfo
+next-env.d.ts

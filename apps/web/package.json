@@ -1,0 +1,27 @@
+{
+  "name": "@kasa/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "next typegen && tsc",
+    "test": "vitest run --passWithNoTests"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "catalog:",
+    "vitest": "^5.0.2"
+  },
+  "dependencies": {
+    "@kasa/shared": "workspace:*",
+    "@kasa/ui": "workspace:*",
+    "next": "^16.3.6",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  }
+}
