@@ -6,7 +6,8 @@ const root = new URL("../../../", import.meta.url);
 const out = new URL("../src/", import.meta.url);
 
 export function render(): { ts: string; css: string } {
-  const { $comment: _comment, ...tokens } = JSON.parse(readFileSync(new URL("design/tokens.json", root), "utf8"));
+  const tokens = JSON.parse(readFileSync(new URL("design/tokens.json", root), "utf8"));
+  delete tokens.$comment;
   const kebab = (s: string) => s.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
   const vars: string[] = [];
   for (const [k, v] of Object.entries(tokens.color as Record<string, string>)) vars.push(`--kasa-color-${kebab(k)}: ${v};`);
