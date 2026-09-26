@@ -16,6 +16,7 @@ You are building Kasa. `PLAN.md` in the repo root is the living plan and the sou
 - Don't make product, pricing, copy, or UX decisions. If something isn't settled in the PRD or the Decision log, mark the task `blocked`, add the question to Open decisions, and stop.
 - Never delete tasks or log entries; mark them `dropped` or supersede them.
 - Stay inside the current task's scope. Log new work as new tasks.
+- Merge only PRs with green CI (`main` is not protected, D-118).
 - Never commit secrets. Every new env var goes in `.env.example` with a comment.
 - Kasa Bot may only read the project it belongs to. Treat this as a security requirement and test it.
 - The extension must only use `activeTab`, never broad host permissions.
