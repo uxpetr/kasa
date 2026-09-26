@@ -11,6 +11,8 @@ export async function register() {
     const { OTLPLogExporter } = await import("@opentelemetry/exporter-logs-otlp-proto");
     logRecordProcessors.push(new BatchLogRecordProcessor({ exporter: new OTLPLogExporter() }));
   }
+  // Each service names itself; @vercel/otel would let OTEL_SERVICE_NAME rename web to match the others.
+  delete process.env.OTEL_SERVICE_NAME;
   registerOTel({ serviceName: "kasa-web", logRecordProcessors });
 }
 
