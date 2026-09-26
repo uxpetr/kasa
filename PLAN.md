@@ -427,4 +427,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 
 - 2026-09-26 · — · Plan created from the PRD and prototype. · —
 - 2026-09-26 · — · Handoff folder assembled: PRD, prototype screens, tokens, mascot art. · —
-- 2026-09-26 · F-01 · Stack confirmed (D-110, D-111); pnpm + Turborepo monorepo with web, realtime, worker, extension, and db/shared/ui/bot packages; lint, typecheck, test, and build pass from the root. · branch `setup-kasa-repo`
+- 2026-09-26 · F-01 · Stack confirmed (D-110, D-111); pnpm + Turborepo monorepo with web, realtime, worker, extension, and db/shared/ui/bot packages; lint, typecheck, test, and build pass from the root. · [#1](https://github.com/uxpetr/kasa/pull/1)
