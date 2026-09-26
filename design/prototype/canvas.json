@@ -1,0 +1,106 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Comment.dc.html": {
+      "h": 800,
+      "is_interactive": true,
+      "title": "Extension: comment",
+      "w": 1280,
+      "x": 2720,
+      "y": 0
+    },
+    "ContentTypes.dc.html": {
+      "h": 2820,
+      "title": "Chat content types",
+      "w": 1600,
+      "x": 8320,
+      "y": 0
+    },
+    "Draw.dc.html": {
+      "h": 800,
+      "is_interactive": true,
+      "title": "Extension: draw",
+      "w": 1280,
+      "x": 4080,
+      "y": 0
+    },
+    "Main.dc.html": {
+      "h": 1400,
+      "is_interactive": true,
+      "title": "Project chat (zen mode)",
+      "w": 1280,
+      "x": 1360,
+      "y": 0
+    },
+    "Projects.dc.html": {
+      "h": 880,
+      "is_interactive": true,
+      "title": "Project selection",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "Promo.dc.html": {
+      "h": 5500,
+      "is_interactive": true,
+      "title": "Promo page",
+      "w": 1440,
+      "x": 6800,
+      "y": 0
+    },
+    "Send.dc.html": {
+      "h": 800,
+      "is_interactive": true,
+      "title": "Extension: check and send",
+      "w": 1280,
+      "x": 5440,
+      "y": 0
+    },
+    "Mascot.dc.html": {
+      "x": 10000,
+      "y": 0,
+      "w": 1600,
+      "h": 980,
+      "title": "Mascot explorations"
+    },
+    "Mascot2.dc.html": {
+      "x": 11680,
+      "y": 0,
+      "w": 1600,
+      "h": 1320,
+      "title": "Mascot round 2"
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-09-26T09:00:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "title": {
+      "kind": "title1",
+      "maxW": 13280,
+      "text": "Kasa prototype: clickable flow",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    }
+  },
+  "order": [
+    "Projects.dc.html",
+    "Main.dc.html",
+    "Comment.dc.html",
+    "Draw.dc.html",
+    "Send.dc.html",
+    "Promo.dc.html",
+    "ContentTypes.dc.html",
+    "Mascot.dc.html",
+    "Mascot2.dc.html"
+  ],
+  "pages": [],
+  "title": "Kasa prototype"
+}

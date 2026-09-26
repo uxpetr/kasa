@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kasa chat, Japan 2027</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&amp;family=Instrument+Sans:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',system-ui,sans-serif;color:#1F1D1A;background:#FBFAF7}
+a{color:#B3372A}a:hover{color:#8E2A20}
+button,input{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 1280px; height: 1400px; display: flex; background: #FBFAF7; overflow: hidden">
+<main style="width: 800px; margin: 0 auto; display: flex; flex-direction: column">
+<header style="height: 72px; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between">
+<a href="Projects.dc.html" aria-label="Back to projects" style="width: 44px; height: 44px; border-radius: 22px; display: flex; align-items: center; justify-content: center; text-decoration: none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1F1D1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></a>
+<h1 style="margin: 0; font-family: Fraunces, Georgia, serif; font-size: 20px; font-weight: 600">Japan 2027</h1>
+<a href="Comment.dc.html" aria-label="Try the Kasa extension" style="height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid #E2DDD2; background: #FFFFFF; color: #1F1D1A; font-size: 13px; font-weight: 500; text-decoration: none; display: flex; align-items: center; gap: 6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1F1D1A" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Capture from a site</a>
+</header>
+<div aria-label="Categories" style="display: flex; align-items: center; gap: 8px; padding: 4px 0 12px; border-bottom: 1px solid #ECE8E0">
+<sc-for list="{{ chips }}" as="c" hint-placeholder-count="4">
+<button type="button" aria-pressed="{{ c.pressed }}" onClick="{{ c.pick }}" style="{{ c.style }}">{{ c.label }} <span style="opacity: 0.7">{{ c.count }}</span></button>
+</sc-for>
+<div style="margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6B665C"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2E5B4F" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"></path></svg>Sorted by Kasa Bot<a href="#" style="font-weight: 600; color: #2E5B4F">Edit</a></div>
+</div>
+<section aria-label="Feed" style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; gap: 22px; padding: 12px 0 20px; height: -24px">
+<sc-if value="{{isAll}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; align-items: center; gap: 12px; color: #6B665C; font-size: 12px; font-weight: 600"><div style="flex-grow: 1; height: 1px; background: #ECE8E0"></div>Yesterday<div style="flex-grow: 1; height: 1px; background: #ECE8E0"></div></div>
+</sc-if>
+<sc-if value="{{showPlans}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; gap: 12px; align-items: flex-start">
+<div style="width: 32px; height: 32px; flex-shrink: 0; border-radius: 16px; background: #2E5B4F; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center">A</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 13px; color: #6B665C"><span style="font-weight: 600; color: #1F1D1A">Aiko</span> · 18:02 <span style="display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 10px; background: #E6EEEA; color: #24483E; font-size: 11px; font-weight: 600">Plans</span></div>
+<div style="width: 260px; box-sizing: border-box; padding: 14px 18px 18px; background: #FFF1A8; border-radius: 2px; font-size: 15px; line-height: 1.45; transform: rotate(-1.2deg); display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)">Starting a pile for the trip. Drop anything you find, we'll plan the days by Friday.</div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{showSights}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; gap: 12px; align-items: flex-start">
+<div style="width: 32px; height: 32px; flex-shrink: 0; border-radius: 16px; background: #B3372A; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center">M</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 13px; color: #6B665C"><span style="font-weight: 600; color: #1F1D1A">Mika</span> · 18:40 · 3 sights <span style="display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 10px; background: #E6EEEA; color: #24483E; font-size: 11px; font-weight: 600">Sights</span></div>
+<div style="display: flex; align-items: flex-start; padding: 4px 0 6px 4px">
+<a href="#" style="display: flex; flex-direction: column; gap: 8px; width: 196px; box-sizing: border-box; padding: 8px 8px 12px; background: #FFFFFF; text-decoration: none; color: #1F1D1A; transform: rotate(-2deg); margin-left: 0px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)">
+<img src="img/kinkakuji.jpg" alt="Kinkaku-ji, the golden pavilion, reflected in its pond" style="display: block; width: 100%; height: 132px; object-fit: cover">
+<div style="display: flex; flex-direction: column; gap: 1px; padding: 0 2px"><div style="font-size: 14px; font-weight: 600">Kinkaku-ji</div><div style="font-size: 12px; color: #6B665C">Kyoto · go early</div></div>
+</a>
+<a href="#" style="display: flex; flex-direction: column; gap: 8px; width: 196px; box-sizing: border-box; padding: 8px 8px 12px; background: #FFFFFF; text-decoration: none; color: #1F1D1A; transform: rotate(1.6deg); margin-left: -14px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)">
+<img src="img/kiyomizu.jpg" alt="Kiyomizu-dera pagoda at dusk" style="display: block; width: 100%; height: 132px; object-fit: cover">
+<div style="display: flex; flex-direction: column; gap: 1px; padding: 0 2px"><div style="font-size: 14px; font-weight: 600">Kiyomizu-dera</div><div style="font-size: 12px; color: #6B665C">Kyoto · at sunset</div></div>
+</a>
+<a href="#" style="display: flex; flex-direction: column; gap: 8px; width: 196px; box-sizing: border-box; padding: 8px 8px 12px; background: #FFFFFF; text-decoration: none; color: #1F1D1A; transform: rotate(-0.6deg); margin-left: -14px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)">
+<img src="img/osaka-castle.jpg" alt="Osaka Castle" style="display: block; width: 100%; height: 132px; object-fit: cover">
+<div style="display: flex; flex-direction: column; gap: 1px; padding: 0 2px"><div style="font-size: 14px; font-weight: 600">Osaka Castle</div><div style="font-size: 12px; color: #6B665C">Day trip from Kyoto</div></div>
+</a>
+</div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{showPro}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; gap: 12px; align-items: flex-start">
+<div style="width: 32px; height: 32px; flex-shrink: 0; border-radius: 8px; background: #2E5B4F; color: #FFFFFF; font-family: Fraunces, Georgia, serif; font-size: 17px; font-weight: 600; display: flex; align-items: center; justify-content: center">k</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 13px; color: #6B665C"><span style="font-weight: 600; color: #1F1D1A">Kasa Bot</span> · unprompted <span style="display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 10px; background: #E6EEEA; color: #24483E; font-size: 11px; font-weight: 600">Plans</span></div>
+<div style="width: 440px; box-sizing: border-box; padding: 14px 16px 16px; background: #F1F5F2; border: 1px solid #D5E2DB; border-radius: 4px; transform: rotate(-0.5deg); display: flex; flex-direction: column; gap: 12px; font-size: 15px; line-height: 1.45; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)">
+<div>Kinkaku-ji is in northwest Kyoto and Kiyomizu-dera is in the east, so they fit better on different days. Want me to suggest a pairing for each day?</div>
+<sc-if value="{{proAsk}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; gap: 8px"><button type="button" onClick="{{ suggest }}" style="height: 36px; padding: 0 14px; border-radius: 18px; border: 0; background: #2E5B4F; color: #FFFFFF; font-size: 14px; font-weight: 600; cursor: pointer">Yes, suggest</button><button type="button" onClick="{{ dismiss }}" style="height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid #C9D8CF; background: transparent; color: #24483E; font-size: 14px; cursor: pointer">Not now</button></div>
+</sc-if>
+<sc-if value="{{suggested}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px dashed #C9D8CF; font-size: 14px">
+<div><span style="font-weight: 600">Day 1</span> · Kinkaku-ji in the morning, then northwest Kyoto</div>
+<div><span style="font-weight: 600">Day 2</span> · Kiyomizu-dera at sunset, then down through Higashiyama</div>
+<div><span style="font-weight: 600">Day 3</span> · Osaka Castle as a day trip</div>
+</div>
+</sc-if>
+</div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{isAll}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; align-items: center; gap: 12px; color: #6B665C; font-size: 12px; font-weight: 600"><div style="flex-grow: 1; height: 1px; background: #ECE8E0"></div>Today<div style="flex-grow: 1; height: 1px; background: #ECE8E0"></div></div>
+</sc-if>
+<sc-if value="{{showTokyo}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; gap: 12px; align-items: flex-start">
+<div style="width: 32px; height: 32px; flex-shrink: 0; border-radius: 16px; background: #6B5B3E; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center">J</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 13px; color: #6B665C"><span style="font-weight: 600; color: #1F1D1A">Jonas</span> · 09:12 · from a Tokyo Tower guide <span style="display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 10px; background: #E6EEEA; color: #24483E; font-size: 11px; font-weight: 600">Tokyo</span></div>
+<div style="position: relative; width: 500px; box-sizing: border-box; padding: 10px 10px 14px; background: #FFFFFF; transform: rotate(0.6deg); box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)">
+<div style="position: absolute; left: 200px; top: -10px; width: 96px; height: 22px; background: rgba(230,222,205,0.75); transform: rotate(-2deg)"></div>
+<div style="position: relative; height: 200px; background: #DCD5C8; overflow: hidden">
+<img src="img/tokyo-fuji.jpg" alt="Tokyo Tower in front of Mount Fuji at sunset" style="display: block; width: 100%; height: 200px; object-fit: cover">
+<div style="position: absolute; left: 110px; top: 53px; width: 28px; height: 28px; border-radius: 14px 14px 14px 2px; background: #B3372A; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center">1</div>
+<div style="position: absolute; left: 240px; top: 4px; width: 28px; height: 28px; border-radius: 14px 14px 14px 2px; background: #B3372A; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center">2</div>
+</div>
+<div style="padding: 10px 4px 0; display: flex; flex-direction: column; gap: 4px; font-size: 14px; line-height: 1.45">
+<div><span style="font-weight: 600; color: #B3372A">1</span> The tower view with Fuji behind it. Go at sunset?</div>
+<div><span style="font-weight: 600; color: #B3372A">2</span> Fuji only shows on clear days, so keep this flexible.</div>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{showTokyo}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; gap: 12px; align-items: flex-start">
+<div style="width: 32px; height: 32px; flex-shrink: 0; border-radius: 16px; background: #B3372A; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center">M</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 13px; color: #6B665C"><span style="font-weight: 600; color: #1F1D1A">Mika</span> · 09:30 · via Telegram <span style="display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 10px; background: #E6EEEA; color: #24483E; font-size: 11px; font-weight: 600">Tokyo</span></div>
+<div style="width: 260px; box-sizing: border-box; padding: 14px 18px 18px; background: #FFF1A8; border-radius: 2px; font-size: 15px; line-height: 1.45; transform: rotate(1deg); display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)"><div style="font-size: 12px; color: #6B5F2A">Re: Jonas's capture, pin 1</div><div>Yes! Let's make it our first evening in Tokyo.</div></div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{showSights}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; gap: 12px; align-items: flex-start">
+<div style="width: 32px; height: 32px; flex-shrink: 0; border-radius: 16px; background: #2E5B4F; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center">A</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 13px; color: #6B665C"><span style="font-weight: 600; color: #1F1D1A">Aiko</span> · 10:05 <span style="display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 10px; background: #E6EEEA; color: #24483E; font-size: 11px; font-weight: 600">Sights</span></div>
+<div style="width: 280px; box-sizing: border-box; padding: 14px 18px 18px; background: #FFF1A8; border-radius: 2px; font-size: 15px; line-height: 1.45; transform: rotate(-0.8deg); display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)"><div><span style="font-weight: 600; color: #2E5B4F">@kasa</span> what else is near Kiyomizu-dera for the same evening?</div></div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{showSights}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; gap: 12px; align-items: flex-start">
+<div style="width: 32px; height: 32px; flex-shrink: 0; border-radius: 8px; background: #2E5B4F; color: #FFFFFF; font-family: Fraunces, Georgia, serif; font-size: 17px; font-weight: 600; display: flex; align-items: center; justify-content: center">k</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 13px; color: #6B665C"><span style="font-weight: 600; color: #1F1D1A">Kasa Bot</span> · 10:05 · replying to Aiko <span style="display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 10px; background: #E6EEEA; color: #24483E; font-size: 11px; font-weight: 600">Sights</span></div>
+<div style="width: 440px; box-sizing: border-box; padding: 14px 16px 16px; background: #F1F5F2; border: 1px solid #D5E2DB; border-radius: 4px; transform: rotate(0.4deg); display: flex; flex-direction: column; gap: 12px; font-size: 15px; line-height: 1.45; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)">
+<div>Walk down through Higashiyama afterwards. Sannenzaka and Ninenzaka are the old stone lanes just below the temple.</div>
+<div style="display: flex; gap: 12px; align-items: flex-start">
+<div style="flex-shrink: 0; width: 150px; box-sizing: border-box; padding: 6px 6px 16px; background: #FFFFFF; transform: rotate(-2deg); box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 6px 14px rgba(31,29,26,0.08)"><img src="img/higashiyama.jpg" alt="A lane in Higashiyama, Kyoto, under cherry blossoms" style="display: block; width: 100%; height: 96px; object-fit: cover"></div>
+<div style="display: flex; flex-direction: column; gap: 6px; font-size: 14px"><div style="font-weight: 600">Higashiyama lanes</div><div style="color: #4A463F">Kyoto · a short walk from Kiyomizu-dera</div></div>
+</div>
+<sc-if value="{{notAdded}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; gap: 8px"><button type="button" onClick="{{ addToPile }}" style="height: 36px; padding: 0 14px; border-radius: 18px; border: 0; background: #2E5B4F; color: #FFFFFF; font-size: 14px; font-weight: 600; cursor: pointer">Add to pile</button><button type="button" style="height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid #C9D8CF; background: transparent; color: #24483E; font-size: 14px; cursor: pointer">More ideas</button></div>
+</sc-if>
+<sc-if value="{{added}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: #24483E"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2E5B4F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"></path></svg>Added to Sights</div>
+</sc-if>
+</div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{isAll}}" hint-placeholder-val="{{ true }}">
+<sc-for list="{{ sent }}" as="n" hint-placeholder-count="0">
+<div style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; gap: 12px; align-items: flex-start">
+<div style="width: 32px; height: 32px; flex-shrink: 0; border-radius: 16px; background: #3F4A6B; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center">P</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 13px; color: #6B665C"><span style="font-weight: 600; color: #1F1D1A">You</span> · just now</div>
+<div style="width: 300px; box-sizing: border-box; padding: 14px 18px 18px; background: #FFF1A8; border-radius: 2px; font-size: 15px; line-height: 1.45; transform: rotate(0.8deg); display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)">{{ n.text }}</div>
+</div>
+</div>
+<sc-if value="{{ n.bot }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; gap: 12px; align-items: flex-start">
+<div style="width: 32px; height: 32px; flex-shrink: 0; border-radius: 8px; background: #2E5B4F; color: #FFFFFF; font-family: Fraunces, Georgia, serif; font-size: 17px; font-weight: 600; display: flex; align-items: center; justify-content: center">k</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 13px; color: #6B665C"><span style="font-weight: 600; color: #1F1D1A">Kasa Bot</span> · just now</div>
+<div style="width: 440px; box-sizing: border-box; padding: 14px 16px 16px; background: #F1F5F2; border: 1px solid #D5E2DB; border-radius: 4px; transform: rotate(-0.3deg); display: flex; flex-direction: column; gap: 12px; font-size: 15px; line-height: 1.45; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)">
+<div>On it. I'll look through this pile and the web, and post ideas here in a moment.</div>
+</div>
+</div>
+</div>
+</sc-if>
+</div>
+</sc-for>
+</sc-if>
+</section>
+<footer style="padding: 12px 0 28px; background: #FBFAF7">
+<div style="display: flex; align-items: center; gap: 10px; background: #FFFFFF; border: 1px solid #ECE8E0; border-radius: 26px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07); padding: 6px 6px 6px 8px">
+<button type="button" aria-label="Attach an image or file" style="width: 44px; height: 44px; border-radius: 22px; border: 0; background: #FBFAF7; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1F1D1A" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></button>
+<input type="text" aria-label="Add to Japan 2027" placeholder="Paste a link, drop a photo, write a note, or ask @kasa" value="{{ draft }}" onChange="{{ onDraft }}" onKeyDown="{{ onKey }}" style="flex-grow: 1; border: 0; outline: none; font-size: 15px; color: #1F1D1A; background: transparent; height: 44px">
+<button type="button" onClick="{{ send }}" style="height: 44px; padding: 0 20px; border-radius: 22px; border: 0; background: #B3372A; color: #FFFFFF; font-size: 15px; font-weight: 600; cursor: pointer">Send</button>
+</div>
+</footer>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1400}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { filter: 'All', dismissed: false, suggested: false, added: false, draft: '', sent: [] };
+  }
+  send() {
+    const text = (this.state.draft || '').trim();
+    if (!text) return;
+    const bot = text.toLowerCase().indexOf('@kasa') !== -1;
+    this.setState({ sent: this.state.sent.concat([{ text: text, bot: bot }]), draft: '', filter: 'All' });
+  }
+  renderVals() {
+    const f = this.state.filter;
+    const on = 'height: 36px; padding: 0 14px; border-radius: 18px; background: #1F1D1A; color: #FFFFFF; border: 1px solid #1F1D1A; font-size: 14px; font-weight: 500; cursor: pointer';
+    const off = 'height: 36px; padding: 0 14px; border-radius: 18px; background: #FFFFFF; color: #1F1D1A; border: 1px solid #E2DDD2; font-size: 14px; font-weight: 500; cursor: pointer';
+    const extra = this.state.added ? 1 : 0;
+    const defs = [
+      { label: 'All', count: 8 + this.state.sent.length + extra },
+      { label: 'Sights', count: 3 + extra },
+      { label: 'Tokyo', count: 2 },
+      { label: 'Plans', count: this.state.dismissed ? 1 : 2 }
+    ];
+    const chips = defs.map((d) => ({
+      label: d.label, count: d.count,
+      pressed: f === d.label ? 'true' : 'false',
+      style: f === d.label ? on : off,
+      pick: () => this.setState({ filter: d.label })
+    }));
+    const all = f === 'All';
+    return {
+      chips: chips,
+      isAll: all,
+      showPlans: all || f === 'Plans',
+      showSights: all || f === 'Sights',
+      showTokyo: all || f === 'Tokyo',
+      showPro: (all || f === 'Plans') && !this.state.dismissed,
+      proAsk: !this.state.suggested,
+      suggested: this.state.suggested,
+      added: this.state.added,
+      notAdded: !this.state.added,
+      suggest: () => this.setState({ suggested: true }),
+      dismiss: () => this.setState({ dismissed: true }),
+      addToPile: () => this.setState({ added: true }),
+      draft: this.state.draft,
+      sent: this.state.sent,
+      onDraft: (e) => this.setState({ draft: e.target.value }),
+      onKey: (e) => { if (e.key === 'Enter') this.send(); },
+      send: () => this.send()
+    };
+  }
+}
+</script>
+</body>
+</html>

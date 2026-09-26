@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="480" viewBox="0 0 240 240" role="img" aria-label="Ruska, a round pile of autumn leaves with a face peeking out and one leaf on top like a cap">
+<ellipse cx="120" cy="208" rx="86" ry="9" fill="#1F1D1A" fill-opacity="0.08"></ellipse>
+<path d="M38 200 C 40 132, 78 96, 120 96 C 162 96, 200 132, 202 200 Z" fill="#D98A3D" stroke="#1F1D1A" stroke-width="3" stroke-linejoin="round"></path>
+<ellipse cx="66" cy="176" rx="20" ry="10" fill="#B3372A" stroke="#1F1D1A" stroke-width="2.5" transform="rotate(-25 66 176)"></ellipse>
+<ellipse cx="176" cy="178" rx="20" ry="10" fill="#E6B84A" stroke="#1F1D1A" stroke-width="2.5" transform="rotate(30 176 178)"></ellipse>
+<ellipse cx="80" cy="124" rx="18" ry="9" fill="#E6B84A" stroke="#1F1D1A" stroke-width="2.5" transform="rotate(-40 80 124)"></ellipse>
+<ellipse cx="164" cy="126" rx="18" ry="9" fill="#B3372A" stroke="#1F1D1A" stroke-width="2.5" transform="rotate(40 164 126)"></ellipse>
+<ellipse cx="146" cy="194" rx="18" ry="8" fill="#8C9A4E" stroke="#1F1D1A" stroke-width="2.5" transform="rotate(-12 146 194)"></ellipse>
+<path d="M120 96 C 112 80, 116 64, 130 56 C 138 70, 134 86, 120 96 Z" fill="#B3372A" stroke="#1F1D1A" stroke-width="3" stroke-linejoin="round"></path>
+<path d="M120 96 C 122 84, 125 72, 130 58" fill="none" stroke="#1F1D1A" stroke-width="2" stroke-linecap="round"></path>
+<circle cx="102" cy="146" r="8" fill="#1F1D1A"></circle>
+<circle cx="138" cy="146" r="8" fill="#1F1D1A"></circle>
+<circle cx="104.5" cy="143" r="2.6" fill="#FFFFFF"></circle>
+<circle cx="140.5" cy="143" r="2.6" fill="#FFFFFF"></circle>
+<ellipse cx="88" cy="164" rx="9" ry="5.5" fill="#F4A9A0"></ellipse>
+<ellipse cx="152" cy="164" rx="9" ry="5.5" fill="#F4A9A0"></ellipse>
+<path d="M112 162 Q120 170 128 162" fill="none" stroke="#1F1D1A" stroke-width="3" stroke-linecap="round"></path>
+</svg>

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kasa extension, send to a project</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&amp;family=Instrument+Sans:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0;font-family:'Instrument Sans',system-ui,sans-serif;color:#1F1D1A;background:#FFFFFF}
+a{color:#B3372A}a:hover{color:#8E2A20}
+button,textarea,input{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden; background: #3A3631">
+<div style="height: 44px; background: #2E2B27; display: flex; align-items: center; padding: 0 16px">
+<div style="width: 560px; height: 28px; border-radius: 14px; background: #4A463F; display: flex; align-items: center; padding: 0 14px; font-size: 13px; color: #D6D0C3">ryokan-in-gion.jp/rooms/garden</div>
+</div>
+<div style="position: absolute; left: 180px; top: 84px; width: 920px; height: 640px; box-sizing: border-box; background: #FBFAF7; border-radius: 20px; display: flex; overflow: hidden">
+<div style="flex-grow: 1; padding: 24px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<h1 style="margin: 0; font-family: Fraunces, Georgia, serif; font-size: 24px; font-weight: 600">Check before sending</h1>
+<div style="display: flex; gap: 6px">
+<button type="button" style="height: 44px; padding: 0 14px; border-radius: 22px; border: 1px solid #D6D0C3; background: #FFFFFF; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1F1D1A" stroke-width="2" stroke-linecap="round"><path d="M6 2v16h16M2 6h16v16"></path></svg>Crop</button>
+<button type="button" aria-pressed="true" style="height: 44px; padding: 0 14px; border-radius: 22px; border: 0; background: #1F1D1A; color: #FFFFFF; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8" stroke-dasharray="3 3"></circle></svg>Blur</button>
+</div>
+</div>
+<div style="position: relative; height: 330px; border-radius: 12px; background: #FFFFFF; border: 1px solid #D6D0C3; overflow: hidden">
+<div style="position: absolute; left: 16px; top: 16px; width: 280px; height: 220px; border-radius: 6px; background: #D9D2C4; display: flex; align-items: flex-end; padding: 10px; box-sizing: border-box; font-size: 11px; color: #5C4F3A">[Room photo]</div>
+<svg width="300" height="220" viewBox="0 0 300 220" style="position: absolute; left: 10px; top: 20px" aria-hidden="true"><path d="M60 40 C 120 20, 220 30, 240 90 C 255 140, 190 170, 120 165 C 60 160, 30 120, 55 70 C 60 55, 64 48, 70 44" fill="none" stroke="#B3372A" stroke-width="3" stroke-linecap="round"></path></svg>
+<div style="position: absolute; left: 320px; top: 20px; display: flex; flex-direction: column; gap: 10px; width: 260px">
+<div style="font-family: Georgia, serif; font-size: 20px">Garden room</div>
+<div style="height: 10px; width: 220px; border-radius: 5px; background: #E6E1D8"></div>
+<div style="height: 10px; width: 180px; border-radius: 5px; background: #E6E1D8"></div>
+<div style="font-size: 13px; padding: 6px 4px; background: #F2C94C; background-color: rgba(242,201,76,0.4); border-radius: 4px">Private open-air bath</div>
+<div style="font-size: 13px">Breakfast included</div>
+</div>
+<div style="position: absolute; left: 400px; top: 262px; width: 190px; height: 44px; border-radius: 8px; background: #BDB6A8; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #2E2B27; outline: 2px dashed #1F1D1A; outline-offset: 2px">Blurred: signed-in name</div>
+<div style="position: absolute; left: 16px; top: 262px; font-size: 12px; color: #5E5A52">Drag over anything private to blur it</div>
+</div>
+<label for="s-note" style="font-size: 13px; font-weight: 600">Add a note</label>
+<textarea id="s-note" rows="3" style="border: 1px solid #D6D0C3; border-radius: 12px; padding: 10px 12px; font-size: 15px; line-height: 1.45; resize: none; background: #FFFFFF; color: #1F1D1A">Look at that garden view, and it has its own onsen.</textarea>
+</div>
+<aside aria-label="Choose a project" style="width: 300px; box-sizing: border-box; padding: 24px 20px; background: #FFFFFF; border-left: 1px solid #E2DDD2; display: flex; flex-direction: column; gap: 14px">
+<label for="s-search" style="font-size: 13px; font-weight: 600">Send to</label>
+<input id="s-search" type="search" placeholder="Search projects" style="height: 44px; border: 1px solid #D6D0C3; border-radius: 12px; padding: 0 12px; font-size: 15px; color: #1F1D1A">
+<fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px">
+<legend style="font-size: 12px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; color: #5E5A52; padding: 0 0 6px">Recent</legend>
+<label style="display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 12px; border-radius: 12px; background: #F9E7E4; cursor: pointer"><input type="radio" name="proj" checked="checked" style="accent-color: #B3372A; width: 18px; height: 18px"><span style="display: flex; flex-direction: column"><span style="font-size: 15px; font-weight: 600">Japan 2027</span><span style="font-size: 12px; color: #5E5A52">Last used · 4 members</span></span></label>
+<label style="display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 12px; border-radius: 12px; cursor: pointer"><input type="radio" name="proj" style="accent-color: #B3372A; width: 18px; height: 18px"><span style="display: flex; flex-direction: column"><span style="font-size: 15px">Wedding planning</span><span style="font-size: 12px; color: #5E5A52">2 members</span></span></label>
+<label style="display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 12px; border-radius: 12px; cursor: pointer"><input type="radio" name="proj" style="accent-color: #B3372A; width: 18px; height: 18px"><span style="display: flex; flex-direction: column"><span style="font-size: 15px">Talk ideas</span><span style="font-size: 12px; color: #5E5A52">3 members</span></span></label>
+<label style="display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 12px; border-radius: 12px; cursor: pointer"><input type="radio" name="proj" style="accent-color: #B3372A; width: 18px; height: 18px"><span style="display: flex; flex-direction: column"><span style="font-size: 15px">My pile</span><span style="font-size: 12px; color: #5E5A52">Just you</span></span></label>
+</fieldset>
+<div style="margin-top: auto; font-size: 12px; line-height: 1.45; color: #5E5A52">Also posts to the project's Telegram group.</div>
+<div style="display: flex; gap: 8px">
+<a href="Draw.dc.html" style="flex-grow: 1; height: 48px; border-radius: 24px; border: 1px solid #D6D0C3; background: #FFFFFF; font-size: 15px; text-decoration: none; display: flex; align-items: center; justify-content: center">Back</a>
+<a href="Main.dc.html" style="flex-grow: 2; height: 48px; border-radius: 24px; background: #B3372A; color: #FFFFFF; font-size: 15px; font-weight: 600; text-decoration: none; display: flex; align-items: center; justify-content: center">Send</a>
+</div>
+</aside>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
