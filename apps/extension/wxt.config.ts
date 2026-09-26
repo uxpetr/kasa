@@ -7,4 +7,6 @@ export default defineConfig({
     permissions: ["activeTab"],
     action: {},
   },
+  // The web app owns port 3000; WXT would otherwise race it for the same port under `pnpm dev`.
+  dev: { server: { port: 3010, origin: "http://localhost:3010" } },
 });
