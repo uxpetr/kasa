@@ -2,7 +2,13 @@
 // until then events go to a sink that writes one JSON line per event to stdout.
 // Properties carry ids and enums only, never names, emails, or message text.
 
-export const ANALYTICS_EVENTS = ["signed_up", "signed_in"] as const;
+export const ANALYTICS_EVENTS = [
+  "signed_up",
+  "signed_in",
+  "project_created",
+  "invite_sent",
+  "invite_accepted",
+] as const;
 export type AnalyticsEvent = (typeof ANALYTICS_EVENTS)[number];
 
 export type AnalyticsProperties = Record<string, string | number | boolean | null>;

@@ -151,11 +151,14 @@ export const invites = pgTable(
     projectId: uuid("project_id")
       .notNull()
       .references(() => projects.id, { onDelete: "cascade" }),
+    // Reusable by anyone with the link until it expires or is revoked (D-138).
     token: text("token").notNull().unique(),
     createdBy: uuid("created_by")
       .notNull()
       .references(() => users.id),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    createdAt: createdAt(),
   },
   (t) => [index("invites_project_idx").on(t.projectId)],
 );
