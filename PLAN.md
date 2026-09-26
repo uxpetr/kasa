@@ -257,7 +257,7 @@ Depends on: F-01
 - [ ] Structured logs with request IDs; no personal data or message bodies in logs.
 - [ ] Error reporting with alerts on staging and production.
 
-### F-08 · Design tokens and physical-object components · `todo`
+### F-08 · Design tokens and physical-object components · `in-progress` · branch `f-08-ui`
 Depends on: F-01
 - [ ] Tokens from `design/tokens.json`: colours, fonts, spacing, the one shadow, rotation limits (under 2.5°).
 - [ ] Components: Sticky, LinedSheet, Polaroid, Print (with tape), PinMarker, BotCard, CategoryStamp, Composer.
