@@ -123,6 +123,11 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-124** · 2026-09-26 · Feed paging uses a keyset cursor on `(created_at, id)`, newest first, served by the ascending index `entries_feed_idx (project_id, created_at, id)` scanned backwards (a test asserts the plan). · F-04
 - **D-125** · 2026-09-26 · Database tests create and drop a throwaway database next to `DATABASE_URL`; they skip when it isn't set. Turbo passes `DATABASE_URL` to `test` tasks. · F-04
 - **D-126** · 2026-09-26 · The demo seed follows `Main.dc.html`: the photos there are place links with preview images, so they're seeded as `link` entries with `link_previews`, not `photo` entries. Seed links use `example.com`; image keys point at `seed/…`, uploaded later by F-11. Re-running the seed replaces the demo. · F-04
+- **D-127** · 2026-09-26 · Supersedes the auth part of D-101: **Better Auth** 1.7 instead of Auth.js (next-auth v5 is still beta and in maintenance). Google is the only provider (D-004); sessions are stored in Postgres. Better Auth's tables are `users`, `sessions`, `accounts`, `verifications`; the Google account id moved from `users.google_sub` to `accounts.account_id`. Config lives in `apps/web/lib/create-auth.ts`. · Petr, F-05
+- **D-128** · 2026-09-26 · Extension handoff: a signed-in page calls `GET /api/auth/one-time-token/generate`; the single-use code (3 minutes, stored hashed) goes to the extension, which calls `POST /api/auth/one-time-token/verify` and then uses `Authorization: Bearer <session token>`. The extension shares the web session, so signing out of either ends both. P-08 delivers the code via `externally_connectable` (a manifest key, not a host permission). · F-05
+- **D-129** · 2026-09-26 · Analytics: `track()` in `@kasa/shared` with typed event names; ids and enums only, never names, emails, or message text. Until OD-11 picks a provider, events are JSON lines on stdout. `signed_up` fires when a user row is created; `signed_in` fires on every new session, including the first. · F-05
+- **D-130** · 2026-09-26 · `apps/web` loads the repo-root `.env` in `next.config.ts`. Auth is built on first use, and pages hide sign-in when auth env is missing (as on staging until F-12), instead of failing. · F-05
+- **D-131** · 2026-09-26 · Apps import query helpers (`eq`, `and`, …) from `@kasa/db`, not `drizzle-orm`, so there's one drizzle copy and its types line up. `@kasa/db/testing` provides `createTestDatabase()` for tests. · F-05
 
 ---
 
@@ -139,6 +144,7 @@ Questions only Petr can answer. Agents add to this list and don't guess. When on
 - [ ] **OD-07** Decisions (voting) and the Keep strip: v1 or after pilot feedback? Blocks V-02c.
 - [ ] **OD-08** Mascot direction (Heap, Pebble, Drop, or Stack; art in `design/mascot/`). Blocks F-08 icon work, not the rest of F-08.
 - [x] **OD-10** → D-118. Protecting `main` on a private repo needs GitHub Pro (about $4/month) on the `uxpetr` account. Options: upgrade to Pro; move the repo to a GitHub organization on a paid plan; or drop the criterion and rely on convention (merge only green PRs). Blocks the last F-02 criterion.
+- [ ] **OD-11** Analytics provider. Options: PostHog EU Cloud (product analytics, EU hosting), Plausible (simple, EU, less product depth), self-hosted PostHog, or events in our own Postgres. Needs a privacy/cookie decision too. Events are already tracked (D-129). Blocks P-13's pilot dashboard.
 - [ ] **OD-09** Exact prices for the owner plan and project pass, and project pass duration. Blocks V-10.
 
 ---
@@ -223,6 +229,11 @@ Depends on: F-01
 ### F-11 · Seed media in local storage · `todo`
 Depends on: F-06
 - [ ] `pnpm db:seed` uploads the prototype images (`design/prototype/img/`) to the local bucket under the `seed/` keys the seed data already uses, so the demo renders with pictures.
+
+### F-12 · Sign-in on staging · `todo`
+Depends on: F-05, F-09
+- [ ] `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` set in the Vercel project (not in the repo); the staging callback URL added to the Google OAuth client.
+- [ ] Sign in and out on staging works end to end.
 
 ### F-05 · Google sign-in and sessions · `in-progress` · branch `f-05-auth`
 Depends on: F-04

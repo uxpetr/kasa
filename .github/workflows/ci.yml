@@ -51,6 +51,26 @@ jobs:
   e2e:
     name: End-to-end
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: kasa
+          POSTGRES_PASSWORD: kasa
+          POSTGRES_DB: kasa
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U kasa -d kasa"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+    env:
+      DATABASE_URL: postgres://kasa:kasa@localhost:5432/kasa
+      # CI-only values: the e2e tests stub Google, so no real client is needed.
+      BETTER_AUTH_SECRET: ci-only-secret-0123456789abcdef0123456789
+      GOOGLE_CLIENT_ID: ci-dummy-client.apps.googleusercontent.com
+      GOOGLE_CLIENT_SECRET: ci-dummy-secret
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -60,6 +80,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @kasa/web exec playwright install --with-deps chromium
+      - run: pnpm db:migrate
       - run: pnpm test:e2e
       - uses: actions/upload-artifact@v4
         if: failure()

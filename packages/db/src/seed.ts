@@ -38,10 +38,10 @@ export async function seed(db: Database, now = new Date()) {
 
     const { petr, aiko, mika, jonas } = SEED.users;
     await tx.insert(s.users).values([
-      { id: petr, googleSub: "seed-petr", email: "petr@example.com", name: "Petr" },
-      { id: aiko, googleSub: "seed-aiko", email: "aiko@example.com", name: "Aiko" },
-      { id: mika, googleSub: "seed-mika", email: "mika@example.com", name: "Mika" },
-      { id: jonas, googleSub: "seed-jonas", email: "jonas@example.com", name: "Jonas" },
+      { id: petr, email: "petr@example.com", name: "Petr" },
+      { id: aiko, email: "aiko@example.com", name: "Aiko" },
+      { id: mika, email: "mika@example.com", name: "Mika" },
+      { id: jonas, email: "jonas@example.com", name: "Jonas" },
     ]);
 
     const projectId = SEED.projectId;
