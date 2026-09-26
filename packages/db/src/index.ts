@@ -1,2 +1,2 @@
-// Drizzle schema, migrations, and seed. Filled in by F-04.
-export {};
+export * as schema from "./schema";
+export { createDb, requireDatabaseUrl, type Database } from "./client";
