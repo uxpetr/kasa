@@ -181,7 +181,7 @@ Depends on: OD-01
 - [x] Monorepo created with the layout under [Architecture](#architecture); `pnpm install`, `pnpm lint`, `pnpm typecheck`, and `pnpm test` all run from the root.
 - [x] README explains how to run everything locally in under 5 commands.
 
-### F-02 · CI pipeline · `todo`
+### F-02 · CI pipeline · `in-progress` · branch `f-02-ci`
 Depends on: F-01
 - [ ] CI runs lint, typecheck, unit tests, and build on every PR.
 - [ ] End-to-end test runner (for example Playwright) wired in with one smoke test.
