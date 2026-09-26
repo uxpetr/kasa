@@ -4,7 +4,7 @@ This is the living plan for building Kasa. Humans and Claude Code agents both re
 
 - Product source: [`docs/PRD.md`](docs/PRD.md), exported from Petr's Claude Doc. If this plan and the PRD disagree, the PRD wins for product behaviour; raise the conflict under [Open decisions](#open-decisions).
 - Design source: [`design/`](design/). See [`design/README.md`](design/README.md) for what each screen is, the design tokens, and the mascot art.
-- Last updated: 2026-09-26 · by: Claude (F-02)
+- Last updated: 2026-09-26 · by: Claude (F-03)
 
 ---
 
@@ -55,7 +55,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
 **Next up:** F-04 (database schema). F-07 and F-08 are also unblocked.
-**Blocked:** F-03, last criterion only (give the Vercel GitHub app access to `uxpetr/kasa`).
+**Blocked:** nothing.
 
 ---
 
@@ -117,6 +117,7 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-118** · 2026-09-26 · No branch protection on `main` for now (it needs GitHub Pro on a private repo). Rule instead: merge only PRs whose CI is green. Revisit when a second person gets write access. · Petr, OD-10
 - **D-119** · 2026-09-26 · Local services in `docker-compose.yml`: Postgres 18 and SeaweedFS 4.47 as the S3-compatible store (MinIO stopped publishing images), with a one-shot `s3-init` that creates the `kasa-media` bucket. `pnpm services` starts them. Dev credentials live in `infra/seaweedfs/s3.json` and `.env.example`. · F-03
 - **D-120** · 2026-09-26 · Staging is the Vercel project `kasa` in the personal team (not Dash0): root `apps/web`, Next.js, Node 24, functions in `fra1` (`apps/web/vercel.json`). Vercel Authentication stays on, so staging is private. Deploys from `main`; PRs get preview URLs. Neon and the bucket come in F-09, realtime and worker hosting in F-10. · Petr, F-03
+- **D-121** · 2026-09-26 · Supersedes the account part of D-120: the Vercel project `kasa` lives in Petr's **personal** Vercel account (`petrandrianov-9913`, team `petrandrianov-9913s-projects`), kept separate from his work account. Git-connected to `uxpetr/kasa`, production branch `main`. Run Vercel CLI commands for Kasa with `--global-config ~/.config/vercel-kasa` so they use that account. Settings from D-120 (root, Node, `fra1`, protection) are unchanged. · Petr, F-03
 
 ---
 
@@ -193,11 +194,11 @@ Depends on: F-01
 - [x] End-to-end test runner (for example Playwright) wired in with one smoke test.
 - [x] ~~Main branch is protected: CI must pass.~~ Deferred by D-118: needs GitHub Pro; merge only green PRs instead.
 
-### F-03 · Environments and config · `blocked` (Vercel GitHub access) · branch `f-03-envs`
+### F-03 · Environments and config · `done` · branch `f-03-envs`
 Depends on: F-01, OD-02
 - [x] Local Postgres and object storage via Docker Compose.
 - [x] `.env.example` with every variable documented; secrets never committed.
-- [ ] Staging environment deploys automatically from main. Vercel project `kasa` exists and builds (D-120); waiting for the Vercel GitHub app to get access to `uxpetr/kasa`.
+- [x] Staging environment deploys automatically from main (Vercel project `kasa`, D-121).
 
 ### F-09 · Staging data services · `todo`
 Depends on: F-03, F-04
