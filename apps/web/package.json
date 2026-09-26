@@ -22,6 +22,8 @@
   },
   "dependencies": {
     "@kasa/db": "workspace:*",
+    "@kasa/jobs": "workspace:*",
+    "@kasa/media": "workspace:*",
     "@kasa/shared": "workspace:*",
     "@kasa/ui": "workspace:*",
     "better-auth": "^1.7.6",

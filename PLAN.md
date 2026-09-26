@@ -4,7 +4,7 @@ This is the living plan for building Kasa. Humans and Claude Code agents both re
 
 - Product source: [`docs/PRD.md`](docs/PRD.md), exported from Petr's Claude Doc. If this plan and the PRD disagree, the PRD wins for product behaviour; raise the conflict under [Open decisions](#open-decisions).
 - Design source: [`design/`](design/). See [`design/README.md`](design/README.md) for what each screen is, the design tokens, and the mascot art.
-- Last updated: 2026-09-26 · by: Claude (F-05)
+- Last updated: 2026-09-26 · by: Claude (F-06)
 
 ---
 
@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** F-06 (uploads and media pipeline). F-07, F-08, F-09, and F-10 are also unblocked; P-01 and P-08 open up with F-05 done.
+**Next up:** F-07 (observability) and F-08 (design tokens and components). F-09, F-10, F-11, P-01, P-05, and P-08 are also unblocked.
 **Blocked:** nothing.
 
 ---
@@ -128,6 +128,9 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-129** · 2026-09-26 · Analytics: `track()` in `@kasa/shared` with typed event names; ids and enums only, never names, emails, or message text. Until OD-11 picks a provider, events are JSON lines on stdout. `signed_up` fires when a user row is created; `signed_in` fires on every new session, including the first. · F-05
 - **D-130** · 2026-09-26 · `apps/web` loads the repo-root `.env` in `next.config.ts`. Auth is built on first use, and pages hide sign-in when auth env is missing (as on staging until F-12), instead of failing. · F-05
 - **D-131** · 2026-09-26 · Apps import query helpers (`eq`, `and`, …) from `@kasa/db`, not `drizzle-orm`, so there's one drizzle copy and its types line up. `@kasa/db/testing` provides `createTestDatabase()` for tests. · F-05
+- **D-132** · 2026-09-26 · Uploads: `POST /api/uploads` checks membership (owner/editor), type (JPEG, PNG, WebP, GIF; no HEIC, which prebuilt sharp can't decode) and size (20 MB), then returns a presigned **PUT** valid 5 minutes with Content-Type and Content-Length signed (R2 has no presigned POST). `POST /api/uploads/:id/complete` checks the stored object matches and queues `media.process` once. The worker re-encodes with sharp (drops all metadata, applies orientation), writes `full` and a 640px WebP `thumb`, and deletes the raw upload. `GET /api/media/:id/:variant` redirects members, viewers included, to a signed URL valid 5 minutes; everyone else gets 404. Keys live under `projects/<id>/`. · F-06
+- **D-133** · 2026-09-26 · Queue: pg-boss 12 in `@kasa/jobs`, with typed job names and payloads. The web app starts it as a producer (no maintenance); the worker runs maintenance. pg-boss manages its own `pgboss` schema outside the Drizzle migrations. · F-06
+- **D-134** · 2026-09-26 · New packages: `@kasa/media` (storage client, keys, limits; image processing is in `@kasa/media/process` so the web bundle never loads sharp) and `@kasa/jobs`. CI starts Postgres and S3 with `pnpm services`, the same as local development. · F-06
 
 ---
 
@@ -215,6 +218,7 @@ Depends on: F-01, OD-02
 Depends on: F-03, F-04
 - [ ] Neon Postgres in an EU region attached to the Vercel project; migrations run on deploy.
 - [ ] EU S3-compatible bucket for staging media (pick R2 EU or AWS `eu-central-1`, D-111); credentials only in Vercel env settings.
+- [ ] CDN in front of the bucket for media downloads (signed URLs, D-132); confirm the bucket enforces the signed Content-Type and Content-Length on presigned PUTs, as the local store does.
 
 ### F-10 · Host realtime and worker · `todo`
 Depends on: F-03; needed by F-06 and P-06
@@ -241,11 +245,11 @@ Depends on: F-04
 - [x] Session design supports the extension: a short-lived token exchange from the web session, no separate extension login (D-010). See D-128.
 - [x] Analytics: `signed_up`, `signed_in`.
 
-### F-06 · Uploads and media pipeline · `in-progress` · branch `f-06-media`
+### F-06 · Uploads and media pipeline · `done` · branch `f-06-media`
 Depends on: F-03, F-04
-- [ ] Presigned uploads for images and screenshots; size and type limits enforced server-side.
-- [ ] Worker generates thumbnails and strips EXIF location data.
-- [ ] Media served through the CDN with private, signed URLs scoped to project members.
+- [x] Presigned uploads for images and screenshots; size and type limits enforced server-side.
+- [x] Worker generates thumbnails and strips EXIF location data.
+- [x] Media served through the CDN with private, signed URLs scoped to project members. Signed, member-scoped URLs are done; the CDN in front of the bucket comes with the staging bucket (F-09).
 
 ### F-07 · Observability baseline · `todo`
 Depends on: F-01
@@ -468,3 +472,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-26 · F-03 · Local Postgres and S3 storage via Docker Compose (`pnpm services`), documented `.env.example`, Vercel staging from `main` in `fra1`. · [#3](https://github.com/uxpetr/kasa/pull/3)
 - 2026-09-26 · F-04 · Schema v0 with Drizzle migrations, "Japan 2027" seed, feed paging index, DB tests in CI. · [#4](https://github.com/uxpetr/kasa/pull/4)
 - 2026-09-26 · F-05 · Google sign-in with Better Auth, extension one-time-code handoff, `signed_up`/`signed_in` events; verified with a real Google client locally. · [#5](https://github.com/uxpetr/kasa/pull/5)
+- 2026-09-26 · F-06 · Presigned uploads with server-side limits, worker strips metadata and makes thumbnails, member-only signed media URLs; pg-boss queue. · PR_F06

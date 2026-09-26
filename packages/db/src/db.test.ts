@@ -31,7 +31,7 @@ describe.skipIf(!baseUrl)("database", () => {
         "accounts", "captures", "categories", "comments", "entries", "entry_categories", "entry_media",
         "invites", "link_previews", "memberships", "pins", "project_passes", "projects",
         "reactions", "sessions", "subscriptions", "telegram_identities", "telegram_links",
-        "telegram_messages", "users", "verifications",
+        "telegram_messages", "uploads", "users", "verifications",
       ].sort(),
     );
   });

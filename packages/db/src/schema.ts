@@ -36,6 +36,7 @@ export const mediaRole = pgEnum("media_role", ["photo", "screenshot", "drawing-l
 export const actor = pgEnum("actor", ["bot", "user"]);
 export const direction = pgEnum("direction", ["in", "out"]);
 export const plan = pgEnum("plan", ["free", "owner"]);
+export const uploadStatus = pgEnum("upload_status", ["pending", "processing", "ready", "failed"]);
 
 const updatedAt = () =>
   timestamp("updated_at", { withTimezone: true })
@@ -199,6 +200,31 @@ export const entryMedia = pgTable(
     position: integer("position").notNull().default(0),
   },
   (t) => [index("entry_media_entry_idx").on(t.entryId)],
+);
+
+// A file on its way into the pile: presigned, uploaded, processed (F-06, D-132).
+// Entries attach ready uploads as entry_media when they're created.
+export const uploads = pgTable(
+  "uploads",
+  {
+    id: id(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    uploaderId: uuid("uploader_id").references(() => users.id, { onDelete: "set null" }),
+    contentType: text("content_type").notNull(),
+    size: integer("size").notNull(),
+    status: uploadStatus("status").notNull().default("pending"),
+    // Set once processing succeeds; the raw upload is deleted then.
+    fullKey: text("full_key"),
+    thumbKey: text("thumb_key"),
+    width: integer("width"),
+    height: integer("height"),
+    failureReason: text("failure_reason"),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("uploads_project_idx").on(t.projectId), index("uploads_status_idx").on(t.status, t.createdAt)],
 );
 
 export const linkPreviews = pgTable(

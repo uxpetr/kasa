@@ -7,4 +7,4 @@ allowBuilds:
   sharp: true
 
 catalog:
-  typescript: ~6.0.0
+  typescript: ~6.0.3
