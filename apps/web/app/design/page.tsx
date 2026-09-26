@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { BotButton, BotCard, CategoryStamp, LinedSheet, Polaroid, Print, Sticky } from "@kasa/ui";
+import { BotButton, BotCard, CategoryStamp, LinedSheet, Pile, Polaroid, Print, Sticky } from "@kasa/ui";
 import { InteractiveSamples } from "./interactive";
 import styles from "./design.module.css";
 
@@ -75,6 +75,27 @@ export default function DesignPage() {
           <BotCard rotate={1.5}>
             Sorted 3 new things into <strong>Sights</strong>.
           </BotCard>
+        </Sample>
+
+        <Sample title="Pile" what="A project on the projects screen: a stack of paper, or a sticky when it's just you.">
+          <div className={styles.pile}>
+            <Pile
+              id="design-trip"
+              href="#"
+              title="Japan 2027"
+              preview="Mika: Yes! Let's make it our first evening in Tokyo."
+              unread={3}
+              members={[
+                { id: "a", name: "Aiko" },
+                { id: "m", name: "Mika" },
+                { id: "j", name: "Jun" },
+              ]}
+              peek={{ src: "/samples/higashiyama.jpg", alt: "" }}
+            />
+          </div>
+          <div className={styles.pile}>
+            <Pile id="design-solo" href="#" title="My pile" preview="Just you · 48 things saved" members={[{ id: "p", name: "Petr" }]} meta="Sep 17" personal />
+          </div>
         </Sample>
 
         <Sample title="Category stamp" what="Small green stamps in the meta line.">

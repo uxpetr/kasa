@@ -23,6 +23,13 @@ export const tokens = {
     "highlighter": "#F2C94C",
     "telegram": "#2F8FD1"
   },
+  "avatar": [
+    "#2E5B4F",
+    "#B3372A",
+    "#6B5B3E",
+    "#3F4A6B",
+    "#8A4B6B"
+  ],
   "gradient": {
     "ctaPrimary": "linear-gradient(135deg, #E0664A 0%, #C2412D 45%, #9A2C21 100%)"
   },

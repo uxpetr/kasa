@@ -94,3 +94,8 @@
   padding-left: 20px;
   color: var(--kasa-color-ink-body);
 }
+
+.pile {
+  width: min(360px, 100%);
+  margin-bottom: 24px;
+}

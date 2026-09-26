@@ -21,6 +21,11 @@
   --kasa-color-blush: #F4A9A0;
   --kasa-color-highlighter: #F2C94C;
   --kasa-color-telegram: #2F8FD1;
+  --kasa-avatar-0: #2E5B4F;
+  --kasa-avatar-1: #B3372A;
+  --kasa-avatar-2: #6B5B3E;
+  --kasa-avatar-3: #3F4A6B;
+  --kasa-avatar-4: #8A4B6B;
   --kasa-gradient-cta: linear-gradient(135deg, #E0664A 0%, #C2412D 45%, #9A2C21 100%);
   --kasa-font-display: var(--font-fraunces, Fraunces, Georgia, serif);
   --kasa-font-body: var(--font-instrument-sans, 'Instrument Sans', system-ui, sans-serif);

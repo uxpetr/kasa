@@ -140,6 +140,8 @@ export const memberships = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     role: role("role").notNull(),
     joinedAt: timestamp("joined_at", { withTimezone: true }).notNull().defaultNow(),
+    // When the member last opened the feed; entries by others after this (or after joining) are unread.
+    lastReadAt: timestamp("last_read_at", { withTimezone: true }),
   },
   (t) => [primaryKey({ columns: [t.projectId, t.userId] }), index("memberships_user_idx").on(t.userId)],
 );

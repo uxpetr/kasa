@@ -1,23 +1,25 @@
 import { headers } from "next/headers";
 import { connection } from "next/server";
 import { getAuth, isAuthConfigured, isGoogleSignInConfigured } from "@/lib/auth";
-import { SignInButton, SignOutButton } from "./auth-buttons";
+import { getDb } from "@/lib/db";
+import { listPiles } from "@/lib/piles";
+import { getStorage } from "@/lib/services";
+import { SignInButton } from "./auth-buttons";
+import { PilesScreen } from "./piles-screen";
 
-// Placeholder home until the projects screen (P-02) and landing page (V-12).
+// Signed in: your projects (P-02). Signed out: a placeholder until the landing page (V-12).
 export default async function Home() {
   await connection();
   const session = isAuthConfigured() ? await getAuth().api.getSession({ headers: await headers() }) : null;
 
+  if (session) {
+    const user = { id: session.user.id, name: session.user.name };
+    return <PilesScreen user={user} piles={await listPiles({ db: getDb(), storage: getStorage() }, user.id)} />;
+  }
   return (
     <main>
       <h1>Kasa</h1>
-      {session ? (
-        <p>
-          Signed in as {session.user.name} <SignOutButton />
-        </p>
-      ) : isGoogleSignInConfigured() ? (
-        <SignInButton />
-      ) : null}
+      {isGoogleSignInConfigured() ? <SignInButton /> : null}
     </main>
   );
 }

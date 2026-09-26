@@ -32,8 +32,15 @@ function parseName(value: unknown): Result<string> {
   return ok(name);
 }
 
+export const PERSONAL_PROJECT_NAME = "My pile";
+
 /** Creates a project with the creator as its owner. */
-export async function createProject(db: Database, userId: string, input: { name?: unknown }): Promise<Result<ProjectSummary>> {
+export async function createProject(
+  db: Database,
+  userId: string,
+  input: { name?: unknown },
+  options: { personal?: boolean } = {},
+): Promise<Result<ProjectSummary>> {
   const name = parseName(input.name);
   if (!name.ok) return name;
   const project = await db.transaction(async (tx) => {
@@ -41,8 +48,14 @@ export async function createProject(db: Database, userId: string, input: { name?
     await tx.insert(schema.memberships).values({ projectId: row!.id, userId, role: "owner" });
     return row!;
   });
-  await track("project_created", userId, { projectId: project.id });
+  await track("project_created", userId, { projectId: project.id, personal: options.personal ?? false });
   return ok({ id: project.id, name: project.name, role: "owner", archivedAt: null, createdAt: project.createdAt, memberCount: 1 });
+}
+
+/** Every user starts with a personal "My pile" (D-144). */
+export async function createPersonalProject(db: Database, userId: string): Promise<void> {
+  const res = await createProject(db, userId, { name: PERSONAL_PROJECT_NAME }, { personal: true });
+  if (!res.ok) throw new Error(res.error);
 }
 
 /** The user's live projects, newest first; archived ones are included and flagged (D-140). */

@@ -69,7 +69,7 @@ describe.skipIf(!ready)("projects and invites", () => {
       const res = await createProject(db(), u.owner, { name: "  Wedding   ideas " });
       expect(res).toMatchObject({ ok: true, value: { name: "Wedding ideas", role: "owner", memberCount: 1 } });
       if (!res.ok) return;
-      expect(events).toEqual([expect.objectContaining({ event: "project_created", userId: u.owner, properties: { projectId: res.value.id } })]);
+      expect(events).toEqual([expect.objectContaining({ event: "project_created", userId: u.owner, properties: { projectId: res.value.id, personal: false } })]);
       expect(await listProjects(db(), u.owner)).toContainEqual(expect.objectContaining({ id: res.value.id, role: "owner" }));
     });
 

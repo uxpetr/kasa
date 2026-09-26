@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** P-02 (projects screen). P-14, P-15, F-09, F-10, F-11, P-05, and P-08 are also unblocked.
+**Next up:** P-03 (zen chat feed). P-14, P-15, F-09, F-10, F-11, P-05, and P-08 are also unblocked.
 **Blocked:** nothing.
 
 ---
@@ -143,6 +143,7 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-144** · 2026-09-26 · Every user gets a personal project named "My pile" on first sign-in, so the projects screen is never empty and captures always have a home. One-member projects show as the yellow sticky from the prototype. · Petr, P-02
 - **D-145** · 2026-09-26 · A project card's preview line is the last entry as "Name: text" for notes and bot messages ("You" for yourself, "Kasa Bot" for the bot), and "Name: what it is" otherwise: "Photo", "Link · <title>", "Capture from <site>", "File", and so on. When the last entry has an image, it peeks out as a polaroid like the Japan card. · Petr, P-02
 - **D-146** · 2026-09-26 · Archived projects sit in a collapsed "Archived (n)" section under the grid and look slightly faded when opened. · Petr, P-02
+- **D-147** · 2026-09-26 · Projects screen internals: `/` shows "Your piles" when signed in (`lib/piles.ts` builds it in five queries, whatever the number of projects). Unread = entries by others (the bot included) created after `memberships.last_read_at`, or after `joined_at` if the member never opened the feed; P-03 sets `last_read_at` when the feed is opened. Piles sort by last activity. Avatars are initials on a colour picked from the new `avatar` palette in `design/tokens.json` by user id (all pass 4.5:1 with white). Times show in the viewer's time zone: the time today, "Yesterday", the weekday within a week, then the date. The peeking image is a 5-minute signed URL. `@kasa/ui` gains `Pile`, `Avatar`, `AvatarStack`; the account button's menu uses the HTML popover API. Users created before P-02 have no "My pile"; D-144 only runs on sign-up. · P-02
 
 ---
 
@@ -289,11 +290,11 @@ Depends on: F-05
 - [x] Owner, editor, and viewer permissions enforced on the server for every action.
 - [x] Analytics: `project_created`, `invite_sent`, `invite_accepted`.
 
-### P-02 · Projects screen ("Your piles") · `in-progress` · branch `p-02-projects-screen`
+### P-02 · Projects screen ("Your piles") · `done` · branch `p-02-projects-screen`
 Depends on: P-01, F-08
-- [ ] Grid of projects as paper stacks, with the last message, unread count, and members.
-- [ ] "New project" flow.
-- [ ] Matches `design/prototype/Projects.dc.html`.
+- [x] Grid of projects as paper stacks, with the last message, unread count, and members.
+- [x] "New project" flow.
+- [x] Matches `design/prototype/Projects.dc.html`. Checked with screenshots at 1280px and 390px; project cards link to a placeholder page until P-03.
 
 ### P-03 · Zen chat feed · `todo`
 Depends on: P-01, F-08
@@ -301,6 +302,7 @@ Depends on: P-01, F-08
 - [ ] Header has only back, project name, and a menu (members, settings, search placeholder).
 - [ ] Composer: text, paste a link, drop or attach images. Enter sends.
 - [ ] Analytics: `entry_created` with kind and source.
+- [ ] Opening the feed sets `memberships.last_read_at`, which clears the unread count on the projects screen (added by P-02, D-147).
 
 ### P-04 · Core content types · `todo`
 Depends on: P-03, F-06
@@ -503,3 +505,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-26 · F-08 · Tokens generated from `design/tokens.json`, `@kasa/ui` physical-object components, `/design` showcase with keyboard and axe checks. · [#7](https://github.com/uxpetr/kasa/pull/7)
 - 2026-09-26 · F-07 · OpenTelemetry traces and redacted JSON logs for web, worker, and realtime, sent to Petr's personal Dash0; request ids; trace context through the job queue; error alert rule verified. · [#8](https://github.com/uxpetr/kasa/pull/8)
 - 2026-09-26 · P-01 · Project API: create, list, rename, archive; reusable 7-day invite links; owner/editor/viewer rules in one place and tested per role; `project_created`, `invite_sent`, `invite_accepted`. · [#9](https://github.com/uxpetr/kasa/pull/9)
+- 2026-09-26 · P-02 · "Your piles" projects screen: paper-stack cards with last message, unread count, members, and photo peek; New project dialog; automatic "My pile"; collapsed Archived section; `Pile` and avatar components. · [#10](https://github.com/uxpetr/kasa/pull/10)

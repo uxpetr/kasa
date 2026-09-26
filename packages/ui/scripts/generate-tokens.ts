@@ -11,6 +11,7 @@ export function render(): { ts: string; css: string } {
   const kebab = (s: string) => s.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
   const vars: string[] = [];
   for (const [k, v] of Object.entries(tokens.color as Record<string, string>)) vars.push(`--kasa-color-${kebab(k)}: ${v};`);
+  (tokens.avatar as string[]).forEach((v, i) => vars.push(`--kasa-avatar-${i}: ${v};`));
   vars.push(`--kasa-gradient-cta: ${tokens.gradient.ctaPrimary};`);
   // next/font sets --font-fraunces / --font-instrument-sans; the token stacks are the fallbacks.
   vars.push(`--kasa-font-display: var(--font-fraunces, ${tokens.font.display});`);
