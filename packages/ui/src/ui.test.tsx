@@ -1,0 +1,121 @@
+import { readFileSync } from "node:fs";
+import { renderToStaticMarkup } from "react-dom/server";
+import { describe, expect, it } from "vitest";
+import { render } from "../scripts/generate-tokens";
+import { BotButton, BotCard, CategoryChip, CategoryStamp, clampRotation, Composer, Note, noteVariant, Polaroid, Print, tiltFor, tokens } from "./index";
+
+describe("tokens", () => {
+  it("match design/tokens.json (run `pnpm --filter @kasa/ui tokens` if this fails)", () => {
+    const { ts, css } = render();
+    expect(readFileSync(new URL("./tokens.ts", import.meta.url), "utf8")).toBe(ts);
+    expect(readFileSync(new URL("./tokens.css", import.meta.url), "utf8")).toBe(css);
+  });
+
+  // WCAG 2 relative luminance and contrast ratio.
+  const luminance = (hex: string) => {
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
+  };
+  const contrast = (a: string, b: string) => {
+    const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+    return (hi! + 0.05) / (lo! + 0.05);
+  };
+  const c = tokens.color;
+
+  it.each([
+    ["ink on table", c.ink, c.table],
+    ["body ink on table", c.inkBody, c.table],
+    ["muted ink on table", c.inkMuted, c.table],
+    ["muted ink on the alt table", c.inkMuted, c.tableAlt],
+    ["ink on sticky", c.ink, c.sticky],
+    ["ink on bot paper", c.ink, c.botPaper],
+    ["stamp text on stamp", c.botStampText, c.botStampBg],
+    ["white on accent (Send)", "#FFFFFF", c.accent],
+    ["white on pine (bot button)", "#FFFFFF", c.bot],
+    ["white on ink (pressed chip)", "#FFFFFF", c.ink],
+  ])("%s has at least 4.5:1 contrast", (_name, fg, bg) => {
+    expect(contrast(fg, bg)).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+describe("rotation", () => {
+  it("clamps to the token limit", () => {
+    expect(tokens.motion.maxRotationDeg).toBe(2.5);
+    expect(clampRotation(5)).toBe(2.5);
+    expect(clampRotation(-4)).toBe(-2.5);
+    expect(clampRotation(1.2)).toBe(1.2);
+    expect(clampRotation(Number.NaN)).toBe(0);
+  });
+
+  it("gives each id a stable tilt within the limit", () => {
+    const ids = Array.from({ length: 200 }, (_, i) => `entry-${i}`);
+    for (const id of ids) {
+      expect(tiltFor(id)).toBe(tiltFor(id));
+      expect(Math.abs(tiltFor(id))).toBeLessThan(2.5);
+    }
+    expect(new Set(ids.map(tiltFor)).size).toBeGreaterThan(10);
+  });
+
+  it("is applied clamped on rendered objects", () => {
+    expect(renderToStaticMarkup(<Note text="hi" rotate={9} />)).toContain("--kasa-rotate:2.5deg");
+  });
+});
+
+describe("Note", () => {
+  it("uses a sticky for short text and a lined sheet for long text", () => {
+    expect(noteVariant("Last night in Kyoto: somewhere with an onsen?")).toBe("sticky");
+    expect(noteVariant("x".repeat(141))).toBe("lined");
+    expect(noteVariant("a\nb\nc\nd\ne")).toBe("lined");
+    expect(renderToStaticMarkup(<Note text="short" />)).toContain("kasa-sticky");
+    expect(renderToStaticMarkup(<Note text={"long ".repeat(40)} />)).toContain("kasa-lined");
+  });
+
+  it("escapes text instead of rendering it as HTML", () => {
+    expect(renderToStaticMarkup(<Note text="<img src=x onerror=alert(1)>" />)).not.toContain("<img");
+  });
+});
+
+describe("accessible markup", () => {
+  it("polaroids keep alt text and label the stack count", () => {
+    const html = renderToStaticMarkup(<Polaroid src="/a.jpg" alt="Kinkaku-ji" caption="Pond at 8am" moreCount={4} />);
+    expect(html).toContain('alt="Kinkaku-ji"');
+    expect(html).toContain('aria-label="4 more photos"');
+  });
+
+  it("interactive pins are labelled buttons that report their open state", () => {
+    const html = renderToStaticMarkup(
+      <Print src="/p.jpg" alt="Tokyo Tower" pins={[{ number: 1, x: 0.4, y: 0.3 }, { number: 2, x: 0.7, y: 0.2 }]} openPin={1} onSelectPin={() => {}} />,
+    );
+    expect(html).toContain('aria-label="Pin 1"');
+    expect(html).toContain('aria-expanded="true"');
+    expect(html).toContain('aria-expanded="false"');
+  });
+
+  it("static pins are hidden from screen readers", () => {
+    const html = renderToStaticMarkup(<Print src="/p.jpg" alt="Tokyo Tower" pins={[{ number: 1, x: 0.4, y: 0.3 }]} />);
+    expect(html).toContain('aria-hidden="true"');
+    expect(html).not.toContain("<button");
+  });
+
+  it("the bot card is labelled as the bot and its buttons are real buttons", () => {
+    const html = renderToStaticMarkup(
+      <BotCard actions={<BotButton>Yes, suggest</BotButton>}>Split them across days?</BotCard>,
+    );
+    expect(html).toContain('aria-label="Kasa Bot"');
+    expect(html).toMatch(/<button type="button"[^>]*>Yes, suggest<\/button>/);
+  });
+
+  it("chips expose their pressed state", () => {
+    expect(renderToStaticMarkup(<CategoryChip label="Sights" count={3} pressed onToggle={() => {}} />)).toContain('aria-pressed="true"');
+    expect(renderToStaticMarkup(<CategoryStamp>Plans</CategoryStamp>)).toContain("kasa-stamp");
+  });
+
+  it("the composer input has a label", () => {
+    const html = renderToStaticMarkup(<Composer label="Add to Japan 2027" value="" onChange={() => {}} onSubmit={() => {}} onAttach={() => {}} />);
+    const id = html.match(/<input id="([^"]+)"/)?.[1];
+    expect(id).toBeTruthy();
+    expect(html).toContain(`for="${id}"`);
+    expect(html).toContain("Add to Japan 2027");
+    expect(html).toContain('aria-label="Attach an image or file"');
+  });
+});
