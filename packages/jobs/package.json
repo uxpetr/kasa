@@ -11,6 +11,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@kasa/observability": "workspace:*",
     "pg-boss": "^12.34.0"
   },
   "devDependencies": {

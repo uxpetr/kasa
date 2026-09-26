@@ -4,12 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch --env-file-if-exists=../../.env src/index.ts",
+    "dev": "tsx watch --env-file-if-exists=../../.env --import ./src/telemetry.ts src/index.ts",
     "typecheck": "tsc",
     "test": "vitest run --passWithNoTests",
-    "start": "tsx src/index.ts"
+    "start": "tsx --import ./src/telemetry.ts src/index.ts"
   },
   "devDependencies": {
+    "@opentelemetry/context-async-hooks": "^2.11.0",
+    "@opentelemetry/core": "^2.11.0",
+    "@opentelemetry/sdk-trace-base": "^2.11.0",
     "@types/node": "^26.6.2",
     "sharp": "^0.35.4",
     "tsx": "^4.23.15",
@@ -20,6 +23,8 @@
   "dependencies": {
     "@kasa/db": "workspace:*",
     "@kasa/jobs": "workspace:*",
-    "@kasa/media": "workspace:*"
+    "@kasa/media": "workspace:*",
+    "@kasa/observability": "workspace:*",
+    "@opentelemetry/api": "^1.9.1"
   }
 }

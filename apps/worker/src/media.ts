@@ -1,10 +1,12 @@
 import { and, eq, schema, type Database } from "@kasa/db";
+import type { Logger } from "@kasa/observability";
 import { isImageType, keys, type Storage } from "@kasa/media";
 import { processImage, UnsupportedImageError } from "@kasa/media/process";
 
 export interface MediaDeps {
   db: Database;
   storage: Storage;
+  log?: Logger;
 }
 
 /**
@@ -17,6 +19,7 @@ export async function processUpload(deps: MediaDeps, uploadId: string): Promise<
 
   const rawKey = keys.raw(upload.projectId, upload.id);
   const markFailed = async (reason: string) => {
+    deps.log?.warn("upload rejected", { "upload.id": upload.id, "project.id": upload.projectId, reason });
     await deps.db
       .update(schema.uploads)
       .set({ status: "failed", failureReason: reason })
@@ -45,4 +48,10 @@ export async function processUpload(deps: MediaDeps, uploadId: string): Promise<
     .where(and(eq(schema.uploads.id, upload.id), eq(schema.uploads.status, "processing")));
   // Only the stripped copies are kept; the raw file may carry GPS location.
   await deps.storage.remove(rawKey);
+  deps.log?.info("upload processed", {
+    "upload.id": upload.id,
+    "project.id": upload.projectId,
+    content_type: upload.contentType,
+    size: upload.size,
+  });
 }

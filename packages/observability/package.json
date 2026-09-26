@@ -1,0 +1,38 @@
+{
+  "name": "@kasa/observability",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./node": "./src/node.ts",
+    "./register": "./src/register.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/api-logs": "^0.222.0",
+    "@opentelemetry/exporter-logs-otlp-proto": "^0.222.0",
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.222.0",
+    "@opentelemetry/instrumentation": "^0.222.0",
+    "@opentelemetry/instrumentation-http": "^0.222.0",
+    "@opentelemetry/instrumentation-pg": "^0.74.0",
+    "@opentelemetry/instrumentation-undici": "^0.32.0",
+    "@opentelemetry/resources": "^2.11.0",
+    "@opentelemetry/sdk-logs": "^0.222.0",
+    "@opentelemetry/sdk-node": "^0.222.0",
+    "@opentelemetry/sdk-trace-base": "^2.11.0",
+    "@opentelemetry/semantic-conventions": "^1.43.0",
+    "import-in-the-middle": "^3.5.1"
+  },
+  "devDependencies": {
+    "@opentelemetry/context-async-hooks": "^2.11.0",
+    "@opentelemetry/core": "^2.11.0",
+    "@types/node": "^26.6.2",
+    "typescript": "catalog:",
+    "vitest": "^5.0.2"
+  }
+}
