@@ -139,6 +139,10 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-140** · 2026-09-26 · Archive is owner-only and applies to everyone: the project moves to an Archived section and becomes read-only (no new entries, comments, or reactions) until the owner unarchives it. It is separate from delete, which is restorable for 30 days. · Petr
 - **D-141** · 2026-09-26 · No paywall on invites during the prototype; V-10 adds the paid-plan check from D-009. · Petr
 - **D-142** · 2026-09-26 · Project API (P-01): `GET`/`POST /api/projects`, `PATCH /api/projects/:id` (`name`, `archived`), `GET`/`POST`/`DELETE /api/projects/:id/invites`, `GET /api/invites/:token`, `POST /api/invites/:token/accept`. Non-members get 404, members without the right role 403, dead invite links 410. Permission rules live only in `apps/web/lib/access.ts` (`canAdd`, `canRename`, `canInvite`, `canArchive`), which every route uses; `canAdd` also refuses archived projects, so uploads and later entries/comments are read-only there. Invite tokens are 256-bit random strings stored in plain text so the owner can copy the live link again; making a new link revokes the old one. Link URL: `<BETTER_AUTH_URL>/invite/<token>` (page is P-14). Project names are 1–80 characters with whitespace collapsed. Analytics events carry only ids. Shared `Result` helpers are in `apps/web/lib/result.ts`. · P-01
+- **D-143** · 2026-09-26 · "+ New project" opens a small dialog asking for the name (Create / Cancel); creating opens the new project. Inviting happens later from the project menu. · Petr, P-02
+- **D-144** · 2026-09-26 · Every user gets a personal project named "My pile" on first sign-in, so the projects screen is never empty and captures always have a home. One-member projects show as the yellow sticky from the prototype. · Petr, P-02
+- **D-145** · 2026-09-26 · A project card's preview line is the last entry as "Name: text" for notes and bot messages ("You" for yourself, "Kasa Bot" for the bot), and "Name: what it is" otherwise: "Photo", "Link · <title>", "Capture from <site>", "File", and so on. When the last entry has an image, it peeks out as a polaroid like the Japan card. · Petr, P-02
+- **D-146** · 2026-09-26 · Archived projects sit in a collapsed "Archived (n)" section under the grid and look slightly faded when opened. · Petr, P-02
 
 ---
 
@@ -285,7 +289,7 @@ Depends on: F-05
 - [x] Owner, editor, and viewer permissions enforced on the server for every action.
 - [x] Analytics: `project_created`, `invite_sent`, `invite_accepted`.
 
-### P-02 · Projects screen ("Your piles") · `todo`
+### P-02 · Projects screen ("Your piles") · `in-progress` · branch `p-02-projects-screen`
 Depends on: P-01, F-08
 - [ ] Grid of projects as paper stacks, with the last message, unread count, and members.
 - [ ] "New project" flow.
