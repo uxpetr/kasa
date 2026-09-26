@@ -4,7 +4,7 @@ This is the living plan for building Kasa. Humans and Claude Code agents both re
 
 - Product source: [`docs/PRD.md`](docs/PRD.md), exported from Petr's Claude Doc. If this plan and the PRD disagree, the PRD wins for product behaviour; raise the conflict under [Open decisions](#open-decisions).
 - Design source: [`design/`](design/). See [`design/README.md`](design/README.md) for what each screen is, the design tokens, and the mascot art.
-- Last updated: 2026-09-26 · by: Claude (F-04)
+- Last updated: 2026-09-26 · by: Claude (F-05)
 
 ---
 
@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** F-05 (Google sign-in). F-07, F-08, and F-09 are also unblocked.
+**Next up:** F-06 (uploads and media pipeline). F-07, F-08, F-09, and F-10 are also unblocked; P-01 and P-08 open up with F-05 done.
 **Blocked:** nothing.
 
 ---
@@ -235,11 +235,11 @@ Depends on: F-05, F-09
 - [ ] `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` set in the Vercel project (not in the repo); the staging callback URL added to the Google OAuth client.
 - [ ] Sign in and out on staging works end to end.
 
-### F-05 · Google sign-in and sessions · `in-progress` · branch `f-05-auth`
+### F-05 · Google sign-in and sessions · `done` · branch `f-05-auth`
 Depends on: F-04
-- [ ] Sign in and out with Google; a user row is created on first sign-in.
-- [ ] Session design supports the extension: a short-lived token exchange from the web session, no separate extension login (D-010).
-- [ ] Analytics: `signed_up`, `signed_in`.
+- [x] Sign in and out with Google; a user row is created on first sign-in. (Verified locally with a real Google client.)
+- [x] Session design supports the extension: a short-lived token exchange from the web session, no separate extension login (D-010). See D-128.
+- [x] Analytics: `signed_up`, `signed_in`.
 
 ### F-06 · Uploads and media pipeline · `todo`
 Depends on: F-03, F-04
@@ -467,3 +467,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-26 · F-02 · GitHub Actions CI (lint, typecheck, test, build, Playwright smoke test); branch protection deferred (D-118). · [#2](https://github.com/uxpetr/kasa/pull/2)
 - 2026-09-26 · F-03 · Local Postgres and S3 storage via Docker Compose (`pnpm services`), documented `.env.example`, Vercel staging from `main` in `fra1`. · [#3](https://github.com/uxpetr/kasa/pull/3)
 - 2026-09-26 · F-04 · Schema v0 with Drizzle migrations, "Japan 2027" seed, feed paging index, DB tests in CI. · [#4](https://github.com/uxpetr/kasa/pull/4)
+- 2026-09-26 · F-05 · Google sign-in with Better Auth, extension one-time-code handoff, `signed_up`/`signed_in` events; verified with a real Google client locally. · [#5](https://github.com/uxpetr/kasa/pull/5)
