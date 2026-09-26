@@ -1,0 +1,9 @@
+{
+  "identities": [
+    {
+      "name": "kasa-dev",
+      "credentials": [{ "accessKey": "kasa-dev", "secretKey": "kasa-dev-secret" }],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}
