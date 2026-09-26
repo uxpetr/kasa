@@ -7,3 +7,5 @@ export { PinMarker, Print, type Pin } from "./components/print";
 export { BotButton, BotCard } from "./components/bot-card";
 export { CategoryChip, CategoryStamp } from "./components/category";
 export { Composer } from "./components/composer";
+export { Avatar, AvatarStack, avatarColor, initialOf, type Person } from "./components/avatar";
+export { Pile, type PileProps } from "./components/pile";

@@ -3,6 +3,7 @@ import { createTestDatabase, type TestDatabase } from "@kasa/db/testing";
 import { setAnalyticsSink, type TrackedEvent } from "@kasa/shared";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { createAuth } from "./create-auth";
+import { listProjects } from "./projects";
 
 const baseUrl = process.env.DATABASE_URL;
 
@@ -43,13 +44,23 @@ describe.skipIf(!baseUrl)("auth", () => {
 
   const bearer = (token: string) => new Headers({ authorization: `Bearer ${token}` });
 
-  it("creates a user row on first sign-in and emits signed_up and signed_in", async () => {
+  it("gives every new user a personal \"My pile\" (D-144)", async () => {
+    const { user } = await signUp("pile@example.com");
+    const projects = await listProjects(testDb.db, user.id);
+    expect(projects).toEqual([expect.objectContaining({ name: "My pile", role: "owner", memberCount: 1 })]);
+    expect(events).toContainEqual(
+      expect.objectContaining({ event: "project_created", userId: user.id, properties: { projectId: projects[0]!.id, personal: true } }),
+    );
+  });
+
+  it("creates a user row on first sign-in and emits signed_up, project_created (My pile), and signed_in", async () => {
     const { user } = await signUp("first@example.com");
     const [row] = await testDb.db.select().from(schema.users).where(eq(schema.users.id, user.id));
     expect(row).toMatchObject({ email: "first@example.com", emailVerified: true });
     expect(user.id).toMatch(/^[0-9a-f-]{36}$/);
     expect(events.map((e) => [e.event, e.userId])).toEqual([
       ["signed_up", user.id],
+      ["project_created", user.id],
       ["signed_in", user.id],
     ]);
   });

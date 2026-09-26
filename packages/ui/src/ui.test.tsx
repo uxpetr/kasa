@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { render } from "../scripts/generate-tokens";
-import { BotButton, BotCard, CategoryChip, CategoryStamp, clampRotation, Composer, Note, noteVariant, Polaroid, Print, tiltFor, tokens } from "./index";
+import { avatarColor, AvatarStack, BotButton, BotCard, CategoryChip, CategoryStamp, clampRotation, Composer, initialOf, Note, noteVariant, Pile, Polaroid, Print, tiltFor, tokens } from "./index";
 
 describe("tokens", () => {
   it("match design/tokens.json (run `pnpm --filter @kasa/ui tokens` if this fails)", () => {
@@ -22,7 +22,7 @@ describe("tokens", () => {
   };
   const c = tokens.color;
 
-  it.each([
+  it.each<[string, string, string]>([
     ["ink on table", c.ink, c.table],
     ["body ink on table", c.inkBody, c.table],
     ["muted ink on table", c.inkMuted, c.table],
@@ -33,6 +33,8 @@ describe("tokens", () => {
     ["white on accent (Send)", "#FFFFFF", c.accent],
     ["white on pine (bot button)", "#FFFFFF", c.bot],
     ["white on ink (pressed chip)", "#FFFFFF", c.ink],
+    ["white on muted ink (+N avatar)", "#FFFFFF", c.inkMuted],
+    ...tokens.avatar.map((bg): [string, string, string] => [`white on avatar ${bg}`, "#FFFFFF", bg]),
   ])("%s has at least 4.5:1 contrast", (_name, fg, bg) => {
     expect(contrast(fg, bg)).toBeGreaterThanOrEqual(4.5);
   });
@@ -117,5 +119,68 @@ describe("accessible markup", () => {
     expect(html).toContain(`for="${id}"`);
     expect(html).toContain("Add to Japan 2027");
     expect(html).toContain('aria-label="Attach an image or file"');
+  });
+});
+
+describe("avatars", () => {
+  it("use the first letter of the name", () => {
+    expect(initialOf("mika tanaka")).toBe("M");
+    expect(initialOf("  Émile")).toBe("É");
+    expect(initialOf("🙂 Jo")).toBe("J");
+    expect(initialOf("")).toBe("?");
+  });
+
+  it("give each person a stable palette colour", () => {
+    expect(avatarColor("user-1")).toBe(avatarColor("user-1"));
+    expect(tokens.avatar).toContain(avatarColor("user-2"));
+  });
+
+  it("collapse members past the limit into +N and name everyone for screen readers", () => {
+    const people = ["Aiko", "Mika", "Jun", "Petr", "Sara", "Lena", "Rui"].map((name, i) => ({ id: `u${i}`, name }));
+    const html = renderToStaticMarkup(<AvatarStack people={people} max={4} label="7 members" />);
+    expect(html).toContain("+3");
+    expect(html).toContain('aria-label="7 members"');
+    expect(html.match(/class="kasa-avatar"/g)).toHaveLength(4);
+  });
+});
+
+describe("Pile", () => {
+  const members = [
+    { id: "a", name: "Aiko" },
+    { id: "m", name: "Mika" },
+  ];
+
+  it("draws a stack of paper with title, unread badge, preview, and members", () => {
+    const html = renderToStaticMarkup(
+      <Pile id="p1" href="/projects/p1" title="Japan 2027" preview="Mika: Yes!" unread={3} members={members} meta="Yesterday" />,
+    );
+    expect(html.match(/kasa-pile-sheet/g)).toHaveLength(2);
+    expect(html).toContain('href="/projects/p1"');
+    expect(html).toContain("3 new");
+    expect(html).toContain("Mika: Yes!");
+    expect(html).toContain("Yesterday");
+    expect(html).toContain("2 members: Aiko, Mika");
+  });
+
+  it("shows no badge without unread entries", () => {
+    expect(renderToStaticMarkup(<Pile id="p1" href="#" title="T" members={members} />)).not.toContain(" new<");
+  });
+
+  it("draws a one-member project as a sticky without sheets or avatars", () => {
+    const html = renderToStaticMarkup(<Pile id="p1" href="#" title="My pile" members={[members[0]!]} personal />);
+    expect(html).toContain("data-personal");
+    expect(html).not.toContain("kasa-pile-sheet");
+    expect(html).not.toContain("kasa-avatar");
+  });
+
+  it("lets a peeking photo replace the time and keeps every tilt under the limit", () => {
+    const html = renderToStaticMarkup(
+      <Pile id="p1" href="#" title="T" members={members} meta="Mon" peek={{ src: "/x.jpg", alt: "A street" }} />,
+    );
+    expect(html).toContain('alt="A street"');
+    expect(html).not.toContain("Mon");
+    for (const [, deg] of html.matchAll(/rotate\((-?[\d.]+)deg\)/g)) {
+      expect(Math.abs(Number(deg))).toBeLessThanOrEqual(tokens.motion.maxRotationDeg);
+    }
   });
 });

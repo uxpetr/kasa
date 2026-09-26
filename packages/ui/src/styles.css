@@ -303,6 +303,126 @@ button.kasa-pin::after {
   cursor: default;
 }
 
+/* Projects screen: a pile of paper per project (P-02, design/prototype/Projects.dc.html) */
+.kasa-pile {
+  position: relative;
+}
+.kasa-pile-sheet {
+  position: absolute;
+  inset: 0;
+  background: var(--kasa-color-paper);
+  border-radius: var(--kasa-radius-paper);
+  box-shadow: var(--kasa-shadow-object);
+}
+.kasa-pile-top {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-sizing: border-box;
+  min-height: 200px;
+  padding: 24px;
+  background: var(--kasa-color-paper);
+  border-radius: var(--kasa-radius-paper);
+  box-shadow: var(--kasa-shadow-object);
+  color: var(--kasa-color-ink);
+  text-decoration: none;
+  transition: translate 120ms ease-out;
+}
+.kasa-pile-top:hover {
+  translate: 0 -2px;
+}
+.kasa-pile-top:focus-visible {
+  outline: 2px solid var(--kasa-color-ink);
+  outline-offset: 4px;
+}
+.kasa-pile[data-personal] .kasa-pile-top {
+  background: var(--kasa-color-sticky);
+  border-radius: var(--kasa-radius-sticky);
+}
+.kasa-pile[data-archived] {
+  opacity: 0.7;
+}
+.kasa-pile-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.kasa-pile-title {
+  font: 600 28px/1.15 var(--kasa-font-display);
+  overflow-wrap: anywhere;
+}
+.kasa-pile-unread {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: var(--kasa-color-accent);
+  color: #fff;
+  font-size: var(--kasa-font-size-meta);
+  font-weight: 600;
+}
+.kasa-pile-preview {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  color: var(--kasa-color-ink-body);
+  font-size: var(--kasa-font-size-body);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.kasa-pile-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+}
+.kasa-pile-meta {
+  color: var(--kasa-color-ink-muted);
+  font-size: var(--kasa-font-size-meta);
+}
+.kasa-pile-peek {
+  position: absolute;
+  right: -20px;
+  bottom: -18px;
+  width: 132px;
+  box-sizing: border-box;
+  padding: 6px 6px 18px;
+  background: var(--kasa-color-paper);
+  box-shadow: var(--kasa-shadow-object);
+}
+.kasa-pile-peek img {
+  display: block;
+  width: 100%;
+  height: 84px;
+  object-fit: cover;
+}
+
+.kasa-avatar-stack {
+  display: inline-flex;
+}
+.kasa-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  border: 2px solid var(--kasa-color-paper);
+  border-radius: 50%;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+.kasa-avatar-stack .kasa-avatar + .kasa-avatar {
+  margin-left: -8px;
+}
+.kasa-avatar-more {
+  width: 30px;
+  height: 30px;
+  background: var(--kasa-color-ink-muted);
+}
+
 /* Visible keyboard focus on every control */
 .kasa-pin:focus-visible,
 .kasa-bot-button:focus-visible,

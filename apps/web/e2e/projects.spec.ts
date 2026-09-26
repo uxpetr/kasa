@@ -1,35 +1,22 @@
-import { randomBytes, randomUUID } from "node:crypto";
-import { createDb, inArray, schema } from "@kasa/db";
 import { expect, test, type APIRequestContext } from "@playwright/test";
+import { createUsers } from "./support/users";
 
 // Drives the real API with bearer sessions (D-128) created straight in the database.
 test.describe("projects and invites API", () => {
   test.skip(!process.env.DATABASE_URL, "DATABASE_URL not set");
 
-  const users = { owner: randomUUID(), joiner: randomUUID(), outsider: randomUUID() };
-  const tokens = {} as Record<keyof typeof users, string>;
-  let conn: ReturnType<typeof createDb>;
+  let setup: Awaited<ReturnType<typeof createUsers<"owner" | "joiner" | "outsider">>>;
 
   test.beforeAll(async () => {
-    conn = createDb(process.env.DATABASE_URL!);
-    for (const [name, id] of Object.entries(users) as [keyof typeof users, string][]) {
-      tokens[name] = randomBytes(24).toString("base64url");
-      await conn.db.insert(schema.users).values({ id, name, email: `e2e-${name}-${id}@example.com` });
-      await conn.db
-        .insert(schema.sessions)
-        .values({ userId: id, token: tokens[name], expiresAt: new Date(Date.now() + 3_600_000) });
-    }
+    setup = await createUsers(["owner", "joiner", "outsider"]);
   });
 
   test.afterAll(async () => {
-    const ids = Object.values(users);
-    await conn.db.delete(schema.projects).where(inArray(schema.projects.ownerId, ids));
-    await conn.db.delete(schema.users).where(inArray(schema.users.id, ids));
-    await conn.close();
+    await setup?.cleanup();
   });
 
-  const as = (request: APIRequestContext, who: keyof typeof users) => {
-    const headers = { authorization: `Bearer ${tokens[who]}` };
+  const as = (request: APIRequestContext, who: "owner" | "joiner" | "outsider") => {
+    const headers = setup.users[who].headers;
     return {
       get: (url: string) => request.get(url, { headers }),
       post: (url: string, data?: unknown) => request.post(url, { headers, data }),

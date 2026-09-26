@@ -4,6 +4,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { bearer } from "better-auth/plugins/bearer";
 import { oneTimeToken } from "better-auth/plugins/one-time-token";
+import { createPersonalProject } from "./projects";
 
 export interface AuthConfig {
   db: Database;
@@ -40,7 +41,14 @@ export function createAuth(config: AuthConfig) {
       : {},
     advanced: { database: { generateId: "uuid" } },
     databaseHooks: {
-      user: { create: { after: async (user) => void (await track("signed_up", user.id)) } },
+      user: {
+        create: {
+          after: async (user) => {
+            await track("signed_up", user.id);
+            await createPersonalProject(config.db, user.id);
+          },
+        },
+      },
       session: { create: { after: async (session) => void (await track("signed_in", session.userId)) } },
     },
     plugins: [
