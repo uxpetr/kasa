@@ -1,0 +1,55 @@
+# Local services for development. Credentials here are dev-only defaults
+# and match .env.example; never reuse them anywhere else.
+name: kasa
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: kasa
+      POSTGRES_PASSWORD: kasa
+      POSTGRES_DB: kasa
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kasa -d kasa"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  # S3-compatible object storage (stands in for R2/S3 locally).
+  s3:
+    image: chrislusf/seaweedfs:4.47
+    command: server -dir=/data -s3 -s3.port=8333 -s3.config=/etc/seaweedfs/s3.json
+    ports:
+      - "8333:8333"
+    volumes:
+      - s3-data:/data
+      - ./infra/seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8333/healthz"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  # Creates the media bucket once S3 is reachable, then exits.
+  s3-init:
+    image: amazon/aws-cli:2.37.4
+    depends_on:
+      s3:
+        condition: service_healthy
+    environment:
+      AWS_ACCESS_KEY_ID: kasa-dev
+      AWS_SECRET_ACCESS_KEY: kasa-dev-secret
+      AWS_DEFAULT_REGION: us-east-1
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        aws --endpoint-url http://s3:8333 s3api head-bucket --bucket kasa-media 2>/dev/null \
+          || aws --endpoint-url http://s3:8333 s3 mb s3://kasa-media
+
+volumes:
+  postgres-data:
+  s3-data:

@@ -13,16 +13,17 @@ This folder is the starting point for building it with Claude Code.
 
 ## Run it locally
 
-Needs Node 22+ and pnpm 11.
+Needs Node 22+, pnpm 11, and Docker.
 
 ```sh
-pnpm install     # installs every workspace
+pnpm install && cp .env.example .env
+pnpm services    # local Postgres (5432) and S3-compatible storage (8333)
 pnpm dev         # web app on http://localhost:3000, extension dev build in apps/extension/.output
 pnpm test        # unit tests
 pnpm lint && pnpm typecheck
 ```
 
-`pnpm build` builds the web app and the extension. To load the extension, open `chrome://extensions`, turn on Developer mode, and load `apps/extension/.output/chrome-mv3`.
+`pnpm services:down` stops the local services (data is kept in Docker volumes). `pnpm build` builds the web app and the extension. To load the extension, open `chrome://extensions`, turn on Developer mode, and load `apps/extension/.output/chrome-mv3`.
 
 ## Layout
 

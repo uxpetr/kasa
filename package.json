@@ -12,7 +12,9 @@
     "lint": "eslint .",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "test:e2e": "turbo run test:e2e"
+    "test:e2e": "turbo run test:e2e",
+    "services": "docker compose up -d --wait postgres s3 && docker compose run --rm s3-init",
+    "services:down": "docker compose down"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
