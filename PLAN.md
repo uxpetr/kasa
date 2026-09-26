@@ -104,14 +104,19 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-108** · 2026-09-26 · *Proposed:* OpenTelemetry tracing and structured logs from day one, exported over OTLP. · Initial plan
 - **D-109** · 2026-09-26 · *Proposed:* Stripe for billing (phase 2). Transactional email through a provider such as Postmark or Resend. · Initial plan
 
+**Technical (confirmed)**
+
+- **D-110** · 2026-09-26 · D-100 to D-109 confirmed as proposed; each "Proposed" entry above is now locked. The extension uses **WXT** (resolves the WXT/CRXJS choice in D-105). · Petr, OD-01
+- **D-111** · 2026-09-26 · Hosting in the **EU**: web app on Vercel (`fra1`), Postgres on Neon (EU region), object storage on an EU S3-compatible bucket (Cloudflare R2 EU jurisdiction or AWS `eu-central-1`, chosen in F-03), realtime and worker services on Fly.io or Railway in an EU region (chosen in F-03). · Petr, OD-02
+
 ---
 
 ## Open decisions
 
 Questions only Petr can answer. Agents add to this list and don't guess. When one is answered, move the answer to the Decision log and tick it here.
 
-- [ ] **OD-01** Confirm or change the proposed stack (D-100 to D-109). Blocks F-01.
-- [ ] **OD-02** Hosting and region. Suggested: EU hosting, since users and the company are in Finland, for GDPR. Blocks F-03.
+- [x] **OD-01** → D-110. Confirm or change the proposed stack (D-100 to D-109). Blocks F-01.
+- [x] **OD-02** → D-111. Hosting and region. Suggested: EU hosting, since users and the company are in Finland, for GDPR. Blocks F-03.
 - [ ] **OD-03** Pilot length and the numeric pass bar for gate G1 (for example, share of captures with at least one reply). Blocks P-13.
 - [ ] **OD-04** Positioning line for the product (PRD open question).
 - [ ] **OD-05** Kasa Bot: free or paid, given model costs, and which phase it first ships in. The PRD has it in v1; confirm. Blocks V-04.
@@ -166,7 +171,7 @@ packages/
 
 Goal: an empty but real product skeleton that every later task builds on.
 
-### F-01 · Stack decision and monorepo · `todo`
+### F-01 · Stack decision and monorepo · `in-progress` · branch `setup-kasa-repo`
 Depends on: OD-01
 - [ ] Record the confirmed stack as decisions (supersede D-100 to D-109 as needed).
 - [ ] Monorepo created with the layout under [Architecture](#architecture); `pnpm install`, `pnpm lint`, `pnpm typecheck`, and `pnpm test` all run from the root.
