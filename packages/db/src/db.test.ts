@@ -1,35 +1,25 @@
-import { randomBytes } from "node:crypto";
 import { and, asc, desc, eq, isNull, lt, or } from "drizzle-orm";
-import postgres from "postgres";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { createDb, type Database } from "./client";
-import { runMigrations } from "./migrate";
+import type { Database } from "./client";
 import * as s from "./schema";
 import { SEED, seed } from "./seed";
+import { createTestDatabase, type TestDatabase } from "./testing";
 
 // Runs against a throwaway database next to DATABASE_URL, so local data is never touched.
 const baseUrl = process.env.DATABASE_URL;
 
 describe.skipIf(!baseUrl)("database", () => {
-  const dbName = `kasa_test_${randomBytes(4).toString("hex")}`;
-  let admin: postgres.Sql;
+  let testDb: TestDatabase;
   let db: Database;
-  let close: () => Promise<void>;
 
   beforeAll(async () => {
-    admin = postgres(baseUrl!, { max: 1, onnotice: () => {} });
-    await admin.unsafe(`create database ${dbName}`);
-    const url = new URL(baseUrl!);
-    url.pathname = `/${dbName}`;
-    await runMigrations(url.toString());
-    ({ db, close } = createDb(url.toString(), { max: 2 }));
+    testDb = await createTestDatabase(baseUrl!);
+    db = testDb.db;
     await seed(db, new Date("2026-09-26T12:00:00"));
   });
 
   afterAll(async () => {
-    await close?.();
-    await admin?.unsafe(`drop database if exists ${dbName} with (force)`);
-    await admin?.end();
+    await testDb?.drop();
   });
 
   it("creates every table in the v0 data model", async () => {
@@ -38,10 +28,10 @@ describe.skipIf(!baseUrl)("database", () => {
     );
     expect(tables.map((t) => t.table_name).sort()).toEqual(
       [
-        "captures", "categories", "comments", "entries", "entry_categories", "entry_media",
+        "accounts", "captures", "categories", "comments", "entries", "entry_categories", "entry_media",
         "invites", "link_previews", "memberships", "pins", "project_passes", "projects",
-        "reactions", "subscriptions", "telegram_identities", "telegram_links",
-        "telegram_messages", "users",
+        "reactions", "sessions", "subscriptions", "telegram_identities", "telegram_links",
+        "telegram_messages", "users", "verifications",
       ].sort(),
     );
   });

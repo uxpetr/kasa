@@ -31,7 +31,7 @@ Keep these current:
 - Lint and types: `pnpm lint && pnpm typecheck`
 - Build: `pnpm build`
 - Local services (Postgres, S3): `pnpm services` / `pnpm services:down`
-- Database: `pnpm db:migrate`, `pnpm db:seed`; after editing `packages/db/src/schema.ts`, `pnpm db:generate` and commit the migration. Never edit a migration that has been merged.
+- Database: `pnpm db:migrate`, `pnpm db:seed`; after editing `packages/db/src/schema.ts`, `pnpm db:generate` and commit the migration. Never edit a migration that has been merged. drizzle-kit prompts when a change looks like a rename; split such changes into two migrations.
 - Vercel CLI: always pass `--global-config ~/.config/vercel-kasa` (personal account, D-121); the default CLI login is a different account.
 - One workspace: `pnpm --filter @kasa/<name> <script>`
 - Shared dependency versions (TypeScript) live in the `catalog:` in `pnpm-workspace.yaml`.

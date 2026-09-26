@@ -1,4 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
+import { loadEnv } from "vite";
+
+// Same env as the app: repo-root .env locally, job env in CI.
+Object.assign(process.env, { ...loadEnv("test", "../..", ""), ...process.env });
 
 const port = 3100;
 
@@ -15,6 +19,7 @@ export default defineConfig({
   // Runs against a production build; `pnpm build` must run first.
   webServer: {
     command: `pnpm start --port ${port}`,
+    env: { BETTER_AUTH_URL: `http://localhost:${port}` },
     url: `http://localhost:${port}`,
     reuseExistingServer: !process.env.CI,
   },
