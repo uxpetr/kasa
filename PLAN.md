@@ -134,6 +134,10 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-135** · 2026-09-26 · UI: `@kasa/ui` holds React components styled with plain CSS (`kasa-*` classes in `styles.css`) and CSS variables generated from `design/tokens.json` by `pnpm --filter @kasa/ui tokens`; a test fails if they drift. Fonts are self-hosted with `next/font`. `/design` is the component showcase instead of Storybook. Details that were open in the prototype: rotation is clamped to 2.5° even where the prototype tilts photos up to 5° (the tokens and design rules win); a note becomes a lined sheet past 140 characters or 4 lines; chips, pins, and bot buttons get invisible padding so the tap area reaches 44px (`hitTarget`). The sample photos were copied to `apps/web/public/samples`; check their licences before anything public (V-12). · F-08
 - **D-136** · 2026-09-26 · Traces, logs, and error alerts go to Petr's **personal Dash0 account** over OTLP (D-108), kept separate from his work Dash0 organization. Credentials live only in `.env` and Vercel env settings. · Petr, OD-12
 - **D-137** · 2026-09-26 · Observability: `@kasa/observability` holds the JSON logger (every line carries `trace_id`/`span_id` and also goes out as an OTel log record), key-based redaction (tokens, secrets, cookies, emails, names, phone numbers, addresses, IPs, message bodies; nested objects are logged only by shape; exception messages are redacted too, only the type is kept), and trace-context helpers. Web uses `@vercel/otel` (`instrumentation.ts`, service `kasa-web`) and logs server errors from `onRequestError`; `proxy.ts` gives every request an `x-request-id` (kept from the caller if it looks sane) that routes log and responses return. Worker and realtime use the Node SDK (`kasa-worker`, `kasa-realtime`) preloaded with `--import`, with HTTP, undici and `pg` instrumentation through in-thread `module.registerHooks` loader hooks (async `module.register` fallback on older Node). Job payloads carry W3C trace context (`_trace`), so a worker span continues the request that queued it. The extension sends no telemetry of its own (it only has `activeTab`); its API calls are traced on the server. Nothing is exported unless `OTEL_EXPORTER_OTLP_ENDPOINT` is set; CI and tests never export. All environments share Dash0's `default` dataset and are told apart by `deployment.environment.name` (`local`, `preview`, `staging`; Vercel's Production environment is staging for now); Dash0 accepts unknown dataset names with 200 and drops the data, so don't invent one. The OTEL vars are set on Vercel for Production and Preview, the auth header as a sensitive var. · F-07, Petr
+- **D-138** · 2026-09-26 · Invite links are reusable by anyone who has them for 7 days; the owner can revoke a link or create a new one. Accepting adds the person as editor (P-01). · Petr
+- **D-139** · 2026-09-26 · Only the owner invites (inviting is what makes a project shared, which D-009 ties to the owner's plan). The owner and editors can rename a project. · Petr
+- **D-140** · 2026-09-26 · Archive is owner-only and applies to everyone: the project moves to an Archived section and becomes read-only (no new entries, comments, or reactions) until the owner unarchives it. It is separate from delete, which is restorable for 30 days. · Petr
+- **D-141** · 2026-09-26 · No paywall on invites during the prototype; V-10 adds the paid-plan check from D-009. · Petr
 
 ---
 
@@ -273,7 +277,7 @@ Depends on: F-01
 
 Goal: prove the core loop (capture on a website, discuss in a shared project, come back later) with one trip-planning group. Keep everything else bare.
 
-### P-01 · Projects and invites · `todo`
+### P-01 · Projects and invites · `in-progress` · branch `p-01-projects`
 Depends on: F-05
 - [ ] Create, rename, and archive a project.
 - [ ] Invite by link; accepting adds a membership as editor.
