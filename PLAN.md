@@ -191,7 +191,7 @@ Depends on: F-01
 - [x] End-to-end test runner (for example Playwright) wired in with one smoke test.
 - [x] ~~Main branch is protected: CI must pass.~~ Deferred by D-118: needs GitHub Pro; merge only green PRs instead.
 
-### F-03 · Environments and config · `todo`
+### F-03 · Environments and config · `in-progress` · branch `f-03-envs`
 Depends on: F-01, OD-02
 - [ ] Local Postgres and object storage via Docker Compose.
 - [ ] `.env.example` with every variable documented; secrets never committed.
