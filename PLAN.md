@@ -224,7 +224,7 @@ Depends on: F-01
 Depends on: F-06
 - [ ] `pnpm db:seed` uploads the prototype images (`design/prototype/img/`) to the local bucket under the `seed/` keys the seed data already uses, so the demo renders with pictures.
 
-### F-05 · Google sign-in and sessions · `todo`
+### F-05 · Google sign-in and sessions · `in-progress` · branch `f-05-auth`
 Depends on: F-04
 - [ ] Sign in and out with Google; a user row is created on first sign-in.
 - [ ] Session design supports the extension: a short-lived token exchange from the web session, no separate extension login (D-010).
