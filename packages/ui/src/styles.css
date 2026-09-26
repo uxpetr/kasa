@@ -1,0 +1,330 @@
+/* Kasa physical objects (F-08). Values come from design/prototype; colours, radii,
+   and the one shadow come from tokens.css. Rotation is set per object through
+   --kasa-rotate and clamped in JS to the token limit. */
+@import "./tokens.css";
+
+.kasa-table {
+  background: var(--kasa-color-table);
+  color: var(--kasa-color-ink);
+  font-family: var(--kasa-font-body);
+}
+
+.kasa-object {
+  box-sizing: border-box;
+  box-shadow: var(--kasa-shadow-object);
+  transform: rotate(var(--kasa-rotate, 0deg));
+}
+
+/* Note: sticky for short text, lined sheet for longer text */
+.kasa-sticky {
+  width: 260px;
+  max-width: 100%;
+  padding: 14px 18px 18px;
+  background: var(--kasa-color-sticky);
+  border-radius: var(--kasa-radius-sticky);
+  font-size: var(--kasa-font-size-body);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.kasa-lined {
+  width: 320px;
+  max-width: 100%;
+  padding: 14px 16px 18px;
+  background: var(--kasa-color-paper) repeating-linear-gradient(var(--kasa-color-paper) 0 21px, #e7e2d8 21px 22px);
+  border-radius: var(--kasa-radius-sticky);
+  font-size: var(--kasa-font-size-body);
+  line-height: 22px;
+  overflow-wrap: anywhere;
+}
+
+/* Photo */
+.kasa-polaroid {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 190px;
+  padding: 7px 7px 12px;
+  background: var(--kasa-color-paper);
+}
+.kasa-polaroid img {
+  display: block;
+  width: 100%;
+  height: var(--kasa-image-height, 130px);
+  object-fit: cover;
+}
+.kasa-polaroid-caption {
+  padding: 0 2px;
+  font-size: var(--kasa-font-size-meta);
+  font-weight: 600;
+}
+.kasa-count {
+  position: absolute;
+  right: -10px;
+  top: -10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 26px;
+  min-width: 26px;
+  padding: 0 7px;
+  border-radius: 13px;
+  background: var(--kasa-color-ink);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Capture and drawing: a taped print */
+.kasa-print {
+  position: relative;
+  width: 330px;
+  max-width: 100%;
+  padding: 8px 8px 12px;
+  background: var(--kasa-color-paper);
+}
+.kasa-tape {
+  position: absolute;
+  left: calc(50% - 40px);
+  top: -9px;
+  width: 80px;
+  height: 18px;
+  background: var(--kasa-color-tape);
+  transform: rotate(-2deg);
+}
+.kasa-print-image {
+  position: relative;
+}
+.kasa-print-image img {
+  display: block;
+  width: 100%;
+  height: var(--kasa-image-height, 150px);
+  object-fit: cover;
+}
+.kasa-print-footer {
+  padding: 8px 2px 0;
+  font-size: var(--kasa-font-size-meta);
+  line-height: 1.4;
+}
+
+/* Numbered pin on a capture; x/y are fractions of the image */
+.kasa-pin {
+  position: absolute;
+  left: calc(var(--kasa-pin-x) * 100%);
+  top: calc(var(--kasa-pin-y) * 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin: -24px 0 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 12px 12px 12px 2px;
+  background: var(--kasa-color-accent);
+  color: #fff;
+  font: 600 12px/1 var(--kasa-font-body);
+  transition: transform 120ms ease-out;
+}
+button.kasa-pin {
+  cursor: pointer;
+}
+/* Invisible padding brings the tap area up to the 44px minimum. */
+button.kasa-pin::after {
+  content: "";
+  position: absolute;
+  inset: -10px;
+}
+.kasa-pin[aria-expanded="true"] {
+  transform: scale(1.25);
+  transform-origin: bottom left;
+}
+
+/* Kasa Bot: pine index card with the k mark */
+.kasa-bot {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 360px;
+  max-width: 100%;
+  padding: 12px 14px 14px;
+  background: var(--kasa-color-bot-paper);
+  border: 1px solid var(--kasa-color-bot-line);
+  border-radius: var(--kasa-radius-bot-card);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.kasa-bot-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--kasa-font-size-meta);
+  font-weight: 600;
+}
+.kasa-bot-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: var(--kasa-color-bot);
+  color: #fff;
+  font: 600 15px/1 var(--kasa-font-display);
+}
+.kasa-bot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.kasa-bot-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 15px;
+  font: 600 var(--kasa-font-size-meta) / 1 var(--kasa-font-body);
+  cursor: pointer;
+}
+.kasa-bot-button::after {
+  content: "";
+  position: absolute;
+  inset: -7px 0;
+}
+.kasa-bot-button[data-variant="primary"] {
+  border: 0;
+  background: var(--kasa-color-bot);
+  color: #fff;
+}
+.kasa-bot-button[data-variant="secondary"] {
+  border: 1px solid #c9d8cf;
+  background: transparent;
+  color: var(--kasa-color-bot-stamp-text);
+}
+
+/* Categories */
+.kasa-stamp {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 10px;
+  background: var(--kasa-color-bot-stamp-bg);
+  color: var(--kasa-color-bot-stamp-text);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.kasa-chip {
+  position: relative;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid #e2ddd2;
+  border-radius: var(--kasa-radius-chip);
+  background: var(--kasa-color-paper);
+  color: var(--kasa-color-ink);
+  font: 500 14px/1 var(--kasa-font-body);
+  cursor: pointer;
+}
+.kasa-chip::after {
+  content: "";
+  position: absolute;
+  inset: -4px 0;
+}
+.kasa-chip[aria-pressed="true"] {
+  border-color: var(--kasa-color-ink);
+  background: var(--kasa-color-ink);
+  color: #fff;
+}
+.kasa-chip-count {
+  margin-left: 4px;
+  opacity: 0.7;
+}
+
+/* Composer */
+.kasa-composer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 6px 6px 8px;
+  background: var(--kasa-color-paper);
+  border: 1px solid var(--kasa-color-line);
+  border-radius: 26px;
+  box-shadow: var(--kasa-shadow-object);
+}
+.kasa-composer:focus-within {
+  border-color: var(--kasa-color-line-strong);
+}
+.kasa-composer-attach {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--kasa-hit-target);
+  height: var(--kasa-hit-target);
+  border: 0;
+  border-radius: 22px;
+  background: var(--kasa-color-table);
+  cursor: pointer;
+}
+.kasa-composer-input {
+  flex-grow: 1;
+  min-width: 0;
+  height: var(--kasa-hit-target);
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--kasa-color-ink);
+  font: var(--kasa-font-size-body) var(--kasa-font-body);
+}
+.kasa-composer-input::placeholder {
+  color: var(--kasa-color-ink-muted);
+}
+.kasa-composer-send {
+  flex-shrink: 0;
+  height: var(--kasa-hit-target);
+  padding: 0 20px;
+  border: 0;
+  border-radius: var(--kasa-radius-button);
+  background: var(--kasa-color-accent);
+  color: #fff;
+  font: 600 var(--kasa-font-size-body) / 1 var(--kasa-font-body);
+  cursor: pointer;
+}
+.kasa-composer-send:hover {
+  background: var(--kasa-color-accent-hover);
+}
+.kasa-composer-send:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Visible keyboard focus on every control */
+.kasa-pin:focus-visible,
+.kasa-bot-button:focus-visible,
+.kasa-chip:focus-visible,
+.kasa-composer-attach:focus-visible,
+.kasa-composer-send:focus-visible {
+  outline: 2px solid var(--kasa-color-ink);
+  outline-offset: 2px;
+}
+.kasa-composer:has(.kasa-composer-input:focus-visible) {
+  outline: 2px solid var(--kasa-color-ink);
+  outline-offset: 2px;
+}
+
+.kasa-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

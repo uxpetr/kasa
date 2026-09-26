@@ -4,7 +4,7 @@ This is the living plan for building Kasa. Humans and Claude Code agents both re
 
 - Product source: [`docs/PRD.md`](docs/PRD.md), exported from Petr's Claude Doc. If this plan and the PRD disagree, the PRD wins for product behaviour; raise the conflict under [Open decisions](#open-decisions).
 - Design source: [`design/`](design/). See [`design/README.md`](design/README.md) for what each screen is, the design tokens, and the mascot art.
-- Last updated: 2026-09-26 · by: Claude (F-06)
+- Last updated: 2026-09-26 · by: Claude (F-08)
 
 ---
 
@@ -54,8 +54,8 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** F-07 (observability) and F-08 (design tokens and components). F-09, F-10, F-11, P-01, P-05, and P-08 are also unblocked.
-**Blocked:** nothing.
+**Next up:** P-01 (projects and invites). F-07 waits on OD-12; F-09, F-10, F-11, P-05, and P-08 are also unblocked.
+**Blocked:** F-07 (OD-12, observability backend).
 
 ---
 
@@ -131,6 +131,7 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-132** · 2026-09-26 · Uploads: `POST /api/uploads` checks membership (owner/editor), type (JPEG, PNG, WebP, GIF; no HEIC, which prebuilt sharp can't decode) and size (20 MB), then returns a presigned **PUT** valid 5 minutes with Content-Type and Content-Length signed (R2 has no presigned POST). `POST /api/uploads/:id/complete` checks the stored object matches and queues `media.process` once. The worker re-encodes with sharp (drops all metadata, applies orientation), writes `full` and a 640px WebP `thumb`, and deletes the raw upload. `GET /api/media/:id/:variant` redirects members, viewers included, to a signed URL valid 5 minutes; everyone else gets 404. Keys live under `projects/<id>/`. · F-06
 - **D-133** · 2026-09-26 · Queue: pg-boss 12 in `@kasa/jobs`, with typed job names and payloads. The web app starts it as a producer (no maintenance); the worker runs maintenance. pg-boss manages its own `pgboss` schema outside the Drizzle migrations. · F-06
 - **D-134** · 2026-09-26 · New packages: `@kasa/media` (storage client, keys, limits; image processing is in `@kasa/media/process` so the web bundle never loads sharp) and `@kasa/jobs`. CI starts Postgres and S3 with `pnpm services`, the same as local development. · F-06
+- **D-135** · 2026-09-26 · UI: `@kasa/ui` holds React components styled with plain CSS (`kasa-*` classes in `styles.css`) and CSS variables generated from `design/tokens.json` by `pnpm --filter @kasa/ui tokens`; a test fails if they drift. Fonts are self-hosted with `next/font`. `/design` is the component showcase instead of Storybook. Details that were open in the prototype: rotation is clamped to 2.5° even where the prototype tilts photos up to 5° (the tokens and design rules win); a note becomes a lined sheet past 140 characters or 4 lines; chips, pins, and bot buttons get invisible padding so the tap area reaches 44px (`hitTarget`). The sample photos were copied to `apps/web/public/samples`; check their licences before anything public (V-12). · F-08
 
 ---
 
@@ -148,6 +149,7 @@ Questions only Petr can answer. Agents add to this list and don't guess. When on
 - [ ] **OD-08** Mascot direction (Heap, Pebble, Drop, or Stack; art in `design/mascot/`). Blocks F-08 icon work, not the rest of F-08.
 - [x] **OD-10** → D-118. Protecting `main` on a private repo needs GitHub Pro (about $4/month) on the `uxpetr` account. Options: upgrade to Pro; move the repo to a GitHub organization on a paid plan; or drop the criterion and rely on convention (merge only green PRs). Blocks the last F-02 criterion.
 - [ ] **OD-11** Analytics provider. Options: PostHog EU Cloud (product analytics, EU hosting), Plausible (simple, EU, less product depth), self-hosted PostHog, or events in our own Postgres. Needs a privacy/cookie decision too. Events are already tracked (D-129). Blocks P-13's pilot dashboard.
+- [ ] **OD-12** Where do traces, logs, and error alerts go? F-07 exports OpenTelemetry over OTLP, so any OTLP backend works. Options: a personal Dash0 account (you know it; keep it separate from work), Grafana Cloud free tier (EU region), Honeycomb, or Sentry for errors plus a separate trace backend. Blocks F-07's export and alerting criteria.
 - [ ] **OD-09** Exact prices for the owner plan and project pass, and project pass duration. Blocks V-10.
 
 ---
@@ -257,11 +259,11 @@ Depends on: F-01
 - [ ] Structured logs with request IDs; no personal data or message bodies in logs.
 - [ ] Error reporting with alerts on staging and production.
 
-### F-08 · Design tokens and physical-object components · `in-progress` · branch `f-08-ui`
+### F-08 · Design tokens and physical-object components · `done` · branch `f-08-ui`
 Depends on: F-01
-- [ ] Tokens from `design/tokens.json`: colours, fonts, spacing, the one shadow, rotation limits (under 2.5°).
-- [ ] Components: Sticky, LinedSheet, Polaroid, Print (with tape), PinMarker, BotCard, CategoryStamp, Composer.
-- [ ] Storybook (or equivalent) page showing every component, matching `design/prototype/ContentTypes.dc.html`.
+- [x] Tokens from `design/tokens.json`: colours, fonts, spacing, the one shadow, rotation limits (under 2.5°).
+- [x] Components: Sticky, LinedSheet, Polaroid, Print (with tape), PinMarker, BotCard, CategoryStamp, Composer. (Also Note, BotButton, CategoryChip.)
+- [x] Storybook (or equivalent) page showing every component, matching `design/prototype/ContentTypes.dc.html`. It's `/design` in the web app.
 
 ---
 
@@ -473,3 +475,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-26 · F-04 · Schema v0 with Drizzle migrations, "Japan 2027" seed, feed paging index, DB tests in CI. · [#4](https://github.com/uxpetr/kasa/pull/4)
 - 2026-09-26 · F-05 · Google sign-in with Better Auth, extension one-time-code handoff, `signed_up`/`signed_in` events; verified with a real Google client locally. · [#5](https://github.com/uxpetr/kasa/pull/5)
 - 2026-09-26 · F-06 · Presigned uploads with server-side limits, worker strips metadata and makes thumbnails, member-only signed media URLs; pg-boss queue. · [#6](https://github.com/uxpetr/kasa/pull/6)
+- 2026-09-26 · F-08 · Tokens generated from `design/tokens.json`, `@kasa/ui` physical-object components, `/design` showcase with keyboard and axe checks. · PR_F08

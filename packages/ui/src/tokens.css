@@ -1,0 +1,42 @@
+/* Generated from design/tokens.json by packages/ui/scripts/generate-tokens.ts. Do not edit. */
+:root {
+  --kasa-color-table: #FBFAF7;
+  --kasa-color-table-alt: #F4F2EC;
+  --kasa-color-paper: #FFFFFF;
+  --kasa-color-sticky: #FFF1A8;
+  --kasa-color-ink: #1F1D1A;
+  --kasa-color-ink-muted: #6B665C;
+  --kasa-color-ink-body: #3E3A34;
+  --kasa-color-line: #ECE8E0;
+  --kasa-color-line-strong: #D6D0C3;
+  --kasa-color-accent: #B3372A;
+  --kasa-color-accent-hover: #8E2A20;
+  --kasa-color-accent-tint: #F9E7E4;
+  --kasa-color-bot: #2E5B4F;
+  --kasa-color-bot-paper: #F1F5F2;
+  --kasa-color-bot-line: #D5E2DB;
+  --kasa-color-bot-stamp-bg: #E6EEEA;
+  --kasa-color-bot-stamp-text: #24483E;
+  --kasa-color-tape: rgba(230,222,205,0.75);
+  --kasa-color-blush: #F4A9A0;
+  --kasa-color-highlighter: #F2C94C;
+  --kasa-color-telegram: #2F8FD1;
+  --kasa-gradient-cta: linear-gradient(135deg, #E0664A 0%, #C2412D 45%, #9A2C21 100%);
+  --kasa-font-display: var(--font-fraunces, Fraunces, Georgia, serif);
+  --kasa-font-body: var(--font-instrument-sans, 'Instrument Sans', system-ui, sans-serif);
+  --kasa-font-size-meta: 13px;
+  --kasa-font-size-body: 15px;
+  --kasa-font-size-body-large: 19px;
+  --kasa-font-size-card-title: 26px;
+  --kasa-font-size-section-title: 60px;
+  --kasa-font-size-hero: 96px;
+  --kasa-radius-sticky: 2px;
+  --kasa-radius-paper: 3px;
+  --kasa-radius-bot-card: 4px;
+  --kasa-radius-button: 22px;
+  --kasa-radius-chip: 18px;
+  --kasa-radius-panel: 20px;
+  --kasa-shadow-object: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07);
+  --kasa-shadow-cta-glow: inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -2px 0 rgba(0,0,0,0.12), 0 6px 16px rgba(179,55,42,0.35), 0 14px 40px rgba(224,102,74,0.35);
+  --kasa-hit-target: 44px;
+}
