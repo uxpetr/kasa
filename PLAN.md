@@ -54,8 +54,8 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** F-03 (environments and config). F-04, F-07, and F-08 are also unblocked.
-**Blocked:** nothing.
+**Next up:** F-04 (database schema). F-07 and F-08 are also unblocked.
+**Blocked:** F-03, last criterion only (give the Vercel GitHub app access to `uxpetr/kasa`).
 
 ---
 
@@ -115,6 +115,8 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-116** · 2026-09-26 · CI is GitHub Actions (`.github/workflows/ci.yml`): a checks job (lint, typecheck, test, build) and an e2e job, on every PR and on pushes to `main`, Node 24. · F-02
 - **D-117** · 2026-09-26 · Playwright lives in `apps/web` (`e2e/*.spec.ts`) and runs against a production build via `pnpm test:e2e`; Vitest only picks up `*.test.ts(x)`. · F-02
 - **D-118** · 2026-09-26 · No branch protection on `main` for now (it needs GitHub Pro on a private repo). Rule instead: merge only PRs whose CI is green. Revisit when a second person gets write access. · Petr, OD-10
+- **D-119** · 2026-09-26 · Local services in `docker-compose.yml`: Postgres 18 and SeaweedFS 4.47 as the S3-compatible store (MinIO stopped publishing images), with a one-shot `s3-init` that creates the `kasa-media` bucket. `pnpm services` starts them. Dev credentials live in `infra/seaweedfs/s3.json` and `.env.example`. · F-03
+- **D-120** · 2026-09-26 · Staging is the Vercel project `kasa` in the personal team (not Dash0): root `apps/web`, Next.js, Node 24, functions in `fra1` (`apps/web/vercel.json`). Vercel Authentication stays on, so staging is private. Deploys from `main`; PRs get preview URLs. Neon and the bucket come in F-09, realtime and worker hosting in F-10. · Petr, F-03
 
 ---
 
@@ -191,11 +193,20 @@ Depends on: F-01
 - [x] End-to-end test runner (for example Playwright) wired in with one smoke test.
 - [x] ~~Main branch is protected: CI must pass.~~ Deferred by D-118: needs GitHub Pro; merge only green PRs instead.
 
-### F-03 · Environments and config · `in-progress` · branch `f-03-envs`
+### F-03 · Environments and config · `blocked` (Vercel GitHub access) · branch `f-03-envs`
 Depends on: F-01, OD-02
-- [ ] Local Postgres and object storage via Docker Compose.
-- [ ] `.env.example` with every variable documented; secrets never committed.
-- [ ] Staging environment deploys automatically from main.
+- [x] Local Postgres and object storage via Docker Compose.
+- [x] `.env.example` with every variable documented; secrets never committed.
+- [ ] Staging environment deploys automatically from main. Vercel project `kasa` exists and builds (D-120); waiting for the Vercel GitHub app to get access to `uxpetr/kasa`.
+
+### F-09 · Staging data services · `todo`
+Depends on: F-03, F-04
+- [ ] Neon Postgres in an EU region attached to the Vercel project; migrations run on deploy.
+- [ ] EU S3-compatible bucket for staging media (pick R2 EU or AWS `eu-central-1`, D-111); credentials only in Vercel env settings.
+
+### F-10 · Host realtime and worker · `todo`
+Depends on: F-03; needed by F-06 and P-06
+- [ ] Deploy `apps/realtime` and `apps/worker` to Fly.io or Railway in an EU region (D-111), deploying from main.
 
 ### F-04 · Database schema v0 · `todo`
 Depends on: F-01
