@@ -10,3 +10,5 @@ node_modules/
 dist/
 *.tsbuildinfo
 next-env.d.ts
+playwright-report/
+test-results/
