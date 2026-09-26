@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** finish F-07 (Dash0 export and alerts), then P-01 (projects and invites). F-09, F-10, F-11, P-05, and P-08 are also unblocked.
+**Next up:** P-01 (projects and invites). F-09, F-10, F-11, P-05, and P-08 are also unblocked.
 **Blocked:** nothing.
 
 ---
@@ -255,11 +255,11 @@ Depends on: F-03, F-04
 - [x] Worker generates thumbnails and strips EXIF location data.
 - [x] Media served through the CDN with private, signed URLs scoped to project members. Signed, member-scoped URLs are done; the CDN in front of the bucket comes with the staging bucket (F-09).
 
-### F-07 · Observability baseline · `in-progress` · branch `f-07-otel`
+### F-07 · Observability baseline · `done` · branch `f-07-otel`
 Depends on: F-01
-- [ ] OpenTelemetry traces across web, realtime, worker, and API calls from the extension.
-- [ ] Structured logs with request IDs; no personal data or message bodies in logs.
-- [ ] Error reporting with alerts on staging and production.
+- [x] OpenTelemetry traces across web, realtime, worker, and API calls from the extension. Extension calls are traced on the server (D-137); realtime has the bootstrap and gets real spans with P-06.
+- [x] Structured logs with request IDs; no personal data or message bodies in logs.
+- [x] Error reporting with alerts on staging and production. Dash0 check rule "Kasa: server errors" (error spans from `kasa-*` outside `local`, email to Petr) fired on a test burst of failed jobs. There is no production environment yet; the rule already covers it by environment name.
 
 ### F-08 · Design tokens and physical-object components · `done` · branch `f-08-ui`
 Depends on: F-01
@@ -478,3 +478,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-26 · F-05 · Google sign-in with Better Auth, extension one-time-code handoff, `signed_up`/`signed_in` events; verified with a real Google client locally. · [#5](https://github.com/uxpetr/kasa/pull/5)
 - 2026-09-26 · F-06 · Presigned uploads with server-side limits, worker strips metadata and makes thumbnails, member-only signed media URLs; pg-boss queue. · [#6](https://github.com/uxpetr/kasa/pull/6)
 - 2026-09-26 · F-08 · Tokens generated from `design/tokens.json`, `@kasa/ui` physical-object components, `/design` showcase with keyboard and axe checks. · [#7](https://github.com/uxpetr/kasa/pull/7)
+- 2026-09-26 · F-07 · OpenTelemetry traces and redacted JSON logs for web, worker, and realtime, sent to Petr's personal Dash0; request ids; trace context through the job queue; error alert rule verified. · [#8](https://github.com/uxpetr/kasa/pull/8)
