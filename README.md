@@ -11,8 +11,28 @@ This folder is the starting point for building it with Claude Code.
 | `docs/PRD.md` | The product requirements |
 | `design/` | Prototype screens, design tokens, and mascot art (see `design/README.md`) |
 
-## Getting started
+## Run it locally
 
-1. Put this folder at the root of a new Git repository and commit it.
-2. Answer the open decisions at the top of `PLAN.md` that block the first task (OD-01 stack, OD-02 hosting region).
-3. Start Claude Code in the repo and ask it to pick up the next task from `PLAN.md`.
+Needs Node 22+ and pnpm 11.
+
+```sh
+pnpm install     # installs every workspace
+pnpm dev         # web app on http://localhost:3000, extension dev build in apps/extension/.output
+pnpm test        # unit tests
+pnpm lint && pnpm typecheck
+```
+
+`pnpm build` builds the web app and the extension. To load the extension, open `chrome://extensions`, turn on Developer mode, and load `apps/extension/.output/chrome-mv3`.
+
+## Layout
+
+pnpm workspaces + Turborepo. See the Architecture section of `PLAN.md` for what each workspace is for.
+
+```
+apps/web  apps/realtime  apps/worker  apps/extension
+packages/db  packages/shared  packages/ui  packages/bot
+```
+
+## Working on it
+
+Start Claude Code in the repo and ask it to pick up the next task from `PLAN.md`.

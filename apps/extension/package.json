@@ -1,0 +1,18 @@
+{
+  "name": "@kasa/extension",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "build": "wxt build",
+    "postinstall": "wxt prepare",
+    "typecheck": "tsc",
+    "test": "vitest run --passWithNoTests"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vitest": "^5.0.2",
+    "wxt": "^0.21.4"
+  }
+}

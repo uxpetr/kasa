@@ -22,9 +22,12 @@ You are building Kasa. `PLAN.md` in the repo root is the living plan and the sou
 
 ## Commands
 
-Fill these in during F-01 and keep them current:
+Keep these current:
 
 - Install: `pnpm install`
 - Dev: `pnpm dev`
 - Test: `pnpm test`
 - Lint and types: `pnpm lint && pnpm typecheck`
+- Build: `pnpm build`
+- One workspace: `pnpm --filter @kasa/<name> <script>`
+- Shared dependency versions (TypeScript) live in the `catalog:` in `pnpm-workspace.yaml`.
