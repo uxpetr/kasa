@@ -13,6 +13,22 @@ jobs:
   checks:
     name: Lint, typecheck, test, build
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: kasa
+          POSTGRES_PASSWORD: kasa
+          POSTGRES_DB: kasa
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U kasa -d kasa"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+    env:
+      DATABASE_URL: postgres://kasa:kasa@localhost:5432/kasa
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -23,6 +39,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
+      - name: Migrations match the schema
+        run: |
+          pnpm db:generate
+          test -z "$(git status --porcelain packages/db/migrations)" || { echo "Schema changed without a migration. Run pnpm db:generate and commit it."; git status --porcelain packages/db/migrations; exit 1; }
+      - run: pnpm db:migrate
+      - run: pnpm db:seed
       - run: pnpm test
       - run: pnpm build
 

@@ -18,12 +18,13 @@ Needs Node 22+, pnpm 11, and Docker.
 ```sh
 pnpm install && cp .env.example .env
 pnpm services    # local Postgres (5432) and S3-compatible storage (8333)
+pnpm db:migrate && pnpm db:seed   # schema plus the "Japan 2027" demo project
 pnpm dev         # web app on http://localhost:3000, extension dev build in apps/extension/.output
 pnpm test        # unit tests
 pnpm lint && pnpm typecheck
 ```
 
-`pnpm services:down` stops the local services (data is kept in Docker volumes). `pnpm build` builds the web app and the extension. To load the extension, open `chrome://extensions`, turn on Developer mode, and load `apps/extension/.output/chrome-mv3`.
+After changing `packages/db/src/schema.ts`, run `pnpm db:generate` and commit the new migration; CI fails if you forget. `pnpm services:down` stops the local services (data is kept in Docker volumes). `pnpm build` builds the web app and the extension. To load the extension, open `chrome://extensions`, turn on Developer mode, and load `apps/extension/.output/chrome-mv3`.
 
 ## Layout
 
