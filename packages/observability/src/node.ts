@@ -5,10 +5,8 @@ import { PgInstrumentation } from "@opentelemetry/instrumentation-pg";
 import { UndiciInstrumentation } from "@opentelemetry/instrumentation-undici";
 import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-proto";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
-import { resourceFromAttributes } from "@opentelemetry/resources";
 import { BatchLogRecordProcessor } from "@opentelemetry/sdk-logs";
 import { NodeSDK } from "@opentelemetry/sdk-node";
-import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 
 /**
  * Starts tracing and log export when OTEL_EXPORTER_OTLP_ENDPOINT is set (D-137).
@@ -19,7 +17,8 @@ export function startNodeTelemetry(serviceName: string): { shutdown: () => Promi
     return { shutdown: async () => {} };
   }
   const sdk = new NodeSDK({
-    resource: resourceFromAttributes({ [ATTR_SERVICE_NAME]: serviceName }),
+    // serviceName (not a resource attribute) so OTEL_SERVICE_NAME can't merge services together.
+    serviceName,
     traceExporter: new OTLPTraceExporter(),
     logRecordProcessors: [new BatchLogRecordProcessor({ exporter: new OTLPLogExporter() })],
     // Outgoing HTTP (S3, APIs) and pg (used by pg-boss). postgres.js has no instrumentation yet.
