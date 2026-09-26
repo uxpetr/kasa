@@ -19,7 +19,7 @@ Needs Node 22+, pnpm 11, and Docker.
 pnpm install && cp .env.example .env
 pnpm services    # local Postgres (5432) and S3-compatible storage (8333)
 pnpm db:migrate && pnpm db:seed   # schema plus the "Japan 2027" demo project
-pnpm dev         # web app on http://localhost:3000, extension dev build in apps/extension/.output
+pnpm dev         # web app on http://localhost:3000, the job worker, and the extension dev build
 pnpm test        # unit tests
 pnpm lint && pnpm typecheck
 ```

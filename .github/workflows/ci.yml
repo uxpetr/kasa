@@ -13,22 +13,14 @@ jobs:
   checks:
     name: Lint, typecheck, test, build
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:18-alpine
-        env:
-          POSTGRES_USER: kasa
-          POSTGRES_PASSWORD: kasa
-          POSTGRES_DB: kasa
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U kasa -d kasa"
-          --health-interval 2s
-          --health-timeout 3s
-          --health-retries 30
     env:
       DATABASE_URL: postgres://kasa:kasa@localhost:5432/kasa
+      S3_ENDPOINT: http://localhost:8333
+      S3_REGION: us-east-1
+      S3_BUCKET: kasa-media
+      S3_ACCESS_KEY_ID: kasa-dev
+      S3_SECRET_ACCESS_KEY: kasa-dev-secret
+      S3_FORCE_PATH_STYLE: "true"
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -37,6 +29,8 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Same Postgres and S3 as local development (docker-compose.yml).
+      - run: pnpm services
       - run: pnpm lint
       - run: pnpm typecheck
       - name: Migrations match the schema
@@ -51,22 +45,14 @@ jobs:
   e2e:
     name: End-to-end
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:18-alpine
-        env:
-          POSTGRES_USER: kasa
-          POSTGRES_PASSWORD: kasa
-          POSTGRES_DB: kasa
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U kasa -d kasa"
-          --health-interval 2s
-          --health-timeout 3s
-          --health-retries 30
     env:
       DATABASE_URL: postgres://kasa:kasa@localhost:5432/kasa
+      S3_ENDPOINT: http://localhost:8333
+      S3_REGION: us-east-1
+      S3_BUCKET: kasa-media
+      S3_ACCESS_KEY_ID: kasa-dev
+      S3_SECRET_ACCESS_KEY: kasa-dev-secret
+      S3_FORCE_PATH_STYLE: "true"
       # CI-only values: the e2e tests stub Google, so no real client is needed.
       BETTER_AUTH_SECRET: ci-only-secret-0123456789abcdef0123456789
       GOOGLE_CLIENT_ID: ci-dummy-client.apps.googleusercontent.com
@@ -79,6 +65,8 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Same Postgres and S3 as local development (docker-compose.yml).
+      - run: pnpm services
       - run: pnpm --filter @kasa/web exec playwright install --with-deps chromium
       - run: pnpm db:migrate
       - run: pnpm test:e2e
