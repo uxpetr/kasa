@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** P-01 (projects and invites). F-07 waits on OD-12; F-09, F-10, F-11, P-05, and P-08 are also unblocked.
+**Next up:** finish F-07 (Dash0 export and alerts), then P-01 (projects and invites). F-09, F-10, F-11, P-05, and P-08 are also unblocked.
 **Blocked:** nothing.
 
 ---
@@ -133,6 +133,7 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-134** · 2026-09-26 · New packages: `@kasa/media` (storage client, keys, limits; image processing is in `@kasa/media/process` so the web bundle never loads sharp) and `@kasa/jobs`. CI starts Postgres and S3 with `pnpm services`, the same as local development. · F-06
 - **D-135** · 2026-09-26 · UI: `@kasa/ui` holds React components styled with plain CSS (`kasa-*` classes in `styles.css`) and CSS variables generated from `design/tokens.json` by `pnpm --filter @kasa/ui tokens`; a test fails if they drift. Fonts are self-hosted with `next/font`. `/design` is the component showcase instead of Storybook. Details that were open in the prototype: rotation is clamped to 2.5° even where the prototype tilts photos up to 5° (the tokens and design rules win); a note becomes a lined sheet past 140 characters or 4 lines; chips, pins, and bot buttons get invisible padding so the tap area reaches 44px (`hitTarget`). The sample photos were copied to `apps/web/public/samples`; check their licences before anything public (V-12). · F-08
 - **D-136** · 2026-09-26 · Traces, logs, and error alerts go to Petr's **personal Dash0 account** over OTLP (D-108), kept separate from his work Dash0 organization. Credentials live only in `.env` and Vercel env settings. · Petr, OD-12
+- **D-137** · 2026-09-26 · Observability: `@kasa/observability` holds the JSON logger (every line carries `trace_id`/`span_id` and also goes out as an OTel log record), key-based redaction (tokens, secrets, cookies, emails, names, message bodies, URLs with query strings; exception messages are redacted too, only the type is kept), and trace-context helpers. Web uses `@vercel/otel` (`instrumentation.ts`, service `kasa-web`) and logs server errors from `onRequestError`; `proxy.ts` gives every request an `x-request-id` (kept from the caller if it looks sane) that routes log and responses return. Worker and realtime use the Node SDK (`kasa-worker`, `kasa-realtime`) preloaded with `--import`, with HTTP, undici and `pg` instrumentation through in-thread `module.registerHooks` loader hooks (async `module.register` fallback on older Node). Job payloads carry W3C trace context (`_trace`), so a worker span continues the request that queued it. The extension sends no telemetry of its own (it only has `activeTab`); its API calls are traced on the server. Nothing is exported unless `OTEL_EXPORTER_OTLP_ENDPOINT` is set; CI and tests never export. · F-07
 
 ---
 

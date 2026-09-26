@@ -1,5 +1,6 @@
 // Background job queue on Postgres (pg-boss, D-104). pg-boss manages its own
 // `pgboss` schema; it is not part of the Drizzle migrations (D-133).
+import { injectTraceContext, type TraceCarrier } from "@kasa/observability";
 import { PgBoss } from "pg-boss";
 
 /** Every job the worker runs, with its payload. Add new jobs here. */
@@ -7,6 +8,9 @@ export interface JobPayloads {
   "media.process": { uploadId: string };
 }
 export type JobName = keyof JobPayloads;
+
+/** What's stored: the payload plus the sender's trace context, so the job continues its trace (D-137). */
+export type JobData<N extends JobName> = JobPayloads[N] & { _trace?: TraceCarrier };
 export const JOB_NAMES = ["media.process"] as const satisfies readonly JobName[];
 
 /** What the web app needs from the queue: enqueue only. */
@@ -37,7 +41,8 @@ export async function startQueue(
     boss,
     queue: {
       async send(name, payload) {
-        const id = await boss.send(name, payload);
+        const data: JobData<typeof name> = { ...payload, _trace: injectTraceContext() };
+        const id = await boss.send(name, data);
         if (!id) throw new Error(`Could not enqueue ${name}`);
       },
     },
