@@ -455,3 +455,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-26 · F-01 · Stack confirmed (D-110, D-111); pnpm + Turborepo monorepo with web, realtime, worker, extension, and db/shared/ui/bot packages; lint, typecheck, test, and build pass from the root. · [#1](https://github.com/uxpetr/kasa/pull/1)
 - 2026-09-26 · F-02 · GitHub Actions CI (lint, typecheck, test, build, Playwright smoke test); branch protection deferred (D-118). · [#2](https://github.com/uxpetr/kasa/pull/2)
 - 2026-09-26 · F-03 · Local Postgres and S3 storage via Docker Compose (`pnpm services`), documented `.env.example`, Vercel staging from `main` in `fra1`. · [#3](https://github.com/uxpetr/kasa/pull/3)
+- 2026-09-26 · F-04 · Schema v0 with Drizzle migrations, "Japan 2027" seed, feed paging index, DB tests in CI. · [#4](https://github.com/uxpetr/kasa/pull/4)
