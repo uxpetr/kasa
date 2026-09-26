@@ -209,7 +209,7 @@ Depends on: F-03, F-04
 Depends on: F-03; needed by F-06 and P-06
 - [ ] Deploy `apps/realtime` and `apps/worker` to Fly.io or Railway in an EU region (D-111), deploying from main.
 
-### F-04 · Database schema v0 · `todo`
+### F-04 · Database schema v0 · `in-progress` · branch `f-04-db`
 Depends on: F-01
 - [ ] Tables from the data model above, created by migration.
 - [ ] Seed script creates the "Japan 2027" demo project from the prototype (4 members, notes, photos, a capture, a bot reply).
