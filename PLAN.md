@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** P-01 (projects and invites). F-09, F-10, F-11, P-05, and P-08 are also unblocked.
+**Next up:** P-02 (projects screen). P-14, P-15, F-09, F-10, F-11, P-05, and P-08 are also unblocked.
 **Blocked:** nothing.
 
 ---
@@ -138,6 +138,7 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-139** · 2026-09-26 · Only the owner invites (inviting is what makes a project shared, which D-009 ties to the owner's plan). The owner and editors can rename a project. · Petr
 - **D-140** · 2026-09-26 · Archive is owner-only and applies to everyone: the project moves to an Archived section and becomes read-only (no new entries, comments, or reactions) until the owner unarchives it. It is separate from delete, which is restorable for 30 days. · Petr
 - **D-141** · 2026-09-26 · No paywall on invites during the prototype; V-10 adds the paid-plan check from D-009. · Petr
+- **D-142** · 2026-09-26 · Project API (P-01): `GET`/`POST /api/projects`, `PATCH /api/projects/:id` (`name`, `archived`), `GET`/`POST`/`DELETE /api/projects/:id/invites`, `GET /api/invites/:token`, `POST /api/invites/:token/accept`. Non-members get 404, members without the right role 403, dead invite links 410. Permission rules live only in `apps/web/lib/access.ts` (`canAdd`, `canRename`, `canInvite`, `canArchive`), which every route uses; `canAdd` also refuses archived projects, so uploads and later entries/comments are read-only there. Invite tokens are 256-bit random strings stored in plain text so the owner can copy the live link again; making a new link revokes the old one. Link URL: `<BETTER_AUTH_URL>/invite/<token>` (page is P-14). Project names are 1–80 characters with whitespace collapsed. Analytics events carry only ids. Shared `Result` helpers are in `apps/web/lib/result.ts`. · P-01
 
 ---
 
@@ -277,12 +278,12 @@ Depends on: F-01
 
 Goal: prove the core loop (capture on a website, discuss in a shared project, come back later) with one trip-planning group. Keep everything else bare.
 
-### P-01 · Projects and invites · `in-progress` · branch `p-01-projects`
+### P-01 · Projects and invites · `done` · branch `p-01-projects`
 Depends on: F-05
-- [ ] Create, rename, and archive a project.
-- [ ] Invite by link; accepting adds a membership as editor.
-- [ ] Owner, editor, and viewer permissions enforced on the server for every action.
-- [ ] Analytics: `project_created`, `invite_sent`, `invite_accepted`.
+- [x] Create, rename, and archive a project. API only (`/api/projects`); the screens are P-02 and P-14.
+- [x] Invite by link; accepting adds a membership as editor.
+- [x] Owner, editor, and viewer permissions enforced on the server for every action.
+- [x] Analytics: `project_created`, `invite_sent`, `invite_accepted`.
 
 ### P-02 · Projects screen ("Your piles") · `todo`
 Depends on: P-01, F-08
@@ -350,10 +351,24 @@ Depends on: P-07
 - [ ] Unsubscribe link and per-project mute.
 
 ### P-13 · Pilot readiness · `todo`
-Depends on: P-02 to P-12, OD-03
+Depends on: P-02 to P-12, P-14, P-15, OD-03
 - [ ] Dashboard for the pilot metrics: captures per active user per week, share of captures with a reply, week-4 extension retention.
 - [ ] Onboarding for the pilot group, with the extension offered after sign-up (D-018).
 - [ ] A way for pilot users to send feedback from inside the app.
+
+### P-14 · Invite page · `todo`
+Depends on: P-01, F-08
+- [ ] `/invite/<token>` shows the project name and member count (`GET /api/invites/:token`), asks the person to sign in first if needed, then joins (`POST /api/invites/:token/accept`) and opens the project.
+- [ ] Clear states for an expired or revoked link (410) and an unknown one (404).
+- [ ] Owner can copy, renew, and revoke the link from the project menu.
+- [ ] Copy and layout need a design; add an Open decision if the prototype doesn't cover it.
+
+### P-15 · Members · `todo`
+Depends on: P-01
+- [ ] Members list in the project menu, with roles.
+- [ ] Owner changes a member's role (editor or viewer) and removes members.
+- [ ] Members can leave; their entries stay (D-015).
+- [ ] Permissions enforced on the server and tested, like P-01.
 
 ### G1 · Gate: captures get replies
 Pass bar set in OD-03. Record the result and Petr's go/no-go in the Decision log. If it fails, stop and rethink the core loop with Petr before phase 2.
@@ -483,3 +498,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-26 · F-06 · Presigned uploads with server-side limits, worker strips metadata and makes thumbnails, member-only signed media URLs; pg-boss queue. · [#6](https://github.com/uxpetr/kasa/pull/6)
 - 2026-09-26 · F-08 · Tokens generated from `design/tokens.json`, `@kasa/ui` physical-object components, `/design` showcase with keyboard and axe checks. · [#7](https://github.com/uxpetr/kasa/pull/7)
 - 2026-09-26 · F-07 · OpenTelemetry traces and redacted JSON logs for web, worker, and realtime, sent to Petr's personal Dash0; request ids; trace context through the job queue; error alert rule verified. · [#8](https://github.com/uxpetr/kasa/pull/8)
+- 2026-09-26 · P-01 · Project API: create, list, rename, archive; reusable 7-day invite links; owner/editor/viewer rules in one place and tested per role; `project_created`, `invite_sent`, `invite_accepted`. · [#9](https://github.com/uxpetr/kasa/pull/9)

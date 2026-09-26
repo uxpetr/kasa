@@ -10,3 +10,16 @@ test("upload and media routes reject anonymous requests", async ({ request }) =>
     (await request.post("/api/uploads", { headers: { authorization: "Bearer not-a-real-token" }, data: {} })).status(),
   ).toBe(401);
 });
+
+test("project and invite routes reject anonymous requests", async ({ request }) => {
+  const id = "00000000-0000-4000-8000-000000000001";
+  const token = "x".repeat(43);
+  expect((await request.get("/api/projects")).status()).toBe(401);
+  expect((await request.post("/api/projects", { data: { name: "x" } })).status()).toBe(401);
+  expect((await request.patch(`/api/projects/${id}`, { data: { name: "x" } })).status()).toBe(401);
+  expect((await request.get(`/api/projects/${id}/invites`)).status()).toBe(401);
+  expect((await request.post(`/api/projects/${id}/invites`)).status()).toBe(401);
+  expect((await request.delete(`/api/projects/${id}/invites`)).status()).toBe(401);
+  expect((await request.get(`/api/invites/${token}`)).status()).toBe(401);
+  expect((await request.post(`/api/invites/${token}/accept`)).status()).toBe(401);
+});

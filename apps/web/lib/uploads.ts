@@ -4,7 +4,8 @@
 import { and, eq, schema, type Database } from "@kasa/db";
 import type { JobQueue } from "@kasa/jobs";
 import { checkUpload, keys, type Storage } from "@kasa/media";
-import { canAdd, canRead, projectRole } from "./access";
+import { canAdd, canRead, projectAccess } from "./access";
+import { fail, isUuid, type Result } from "./result";
 
 export interface UploadDeps {
   db: Database;
@@ -12,20 +13,17 @@ export interface UploadDeps {
   queue: JobQueue;
 }
 
-export type Result<T> = { ok: true; value: T } | { ok: false; status: 400 | 404 | 409 | 413 | 415; error: string };
-
-const fail = <T>(status: 400 | 404 | 409 | 413 | 415, error: string): Result<T> => ({ ok: false, status, error });
-
 export async function createUpload(
   deps: Pick<UploadDeps, "db" | "storage">,
   userId: string,
   input: { projectId?: unknown; contentType?: unknown; size?: unknown },
 ): Promise<Result<{ uploadId: string; uploadUrl: string; headers: Record<string, string> }>> {
-  if (typeof input.projectId !== "string" || !isUuid(input.projectId)) return fail(400, "projectId is required");
+  if (!isUuid(input.projectId)) return fail(400, "projectId is required");
 
   // Not a member and missing project look the same, so ids can't be probed.
-  const role = await projectRole(deps.db, userId, input.projectId);
-  if (!canAdd(role)) return fail(404, "Project not found");
+  const access = await projectAccess(deps.db, userId, input.projectId);
+  if (!access) return fail(404, "Project not found");
+  if (!canAdd(access)) return fail(403, access.archived ? "Project is archived" : "Viewers can't add to this project");
 
   const check = checkUpload({ contentType: input.contentType, size: input.size });
   if (!check.ok) return check.reason === "type" ? fail(415, "Unsupported file type") : fail(413, "File too large");
@@ -54,7 +52,10 @@ export async function completeUpload(
     .select()
     .from(schema.uploads)
     .where(and(eq(schema.uploads.id, uploadId), eq(schema.uploads.uploaderId, userId)));
-  if (!upload || !canAdd(await projectRole(deps.db, userId, upload.projectId))) return fail(404, "Upload not found");
+  if (!upload) return fail(404, "Upload not found");
+  const access = await projectAccess(deps.db, userId, upload.projectId);
+  if (!access) return fail(404, "Upload not found");
+  if (!canAdd(access)) return fail(403, access.archived ? "Project is archived" : "Viewers can't add to this project");
   if (upload.status !== "pending") return { ok: true, value: { status: upload.status } };
 
   const stored = await deps.storage.head(keys.raw(upload.projectId, upload.id));
@@ -85,11 +86,8 @@ export async function mediaUrl(
   if (!isUuid(uploadId)) return null;
   const [upload] = await deps.db.select().from(schema.uploads).where(eq(schema.uploads.id, uploadId));
   if (!upload || upload.status !== "ready") return null;
-  if (!canRead(await projectRole(deps.db, userId, upload.projectId))) return null;
+  if (!canRead(await projectAccess(deps.db, userId, upload.projectId))) return null;
   const key = variant === "full" ? upload.fullKey : upload.thumbKey;
   return key ? deps.storage.presignDownload(key) : null;
 }
 
-function isUuid(value: string) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-}

@@ -69,8 +69,17 @@ describe.skipIf(!ready)("uploads", () => {
       }
     });
 
-    it("hides the project from viewers, outsiders, and deleted projects", async () => {
-      expect(await createUpload(deps(), u.viewer, { projectId, ...request })).toMatchObject({ ok: false, status: 404 });
+    it("refuses viewers and archived projects with 403", async () => {
+      expect(await createUpload(deps(), u.viewer, { projectId, ...request })).toMatchObject({ ok: false, status: 403 });
+      await testDb.db.update(schema.projects).set({ archivedAt: new Date() }).where(eq(schema.projects.id, projectId));
+      try {
+        expect(await createUpload(deps(), u.owner, { projectId, ...request })).toMatchObject({ ok: false, status: 403 });
+      } finally {
+        await testDb.db.update(schema.projects).set({ archivedAt: null }).where(eq(schema.projects.id, projectId));
+      }
+    });
+
+    it("hides the project from outsiders and deleted projects", async () => {
       expect(await createUpload(deps(), u.outsider, { projectId, ...request })).toMatchObject({ ok: false, status: 404 });
       expect(await createUpload(deps(), u.owner, { projectId: deletedProjectId, ...request })).toMatchObject({
         ok: false,
