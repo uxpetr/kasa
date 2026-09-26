@@ -54,8 +54,8 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** F-02 (CI pipeline). F-03 to F-08 are also unblocked.
-**Blocked:** nothing yet.
+**Next up:** F-03 to F-08 are unblocked; F-02 waits on OD-10.
+**Blocked:** F-02, last criterion only (OD-10, branch protection).
 
 ---
 
@@ -112,6 +112,8 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-113** · 2026-09-26 · TypeScript pinned to **6.0** through the pnpm `catalog:`, because typescript-eslint 8 doesn't support TS 7 yet. Revisit when it does. · F-01
 - **D-114** · 2026-09-26 · Linting is one root ESLint 10 flat config (`eslint.config.js`, typescript-eslint recommended) run as `pnpm lint`; typecheck and test run per workspace through Turbo. Vitest 5 is the unit test runner. · F-01
 - **D-115** · 2026-09-26 · Versions at scaffold time: Next.js 16, React 19, WXT (MV3, manifest permissions `["activeTab"]` only). Build scripts are allowed only for `esbuild` and `sharp` (`allowBuilds` in `pnpm-workspace.yaml`). · F-01
+- **D-116** · 2026-09-26 · CI is GitHub Actions (`.github/workflows/ci.yml`): a checks job (lint, typecheck, test, build) and an e2e job, on every PR and on pushes to `main`, Node 24. · F-02
+- **D-117** · 2026-09-26 · Playwright lives in `apps/web` (`e2e/*.spec.ts`) and runs against a production build via `pnpm test:e2e`; Vitest only picks up `*.test.ts(x)`. · F-02
 
 ---
 
@@ -127,6 +129,7 @@ Questions only Petr can answer. Agents add to this list and don't guess. When on
 - [ ] **OD-06** Kasa Bot: what triggers an unprompted post, and the maximum frequency. Blocks V-06.
 - [ ] **OD-07** Decisions (voting) and the Keep strip: v1 or after pilot feedback? Blocks V-02c.
 - [ ] **OD-08** Mascot direction (Heap, Pebble, Drop, or Stack; art in `design/mascot/`). Blocks F-08 icon work, not the rest of F-08.
+- [ ] **OD-10** Protecting `main` on a private repo needs GitHub Pro (about $4/month) on the `uxpetr` account. Options: upgrade to Pro; move the repo to a GitHub organization on a paid plan; or drop the criterion and rely on convention (merge only green PRs). Blocks the last F-02 criterion.
 - [ ] **OD-09** Exact prices for the owner plan and project pass, and project pass duration. Blocks V-10.
 
 ---
@@ -181,11 +184,11 @@ Depends on: OD-01
 - [x] Monorepo created with the layout under [Architecture](#architecture); `pnpm install`, `pnpm lint`, `pnpm typecheck`, and `pnpm test` all run from the root.
 - [x] README explains how to run everything locally in under 5 commands.
 
-### F-02 · CI pipeline · `in-progress` · branch `f-02-ci`
+### F-02 · CI pipeline · `blocked` (OD-10) · branch `f-02-ci` · [#2](https://github.com/uxpetr/kasa/pull/2)
 Depends on: F-01
-- [ ] CI runs lint, typecheck, unit tests, and build on every PR.
-- [ ] End-to-end test runner (for example Playwright) wired in with one smoke test.
-- [ ] Main branch is protected: CI must pass.
+- [x] CI runs lint, typecheck, unit tests, and build on every PR.
+- [x] End-to-end test runner (for example Playwright) wired in with one smoke test.
+- [ ] Main branch is protected: CI must pass. Blocked: needs GitHub Pro for a private repo (OD-10).
 
 ### F-03 · Environments and config · `todo`
 Depends on: F-01, OD-02
