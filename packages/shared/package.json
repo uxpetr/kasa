@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./realtime": "./src/realtime.ts"
+    "./realtime": "./src/realtime.ts",
+    "./unsubscribe": "./src/unsubscribe.ts"
   },
   "scripts": {
     "typecheck": "tsc",

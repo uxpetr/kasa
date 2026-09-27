@@ -11,7 +11,7 @@ import styles from "./feed.module.css";
 
 export interface FeedProps {
   project: { id: string; name: string; archived: boolean };
-  viewer: { id: string; name: string; role: "owner" | "editor" | "viewer" };
+  viewer: { id: string; name: string; role: "owner" | "editor" | "viewer"; emailsMuted: boolean };
   can: { post: boolean; rename: boolean; archive: boolean };
   initialPage: FeedPage;
 }
@@ -191,6 +191,7 @@ export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
           <FeedComposer
             projectId={project.id}
             projectName={project.name}
+            viewerId={viewer.id}
             onSent={onSent}
             replyTo={replyingTo ? { id: replyingTo.id, label: objectLabel(replyingTo, viewer.id) } : null}
             onCancelReply={() => setReplyingTo(null)}

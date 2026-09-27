@@ -13,7 +13,7 @@ type Member = { id: string; name: string; role: "owner" | "editor" | "viewer" };
 const ROLE_LABEL = { owner: "Owner", editor: "Editor", viewer: "Viewer" } as const;
 
 /** Back, the project name, and the project menu (D-008, D-148). */
-export function ProjectHeader({ project, can }: Pick<FeedProps, "project" | "viewer" | "can">) {
+export function ProjectHeader({ project, viewer, can }: Pick<FeedProps, "project" | "viewer" | "can">) {
   const router = useRouter();
   const members = useRef<HTMLDialogElement>(null);
   const rename = useRef<HTMLDialogElement>(null);
@@ -21,6 +21,7 @@ export function ProjectHeader({ project, can }: Pick<FeedProps, "project" | "vie
   const [memberList, setMemberList] = useState<Member[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [muted, setMuted] = useState(viewer.emailsMuted);
 
   const closeMenu = () => menu.current?.hidePopover();
 
@@ -102,6 +103,21 @@ export function ProjectHeader({ project, can }: Pick<FeedProps, "project" | "vie
             {project.archived ? "Unarchive" : "Archive"}
           </button>
         ) : null}
+        <button
+          type="button"
+          role="menuitem" className={controls.menuItem}
+          onClick={async () => {
+            closeMenu();
+            const res = await fetch(`/api/projects/${project.id}/email-mute`, {
+              method: "PUT",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ muted: !muted }),
+            }).catch(() => null);
+            if (res?.ok) setMuted(((await res.json()) as { muted: boolean }).muted);
+          }}
+        >
+          {muted ? "Unmute emails" : "Mute emails"}
+        </button>
         <button type="button" role="menuitem" className={controls.menuItem} disabled>
           Search (coming soon)
         </button>

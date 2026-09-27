@@ -54,8 +54,8 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Chrome extension (D-158), pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** P-12 (notifications), in progress. P-14, P-15, F-09, F-10, and F-11 are also unblocked.
-**Blocked:** nothing. Real emails for P-12 need a Resend account and a sender domain from Petr.
+**Next up:** P-14, P-15, F-09, F-10, F-11, and F-13 are unblocked. P-12 (notifications) is done.
+**Blocked:** nothing. Real emails need F-13 (a Resend account and a sender domain from Petr).
 
 ---
 
@@ -164,6 +164,7 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-165** · 2026-09-27 · **Muting**: a "Mute emails" / "Unmute emails" toggle in the feed's project menu, per project. The unsubscribe link in every email mutes that project in one click. · Petr, P-12
 - **D-166** · 2026-09-27 · Link unfurling internals (P-05): posting a Link entry queues `link.unfurl { entryId }`; if queueing fails the entry stays a plain link. Other writers of Link entries (Telegram, P-14) must queue the same job. The worker fetches with `node:http`/`https` through `safeFetch`: http(s) only, no credentials in the URL, at most 5 redirects with each hop re-checked, one 5s deadline for the whole fetch, and the connected address checked in the DNS lookup itself, so DNS rebinding can't slip a private address past the check. Refused: private, loopback, link-local (including 169.254.169.254), CGNAT, documentation, multicast, and reserved IPv4; on IPv6, loopback, unique-local, link-local, multicast, and every range that can embed an IPv4 address (IPv4-mapped, NAT64, 6to4, Teredo); and `localhost`. Size caps apply after decompression: HTML is cut at 1 MB (only the head is parsed), oEmbed JSON is capped at 256 KB, images at 10 MB. The title comes from Open Graph, then Twitter tags, then oEmbed, then `<title>`; the site name from `og:site_name`, then oEmbed `provider_name`; the image from `og:image`, then Twitter tags, then the oEmbed thumbnail. oEmbed `html` is never used. The image is re-encoded with sharp as a metadata-free WebP at most 1200px wide and stored at `projects/<id>/previews/<entryId>.webp`, served through the existing members-only `/api/entries/:id/preview-image`. SVGs and images under 64px are skipped. Refused pages and 4xx responses leave a plain link; 5xx and network errors throw so pg-boss retries. Unfurling touches `entries.updated_at`, so open feeds pick up the card through live updates. Tests set `UNFURL_LOOPBACK_ONLY=1`, so the worker unfurls only from local test servers and never reaches the internet; the worker refuses to start with it under `NODE_ENV=production`. `.env.example` now also documents the `REALTIME_*` variables, which were missing since P-06. · P-05
 - **D-167** · 2026-09-27 · **Email wording** (resolves OD-13; drafted by Claude, approved by Petr). Sender `Kasa <notifications@…>`. Subjects: "Mika replied to you in Japan 2027", "Mika mentioned you in Japan 2027"; batched: "3 replies in Japan 2027", "2 mentions in Japan 2027", "4 replies and mentions in Japan 2027". Body, one reply: heading "Mika replied to your note" (note, link, photo, capture), the original as one greyed line, the reply text, and an "Open Japan 2027" button. One mention: "Mika mentioned you", the message, the button. Batched: "4 new for you in Japan 2027", then one line each: "**Mika** replied to your link: …" / "**Aiko** mentioned you: …", at most 5, then "…and 1 more", then the button. Snippets are cut at 140 characters; text-less entries read "(a photo)" and so on. Kasa Bot replies email like anyone else's. Footer: "You're getting this because you're in Japan 2027 on Kasa. Mute emails from this pile" (the link mutes in one click). Unsubscribe page: "Emails muted" / "You won't get emails about Japan 2027 anymore. Everything is still in the pile." with Unmute and Open Japan 2027; after Unmute: "Emails are on again for Japan 2027." In the app, only the D-165 toggle label. · Petr, P-12
+- **D-168** · 2026-09-27 · Notification internals (P-12). Migration 0010 adds `notifications` (one per person per entry, `handled_at` once emailed or skipped) and `memberships.emails_muted` / `last_emailed_at`. `POST /api/projects/:id/entries` takes `mentions` (user ids picked in the autocomplete, at most 20); in the same transaction `createEntry` records a `reply` for the author of the entry answered and a `mention` for each picked member, never for the author, non-members, or muted members; a reply that also mentions its recipient counts once, as a reply. It then queues `notify.send { userId, projectId }` no earlier than `last_emailed_at + 15 min`. The `notify.send` queue uses pg-boss's `stately` policy keyed by person and project, so at most one job waits and one runs; the job locks the membership row, re-queues itself while the window is closed, and otherwise sends one email with everything waiting. Skipped and marked handled: entries deleted since, entries the person already saw (created before their `last_read_at`), and everything while muted or after they left. Email goes to Resend over plain HTTP (no SDK) with an idempotency key per batch, so a retry never sends twice; without `RESEND_API_KEY` the worker logs a line instead (local runs, CI, and e2e, which forces the key off). Unsubscribe links carry an HMAC token over project and user (`UNSUBSCRIBE_SECRET`, `@kasa/shared/unsubscribe`) that doesn't expire. `/unsubscribe?token=` mutes from the browser rather than on GET, so mail scanners that open links don't mute anyone, and emails carry RFC 8058 `List-Unsubscribe` / `List-Unsubscribe-Post` headers for one-click unsubscribe in mail apps (`POST /api/unsubscribe`). A bad token shows the API error "This link isn't valid". The mute toggle calls `PUT /api/projects/:id/email-mute`. The composer input is now an ARIA combobox: `@` plus letters at a word start lists matching members (any word of the name) and Kasa Bot; arrows move, Enter or Tab picks, Escape closes the list without cancelling a reply. Picking inserts `@Full Name ` (Kasa Bot inserts `@kasa`), and only picked names still in the text are sent as `mentions`. Future writers of replies (Kasa Bot, Telegram) must call `recordNotifications`. `.env.example` documents `RESEND_API_KEY`, `EMAIL_FROM`, `UNSUBSCRIBE_SECRET`, and `RESEND_BASE_URL`. · P-12
 
 ---
 
@@ -275,6 +276,12 @@ Depends on: F-05, F-09
 - [ ] `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` set in the Vercel project (not in the repo); the staging callback URL added to the Google OAuth client.
 - [ ] Sign in and out on staging works end to end.
 
+### F-13 · Email sending on staging and production · `todo`
+Depends on: P-12, F-10
+- [ ] Petr creates a Resend account and verifies a sender domain he controls (D-163).
+- [ ] `RESEND_API_KEY`, `EMAIL_FROM`, and `UNSUBSCRIBE_SECRET` set for the worker, and `UNSUBSCRIBE_SECRET` for the web app, in each environment (not in the repo).
+- [ ] A reply on staging sends a real email whose unsubscribe link and one-click header both mute the project.
+
 ### F-05 · Google sign-in and sessions · `done` · branch `f-05-auth`
 Depends on: F-04
 - [x] Sign in and out with Google; a user row is created on first sign-in. (Verified locally with a real Google client.)
@@ -379,11 +386,11 @@ Depends on: P-09, P-10
 - [ ] Upload continues in the background if the popup closes; capture to saved in under 5 seconds on a normal connection.
 - [ ] Analytics: `capture_created` with mode.
 
-### P-12 · Minimal notifications · `in-progress` · branch `p-12-notifications`
+### P-12 · Minimal notifications · `done` · branch `p-12-notifications`
 Depends on: P-07
-- [ ] Email for replies and `@mentions`, batched to at most one email per 15 minutes per project.
-- [ ] Unsubscribe link and per-project mute (D-165).
-- [ ] `@mention` autocomplete in the composer (D-164); email via Resend (D-163).
+- [x] Email for replies and `@mentions`, batched to at most one email per 15 minutes per project.
+- [x] Unsubscribe link and per-project mute (D-165).
+- [x] `@mention` autocomplete in the composer (D-164); email via Resend (D-163). (Real sending needs `RESEND_API_KEY`, `EMAIL_FROM`, and `UNSUBSCRIBE_SECRET` in each environment, see F-13.)
 
 ### P-13 · Pilot readiness · `todo`
 Depends on: P-02 to P-07, P-12, P-14, P-15, OD-03 (P-08 to P-11 dropped, D-158)

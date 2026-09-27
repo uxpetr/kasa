@@ -49,6 +49,7 @@
         "GOOGLE_CLIENT_SECRET",
         "REALTIME_SECRET",
         "REALTIME_PUBLIC_URL",
+        "UNSUBSCRIBE_SECRET",
         "S3_ENDPOINT",
         "S3_REGION",
         "S3_BUCKET",

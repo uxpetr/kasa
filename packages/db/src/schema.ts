@@ -15,6 +15,7 @@ import {
   uuid,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 const id = () => uuid("id").primaryKey().defaultRandom();
 const createdAt = () => timestamp("created_at", { withTimezone: true }).notNull().defaultNow();
@@ -142,8 +143,40 @@ export const memberships = pgTable(
     joinedAt: timestamp("joined_at", { withTimezone: true }).notNull().defaultNow(),
     // When the member last opened the feed; entries by others after this (or after joining) are unread.
     lastReadAt: timestamp("last_read_at", { withTimezone: true }),
+    // "Mute emails" in the project menu, or the unsubscribe link (D-165).
+    emailsMuted: boolean("emails_muted").notNull().default(false),
+    // At most one notification email per 15 minutes per project (P-12).
+    lastEmailedAt: timestamp("last_emailed_at", { withTimezone: true }),
   },
   (t) => [primaryKey({ columns: [t.projectId, t.userId] }), index("memberships_user_idx").on(t.userId)],
+);
+
+export const notificationKind = pgEnum("notification_kind", ["reply", "mention"]);
+
+// Replies and @mentions waiting to be emailed (P-12). One per person per entry; a reply
+// that also mentions its recipient counts as a reply.
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: id(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    entryId: uuid("entry_id")
+      .notNull()
+      .references(() => entries.id, { onDelete: "cascade" }),
+    kind: notificationKind("kind").notNull(),
+    createdAt: createdAt(),
+    // Set when emailed, or when skipped (already read, deleted, muted).
+    handledAt: timestamp("handled_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("notifications_user_entry_idx").on(t.userId, t.entryId),
+    index("notifications_pending_idx").on(t.userId, t.projectId).where(sql`${t.handledAt} is null`),
+  ],
 );
 
 export const invites = pgTable(
