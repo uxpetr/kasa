@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Chrome extension (D-158), pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** P-14 (invite page), in progress; it's the last task before P-13 (pilot readiness). F-09, F-10, F-11, and F-13 are also unblocked.
+**Next up:** P-13 (pilot readiness) once OD-03 (pilot length and pass bar) is decided. F-09, F-10, F-11, and F-13 are also unblocked.
 **Blocked:** nothing. Real emails need F-13 (a Resend account and a sender domain from Petr).
 
 ---
@@ -173,6 +173,7 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-174** · 2026-09-27 · Signed-out visitors with a working link see the pile's name, member count, and inviter before signing in; nothing else about the pile. · Petr, P-14
 - **D-175** · 2026-09-27 · **Dead invite links**: expired or turned off (410) shows "This invite has expired" / "Ask the person who sent it for a new link."; unknown (404) shows "This invite link doesn't work" / "Check that you copied the whole link."; both with a "Go to Kasa" button. · Petr, P-14
 - **D-176** · 2026-09-27 · **Invite people dialog**: an "Invite people" item in the project menu (owner only) opens a dialog with "Anyone with this link can join as an editor. It works for 7 days.", the link in a read-only field, and "Copy link" (which then reads "Copied"), "New link", and "Turn off link". With no live link it offers "Create link". · Petr, P-14
+- **D-177** · 2026-09-27 · Invite page internals (P-14): `GET /api/invites/:token` now works signed out (D-174). Signed out, it returns only `projectName`, `memberCount`, `inviterName` (the first name of whoever made the link), `avatars` (up to five, as id and initial only), and `alreadyMember: false`. Signed in, it also returns `projectId`. The page renders on the server from the same `previewInvite`, sends existing members straight to the pile, and uses the title "Join Japan 2027 · Kasa" with `noindex`. "Sign in with Google to join" returns to `/invite/<token>?join=1`, which joins without a second click, since the person already chose to join. If the link stops working while the page is open, joining re-renders it as expired. The Invite people dialog uses the existing owner-only `GET`/`POST`/`DELETE /api/projects/:id/invites`; "Copy link" uses the Clipboard API and says so if copying fails. · P-14
 
 ---
 
@@ -406,12 +407,12 @@ Depends on: P-02 to P-07, P-12, P-14, P-15, OD-03 (P-08 to P-11 dropped, D-158)
 - [ ] Onboarding for the pilot group. The extension offer (D-018) comes with L-06.
 - [ ] A way for pilot users to send feedback from inside the app.
 
-### P-14 · Invite page · `in-progress` · branch `p-14-invite-page`
+### P-14 · Invite page · `done` · branch `p-14-invite-page`
 Depends on: P-01, F-08
-- [ ] `/invite/<token>` shows the project name and member count (`GET /api/invites/:token`), asks the person to sign in first if needed, then joins (`POST /api/invites/:token/accept`) and opens the project.
-- [ ] Clear states for an expired or revoked link (410) and an unknown one (404).
-- [ ] Owner can copy, renew, and revoke the link from the project menu.
-- [ ] Copy and layout need a design; add an Open decision if the prototype doesn't cover it.
+- [x] `/invite/<token>` shows the project name and member count (`GET /api/invites/:token`), asks the person to sign in first if needed, then joins (`POST /api/invites/:token/accept`) and opens the project.
+- [x] Clear states for an expired or revoked link (410) and an unknown one (404).
+- [x] Owner can copy, renew, and revoke the link from the project menu.
+- [x] Copy and layout need a design; add an Open decision if the prototype doesn't cover it. (Decided with Petr: D-173 to D-176.)
 
 ### P-15 · Members · `done` · branch `p-15-members`
 Depends on: P-01

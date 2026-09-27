@@ -233,8 +233,21 @@ describe.skipIf(!ready)("projects and invites", () => {
 
       expect(await previewInvite(db(), u.joiner, token)).toEqual({
         ok: true,
-        value: { projectId: id, projectName: "Japan 2027", memberCount: 3, alreadyMember: false },
+        value: {
+          projectId: id,
+          projectName: "Japan 2027",
+          memberCount: 3,
+          inviterName: "owner",
+          avatars: [
+            { id: u.owner, initial: "O" },
+            { id: u.editor, initial: "E" },
+            { id: u.viewer, initial: "V" },
+          ],
+          alreadyMember: false,
+        },
       });
+      // Signed out: the same preview, never "already a member" (D-174).
+      expect(await previewInvite(db(), null, token)).toMatchObject({ ok: true, value: { projectName: "Japan 2027", alreadyMember: false } });
       expect(await acceptInvite(db(), u.joiner, token)).toEqual({ ok: true, value: { projectId: id, role: "editor" } });
       expect(await acceptInvite(db(), second, token)).toEqual({ ok: true, value: { projectId: id, role: "editor" } });
       expect(events.filter((e) => e.event === "invite_accepted").map((e) => e.userId)).toEqual([u.joiner, second]);

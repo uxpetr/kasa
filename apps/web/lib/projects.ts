@@ -246,29 +246,49 @@ async function usableInvite(db: Database, token: unknown) {
       expiresAt: schema.invites.expiresAt,
       revokedAt: schema.invites.revokedAt,
       archivedAt: schema.projects.archivedAt,
+      inviterName: schema.users.name,
     })
     .from(schema.invites)
     .innerJoin(schema.projects, eq(schema.projects.id, schema.invites.projectId))
+    .innerJoin(schema.users, eq(schema.users.id, schema.invites.createdBy))
     .where(and(eq(schema.invites.token, token), isNull(schema.projects.deletedAt)));
   if (!row) return fail<never>(404, "Invite not found");
   if (row.revokedAt || row.expiresAt <= new Date() || row.archivedAt) return fail<never>(410, "This invite link no longer works");
   return ok(row);
 }
 
-/** What a signed-in person sees before joining: the project name and whether they're already in. */
-export async function previewInvite(
-  db: Database,
-  userId: string,
-  token: unknown,
-): Promise<Result<{ projectId: string; projectName: string; memberCount: number; alreadyMember: boolean }>> {
+export interface InvitePreview {
+  projectId: string;
+  projectName: string;
+  memberCount: number;
+  /** First name of whoever made the link (the owner, D-139). */
+  inviterName: string;
+  /** Up to five members as initials only: nothing else about the pile shows before joining (D-174). */
+  avatars: { id: string; initial: string }[];
+  alreadyMember: boolean;
+}
+
+const firstNameOf = (name: string) => name.trim().split(/\s+/)[0] || name;
+
+/** What someone with a working link sees before joining (D-173). `userId` is null when signed out (D-174). */
+export async function previewInvite(db: Database, userId: string | null, token: unknown): Promise<Result<InvitePreview>> {
   const invite = await usableInvite(db, token);
   if (!invite.ok) return invite;
-  const { projectId, projectName } = invite.value;
-  const [members] = await db
-    .select({ n: count(), me: sql<number>`count(*) filter (where ${schema.memberships.userId} = ${userId})` })
+  const { projectId, projectName, inviterName } = invite.value;
+  const members = await db
+    .select({ id: schema.memberships.userId, name: schema.users.name })
     .from(schema.memberships)
-    .where(eq(schema.memberships.projectId, projectId));
-  return ok({ projectId, projectName, memberCount: Number(members!.n), alreadyMember: Number(members!.me) > 0 });
+    .innerJoin(schema.users, eq(schema.users.id, schema.memberships.userId))
+    .where(eq(schema.memberships.projectId, projectId))
+    .orderBy(sql`case ${schema.memberships.role} when 'owner' then 0 when 'editor' then 1 else 2 end`, schema.memberships.joinedAt);
+  return ok({
+    projectId,
+    projectName,
+    memberCount: members.length,
+    inviterName: firstNameOf(inviterName),
+    avatars: members.slice(0, 5).map((m) => ({ id: m.id, initial: (m.name.trim()[0] ?? "?").toUpperCase() })),
+    alreadyMember: userId !== null && members.some((m) => m.id === userId),
+  });
 }
 
 /** Joins the project as editor; existing members keep their role (D-138). */

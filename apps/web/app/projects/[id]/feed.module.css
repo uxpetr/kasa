@@ -555,3 +555,11 @@ button.reaction::after {
   outline: 2px solid var(--kasa-color-ink);
   outline-offset: 2px;
 }
+
+/* Invite people (D-176): four buttons wrap onto two rows rather than squeezing their labels. */
+.inviteActions {
+  flex-wrap: wrap;
+}
+.inviteActions button {
+  white-space: nowrap;
+}
