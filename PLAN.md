@@ -144,6 +144,10 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-145** · 2026-09-26 · A project card's preview line is the last entry as "Name: text" for notes and bot messages ("You" for yourself, "Kasa Bot" for the bot), and "Name: what it is" otherwise: "Photo", "Link · <title>", "Capture from <site>", "File", and so on. When the last entry has an image, it peeks out as a polaroid like the Japan card. · Petr, P-02
 - **D-146** · 2026-09-26 · Archived projects sit in a collapsed "Archived (n)" section under the grid and look slightly faded when opened. · Petr, P-02
 - **D-147** · 2026-09-26 · Projects screen internals: `/` shows "Your piles" when signed in (`lib/piles.ts` builds it in five queries, whatever the number of projects). Unread = entries by others (the bot included) created after `memberships.last_read_at`, or after `joined_at` if the member never opened the feed; P-03 sets `last_read_at` when the feed is opened. Piles sort by last activity. Avatars are initials on a colour picked from the new `avatar` palette in `design/tokens.json` by user id (all pass 4.5:1 with white). Times show in the viewer's time zone: the time today, "Yesterday", the weekday within a week, then the date. The peeking image is a 5-minute signed URL. `@kasa/ui` gains `Pile`, `Avatar`, `AvatarStack`; the account button's menu uses the HTML popover API. Users created before P-02 have no "My pile"; D-144 only runs on sign-up. · P-02
+- **D-148** · 2026-09-27 · Project menu in the feed header: Members (read-only list with roles until P-15), Rename (owner and editors) and Archive/Unarchive (owner) through the P-01 API, and a disabled "Search (coming soon)". The invite link stays in P-14. The prototype's "Capture from a site" button waits for the extension tasks. · Petr, P-03
+- **D-149** · 2026-09-27 · Composer links: a message that is exactly one URL becomes a Link entry (unfurled in P-05); text with URLs inside stays a Note with the URLs clickable. · Petr, P-03
+- **D-150** · 2026-09-27 · Composer images: all images from one send become one Photo entry (a stack when there are several), and any text is its caption. · Petr, P-03
+- **D-151** · 2026-09-27 · Feed notices: viewers see "You can view this pile but not add to it." in place of the composer; archived projects show "This pile is archived." with an Unarchive button for the owner; an empty feed says "Nothing here yet. Paste a link, drop a photo, or write a note." · Petr, P-03
 
 ---
 
@@ -296,7 +300,7 @@ Depends on: P-01, F-08
 - [x] "New project" flow.
 - [x] Matches `design/prototype/Projects.dc.html`. Checked with screenshots at 1280px and 390px; project cards link to a placeholder page until P-03.
 
-### P-03 · Zen chat feed · `todo`
+### P-03 · Zen chat feed · `in-progress` · branch `p-03-zen-feed`
 Depends on: P-01, F-08
 - [ ] Opens at the newest entry; scroll up loads older entries in pages.
 - [ ] Header has only back, project name, and a menu (members, settings, search placeholder).
