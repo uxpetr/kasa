@@ -59,7 +59,7 @@ test.describe("link unfurling", () => {
       if (request.url().startsWith(site)) external.push(request.url());
     });
 
-    await page.getByRole("textbox").fill(`${site}/ryokan`);
+    await page.getByRole("combobox").fill(`${site}/ryokan`);
     await page.keyboard.press("Enter");
 
     // First a plain link, then the unfurled card arrives through live updates.

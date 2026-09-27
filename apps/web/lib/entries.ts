@@ -1,8 +1,12 @@
 // The zen chat feed (P-03, P-04): reading pages, posting, reacting, deleting, and marking read.
 // Access: members read (viewers included); owners and editors post and react unless archived (lib/access).
 import { and, asc, count, desc, eq, gt, inArray, isNull, lt, or, schema, sql, type Database } from "@kasa/db";
+import type { JobQueue } from "@kasa/jobs";
+import { errorAttributes } from "@kasa/observability";
 import { track } from "@kasa/shared";
 import { canAdd, canDeleteEntry, canReact, canRead, projectAccess } from "./access";
+import { log } from "./log";
+import { parseMentions, queueNotifications, recordNotifications } from "./notifications";
 import { isReaction, REACTIONS, type Reaction } from "./reactions";
 import { fail, isUuid, ok, type Result } from "./result";
 
@@ -323,13 +327,16 @@ export function soleUrl(text: string): string | null {
 
 /**
  * Posts from the app composer: images make one Photo entry with the text as caption (D-150);
- * a lone URL makes a Link entry (D-149); anything else is a Note.
+ * a lone URL makes a Link entry (D-149); anything else is a Note. `mentions` are the ids of
+ * people picked from the @ autocomplete (D-164). With `jobs`, links are queued for unfurling
+ * (P-05) and replies and mentions for email (P-12); the entry is saved even if queueing fails.
  */
 export async function createEntry(
   db: Database,
   userId: string,
   projectId: string,
-  input: { text?: unknown; uploadIds?: unknown; replyToId?: unknown },
+  input: { text?: unknown; uploadIds?: unknown; replyToId?: unknown; mentions?: unknown },
+  jobs?: JobQueue,
 ): Promise<Result<FeedEntry>> {
   const access = isUuid(projectId) ? await projectAccess(db, userId, projectId) : null;
   if (!access) return fail(404, "Project not found");
@@ -344,6 +351,8 @@ export async function createEntry(
   if (new Set(uploadIds).size !== uploadIds.length) return fail(400, "uploadIds must not repeat");
   if (uploadIds.length > MAX_PHOTOS_PER_ENTRY) return fail(400, `At most ${MAX_PHOTOS_PER_ENTRY} photos per message`);
   if (!text && uploadIds.length === 0) return fail(400, "Write something or attach a photo");
+  const mentions = parseMentions(input.mentions);
+  if (!mentions.ok) return mentions;
 
   // A reply answers a live entry in the same project (D-006).
   let original: Row | undefined;
@@ -383,6 +392,7 @@ export async function createEntry(
   const url = uploadIds.length === 0 ? soleUrl(text) : null;
   const kind: EntryKind = uploadIds.length ? "photo" : url ? "link" : "note";
 
+  let recipients: string[] = [];
   const entryId = await db
     .transaction(async (tx) => {
     const [entry] = await tx
@@ -398,6 +408,7 @@ export async function createEntry(
       );
     }
     if (kind === "link") await tx.insert(schema.linkPreviews).values({ entryId: entry!.id, url: url! });
+    recipients = await recordNotifications(tx, { id: entry!.id, projectId, authorId: userId }, original?.authorId ?? null, mentions.value);
     return entry!.id;
     })
     // Two sends racing with the same image: the unique index lets only one through.
@@ -407,6 +418,14 @@ export async function createEntry(
     });
   if (!entryId) return fail(409, "Some photos aren't ready or can't be used");
 
+  if (jobs) {
+    try {
+      if (kind === "link") await jobs.send("link.unfurl", { entryId });
+      await queueNotifications(db, jobs, projectId, recipients);
+    } catch (error) {
+      log.error("follow-up jobs not queued", { "entry.id": entryId, "project.id": projectId, ...errorAttributes(error) });
+    }
+  }
   await track("entry_created", userId, { projectId, kind, source: "app" });
   if (original) await track("reply_created", userId, { projectId, kind, toKind: original.kind, own: original.authorId === userId });
   return ok((await withDetails(db, [(await rowById(db, entryId))!], userId))[0]!);

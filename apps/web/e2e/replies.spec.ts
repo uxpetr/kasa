@@ -53,7 +53,7 @@ test.describe("replies", () => {
     await note.getByRole("button", { name: "Actions for Petr's note" }).click();
     await page.getByRole("menuitem", { name: "Reply" }).click();
     await expect(page.getByText("Replying to Petr's note")).toBeVisible();
-    await expect(page.getByRole("textbox", { name: "Reply to Petr's note" })).toBeFocused();
+    await expect(page.getByRole("combobox", { name: "Reply to Petr's note" })).toBeFocused();
     await page.keyboard.press("Escape");
     await expect(page.getByText("Replying to Petr's note")).toHaveCount(0);
 

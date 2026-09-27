@@ -47,7 +47,7 @@ test.describe("live updates", () => {
   }
 
   async function post(page: Page, text: string) {
-    await page.getByRole("textbox").fill(text);
+    await page.getByRole("combobox").fill(text);
     await page.keyboard.press("Enter");
     await expect(feed(page).getByText(text)).toBeVisible();
   }

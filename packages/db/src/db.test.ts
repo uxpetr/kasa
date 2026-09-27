@@ -30,7 +30,7 @@ describe.skipIf(!baseUrl)("database", () => {
     expect(tables.map((t) => t.table_name).sort()).toEqual(
       [
         "accounts", "captures", "categories", "comments", "entries", "entry_categories", "entry_media",
-        "invites", "link_previews", "memberships", "pins", "project_passes", "projects",
+        "invites", "link_previews", "memberships", "notifications", "pins", "project_passes", "projects",
         "reactions", "sessions", "subscriptions", "telegram_identities", "telegram_links",
         "telegram_messages", "uploads", "users", "verifications",
       ].sort(),

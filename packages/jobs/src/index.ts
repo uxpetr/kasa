@@ -7,17 +7,31 @@ import { PgBoss } from "pg-boss";
 export interface JobPayloads {
   "media.process": { uploadId: string };
   "link.unfurl": { entryId: string };
+  "notify.send": { userId: string; projectId: string };
 }
 export type JobName = keyof JobPayloads;
 
 /** What's stored: the payload plus the sender's trace context, so the job continues its trace (D-137). */
 export type JobData<N extends JobName> = JobPayloads[N] & { _trace?: TraceCarrier };
-export const JOB_NAMES = ["media.process", "link.unfurl"] as const satisfies readonly JobName[];
+export const JOB_NAMES = ["media.process", "link.unfurl", "notify.send"] as const satisfies readonly JobName[];
+
+export interface SendOptions {
+  /** Don't run before this moment. */
+  startAfter?: Date;
+  /**
+   * With a `stately` queue, at most one job per key waits and one runs; sending
+   * while one is already waiting is a no-op, since that job will see the new work.
+   */
+  singletonKey?: string;
+}
 
 /** What the web app needs from the queue: enqueue only. */
 export interface JobQueue {
-  send<N extends JobName>(name: N, payload: JobPayloads[N]): Promise<void>;
+  send<N extends JobName>(name: N, payload: JobPayloads[N], options?: SendOptions): Promise<void>;
 }
+
+/** Per-queue settings; `notify.send` is stately so emails batch per person and project (P-12). */
+const QUEUE_POLICY: Partial<Record<JobName, "stately">> = { "notify.send": "stately" };
 
 /**
  * `producer` (web app, short-lived functions) only sends jobs; `worker` also runs
@@ -36,16 +50,27 @@ export async function startQueue(
   boss.on("error", (error) => console.error(JSON.stringify({ type: "queue_error", message: error.message })));
   await boss.start();
   for (const name of JOB_NAMES) {
-    await boss.createQueue(name, { retryLimit: 3, retryDelay: 5, retryBackoff: true });
+    await boss.createQueue(name, { retryLimit: 3, retryDelay: 5, retryBackoff: true, policy: QUEUE_POLICY[name] ?? "standard" });
   }
   return {
     boss,
     queue: {
-      async send(name, payload) {
+      async send(name, payload, options = {}) {
         const data: JobData<typeof name> = { ...payload, _trace: injectTraceContext() };
-        const id = await boss.send(name, data);
-        if (!id) throw new Error(`Could not enqueue ${name}`);
+        const id = await boss.send(name, data, options);
+        if (!id && !options.singletonKey) throw new Error(`Could not enqueue ${name}`);
       },
     },
   };
 }
+
+/** At most one notification email per person per project in this window (P-12). */
+export const EMAIL_INTERVAL_MS = 15 * 60_000;
+
+/** When a person's next notification email for a project may go out. */
+export function nextEmailAt(lastEmailedAt: Date | null, now = new Date()): Date {
+  const next = lastEmailedAt ? new Date(lastEmailedAt.getTime() + EMAIL_INTERVAL_MS) : now;
+  return next > now ? next : now;
+}
+
+export const notifyKey = (userId: string, projectId: string) => `${userId}:${projectId}`;

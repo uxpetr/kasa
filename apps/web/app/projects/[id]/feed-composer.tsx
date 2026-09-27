@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState, type ClipboardEvent, type DragEvent } from "react";
+import { useEffect, useId, useRef, useState, type ClipboardEvent, type DragEvent, type KeyboardEvent } from "react";
 import { IMAGE_TYPES, isImageType, MAX_UPLOAD_BYTES } from "@kasa/media/limits";
-import { Composer } from "@kasa/ui";
+import { Avatar, Composer } from "@kasa/ui";
 import type { FeedEntry } from "@/lib/entries";
+import { activeMention, insertMention, KASA_BOT, matchMentions, mentionIds, type Mentionable } from "@/lib/mentions";
 import controls from "../../controls.module.css";
 import styles from "./feed.module.css";
 
@@ -48,14 +49,67 @@ async function uploadImage(projectId: string, file: File): Promise<string> {
 interface ComposerProps {
   projectId: string;
   projectName: string;
+  viewerId: string;
   onSent: (entry: FeedEntry) => void;
   /** The entry being replied to (D-006), e.g. { label: "Mika's note" }. */
   replyTo?: { id: string; label: string } | null;
   onCancelReply?: () => void;
 }
 
-export function FeedComposer({ projectId, projectName, onSent, replyTo = null, onCancelReply }: ComposerProps) {
+export function FeedComposer({ projectId, projectName, viewerId, onSent, replyTo = null, onCancelReply }: ComposerProps) {
   const [text, setText] = useState("");
+  const input = useRef<HTMLInputElement>(null);
+  const listId = useId();
+  // @mention autocomplete (D-164): members load on the first "@".
+  const [members, setMembers] = useState<Mentionable[] | null>(null);
+  const [picked, setPicked] = useState<Mentionable[]>([]);
+  const [mention, setMention] = useState<{ start: number; query: string } | null>(null);
+  const [active, setActive] = useState(0);
+  const options = mention && members ? matchMentions([...members, KASA_BOT], mention.query) : [];
+  const open = options.length > 0;
+
+  function onTextChange(value: string) {
+    setText(value);
+    const caret = input.current?.selectionStart ?? value.length;
+    const next = activeMention(value, caret);
+    setMention(next);
+    setActive(0);
+    if (next && members === null) {
+      setMembers([]);
+      void fetch(`/api/projects/${projectId}/members`)
+        .then((res) => (res.ok ? (res.json() as Promise<{ members: Mentionable[] }>) : { members: [] }))
+        .then(({ members }) => setMembers(members.filter((m) => m.id !== viewerId).map(({ id, name }) => ({ id, name }))))
+        .catch(() => setMembers(null));
+    }
+  }
+
+  function pick(option: Mentionable) {
+    if (!mention) return;
+    const next = insertMention(text, mention, option);
+    setText(next.text);
+    setPicked((current) => [...current, option]);
+    setMention(null);
+    requestAnimationFrame(() => {
+      input.current?.focus();
+      input.current?.setSelectionRange(next.caret, next.caret);
+    });
+  }
+
+  function onInputKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    if (!open) return;
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive((i) => (i + (e.key === "ArrowDown" ? 1 : options.length - 1)) % options.length);
+    } else if (e.key === "Enter" || e.key === "Tab") {
+      e.preventDefault();
+      pick(options[active]!);
+    } else if (e.key === "Escape") {
+      // Close the list without also cancelling a reply.
+      e.preventDefault();
+      e.stopPropagation();
+      setMention(null);
+    }
+  }
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -127,11 +181,13 @@ export function FeedComposer({ projectId, projectName, onSent, replyTo = null, o
       const res = await fetch(`/api/projects/${projectId}/entries`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ text: value, uploadIds, ...(replyTo ? { replyToId: replyTo.id } : {}) }),
+        body: JSON.stringify({ text: value, uploadIds, mentions: mentionIds(value, picked), ...(replyTo ? { replyToId: replyTo.id } : {}) }),
       });
       const body = (await res.json().catch(() => ({}))) as FeedEntry & { error?: string };
       if (!res.ok) throw new Error(body.error ?? "Couldn't send");
       setText("");
+      setPicked([]);
+      setMention(null);
       setAttachments([]);
       onSent(body);
     } catch (e) {
@@ -185,11 +241,43 @@ export function FeedComposer({ projectId, projectName, onSent, replyTo = null, o
           ))}
         </ul>
       ) : null}
+      {open ? (
+        <ul id={listId} role="listbox" aria-label="Mention someone" className={styles.mentions}>
+          {options.map((option, i) => (
+            <li
+              key={option.id}
+              id={`${listId}-${i}`}
+              role="option"
+              aria-selected={i === active}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                pick(option);
+              }}
+              onMouseEnter={() => setActive(i)}
+            >
+              <span aria-hidden="true">
+                <Avatar person={option} size={24} />
+              </span>
+              <span>{option.name}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
       <Composer
         label={replyTo ? `Reply to ${replyTo.label}` : `Add to ${projectName}`}
         placeholder="Paste a link, drop a photo, write a note, or ask @kasa"
         value={text}
-        onChange={setText}
+        onChange={onTextChange}
+        inputRef={input}
+        inputProps={{
+          role: "combobox",
+          "aria-autocomplete": "list",
+          "aria-expanded": open,
+          "aria-controls": open ? listId : undefined,
+          "aria-activedescendant": open ? `${listId}-${active}` : undefined,
+          onKeyDown: onInputKeyDown,
+          onBlur: () => setMention(null),
+        }}
         onSubmit={send}
         onAttach={() => fileInput.current?.click()}
         canSubmitEmpty={attachments.length > 0}

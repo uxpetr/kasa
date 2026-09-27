@@ -178,6 +178,9 @@ importers:
       '@kasa/observability':
         specifier: workspace:*
         version: link:../../packages/observability
+      '@kasa/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@opentelemetry/api':
         specifier: ^1.9.1
         version: 1.9.1

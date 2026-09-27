@@ -444,10 +444,42 @@ button.reaction::after {
 }
 
 .composer {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 8px;
   border-radius: 28px;
+}
+/* @mention autocomplete (D-164): a small list floating above the composer. */
+.mentions {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 12px;
+  z-index: 5;
+  min-width: 220px;
+  max-width: calc(100% - 24px);
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--kasa-color-paper);
+  border: 1px solid var(--kasa-color-line);
+  border-radius: 14px;
+  box-shadow: var(--kasa-shadow-object);
+}
+.mentions li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: var(--kasa-font-size-body);
+  cursor: pointer;
+}
+.mentions li > [aria-hidden] {
+  display: flex;
+}
+.mentions li[aria-selected="true"] {
+  background: var(--kasa-color-line);
 }
 .composer[data-dragging] {
   outline: 2px dashed var(--kasa-color-accent);
