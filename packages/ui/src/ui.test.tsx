@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { render } from "../scripts/generate-tokens";
-import { avatarColor, AvatarStack, BotButton, BotCard, CategoryChip, CategoryStamp, clampRotation, Composer, initialOf, Note, noteVariant, Pile, Polaroid, Print, tiltFor, tokens } from "./index";
+import { avatarColor, AvatarStack, BotButton, BotCard, CategoryChip, CategoryStamp, clampRotation, Composer, DeletedOutline, IndexCard, initialOf, Note, noteVariant, Pile, Polaroid, Print, tiltFor, tokens } from "./index";
 
 describe("tokens", () => {
   it("match design/tokens.json (run `pnpm --filter @kasa/ui tokens` if this fails)", () => {
@@ -189,5 +189,29 @@ describe("BotCard in the feed", () => {
   it("drops its own header when the feed already shows the k mark and name", () => {
     expect(renderToStaticMarkup(<BotCard>Hi</BotCard>)).toContain("kasa-bot-header");
     expect(renderToStaticMarkup(<BotCard header={false}>Hi</BotCard>)).not.toContain("kasa-bot-header");
+  });
+});
+
+describe("P-04 objects", () => {
+  it("fans several photos into a stack with a count, and opens full size from a button", () => {
+    const single = renderToStaticMarkup(<Polaroid src="/a.jpg" alt="Kyoto" onOpen={() => {}} />);
+    expect(single).not.toContain("kasa-photo-stack");
+    expect(single).toContain('aria-label="Open photo"');
+    const stack = renderToStaticMarkup(<Polaroid src="/a.jpg" alt="Kyoto" moreCount={3} />);
+    expect(stack).toContain("kasa-photo-stack");
+    expect(stack.match(/kasa-stack-sheet/g)).toHaveLength(2);
+    expect(stack).toContain('aria-label="3 more photos"');
+    expect(renderToStaticMarkup(<Polaroid src="/a.jpg" alt="Kyoto" moreCount={1} />).match(/kasa-stack-sheet/g)).toHaveLength(1);
+  });
+
+  it("makes an index card a single safe link", () => {
+    const html = renderToStaticMarkup(<IndexCard href="https://example.com/a" label="Link · example.com" title="How to use a JR Pass" />);
+    expect(html).toMatch(/^<a [^>]*href="https:\/\/example.com\/a"/);
+    expect(html).toContain('rel="noopener noreferrer nofollow ugc"');
+    expect(html).not.toContain("<img");
+  });
+
+  it("leaves a dashed outline for deleted objects", () => {
+    expect(renderToStaticMarkup(<DeletedOutline text="Mika deleted a note" />)).toContain('class="kasa-deleted"');
   });
 });

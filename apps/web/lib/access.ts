@@ -33,3 +33,8 @@ export const canRename = canAdd;
 export const canInvite = (a: Access | null) => !!a && !a.archived && a.role === "owner";
 /** Only the owner archives and unarchives (D-140). */
 export const canArchive = (a: Access | null) => a?.role === "owner";
+/** Reactions follow the same rule as adding: owners and editors, not while archived (D-003, D-140). */
+export const canReact = canAdd;
+/** Authors delete their own entries; the owner deletes anyone's, the bot's included (D-015). Not while archived. */
+export const canDeleteEntry = (a: Access | null, authorId: string | null, userId: string) =>
+  !!a && !a.archived && (a.role === "owner" || (authorId !== null && authorId === userId));

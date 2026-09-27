@@ -182,6 +182,8 @@ export const entries = pgTable(
     groupKey: text("group_key"),
     editedAt: timestamp("edited_at", { withTimezone: true }),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    // Who deleted it, for the outline's wording (D-155); the author or the owner.
+    deletedBy: uuid("deleted_by").references(() => users.id, { onDelete: "set null" }),
     createdAt: createdAt(),
   },
   (t) => [

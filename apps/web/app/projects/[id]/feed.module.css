@@ -162,26 +162,8 @@
   border-radius: 50%;
   background: var(--kasa-color-line-strong);
 }
-.entryBody a {
+.entryBody a:not([class]) {
   color: var(--kasa-color-accent);
-}
-.link {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 320px;
-  max-width: 100%;
-  box-sizing: border-box;
-  padding: 14px 16px;
-  background: var(--kasa-color-paper);
-  border-radius: var(--kasa-radius-paper);
-  text-decoration: none;
-}
-.entryBody .link {
-  color: var(--kasa-color-ink);
-}
-.linkTitle {
-  font-weight: 600;
 }
 .linkUrl {
   overflow: hidden;
@@ -190,6 +172,188 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.printNote,
+.printSource {
+  display: block;
+}
+.printSource {
+  padding-top: 2px;
+  color: var(--kasa-color-ink-muted);
+  font-size: 12px;
+}
+.pinNumber {
+  color: var(--kasa-color-accent);
+  font-weight: 600;
+}
+
+/* The actions menu (P-04): the button shows on hover or focus, long-press opens it on touch. */
+.objectWrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  width: fit-content;
+  max-width: 100%;
+  -webkit-touch-callout: none;
+}
+.actionsButton {
+  position: absolute;
+  top: 0;
+  right: -44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--kasa-color-line);
+  border-radius: 50%;
+  background: var(--kasa-color-paper);
+  color: var(--kasa-color-ink);
+  cursor: pointer;
+  opacity: 0;
+}
+.actionsButton::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+}
+.entry:hover .actionsButton,
+.actionsButton:focus-visible,
+.actionsButton[aria-expanded="true"] {
+  opacity: 1;
+}
+.actionsButton:focus-visible,
+.reaction:focus-visible,
+.pickerItem:focus-visible {
+  outline: 2px solid var(--kasa-color-ink);
+  outline-offset: 2px;
+}
+.entryMenu {
+  min-width: 0;
+}
+.picker {
+  display: flex;
+  gap: 2px;
+}
+.pickerItem {
+  width: var(--kasa-hit-target);
+  height: var(--kasa-hit-target);
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+.pickerItem:hover,
+.pickerItem[aria-checked="true"] {
+  background: var(--kasa-color-table-alt);
+}
+.pickerItem[aria-checked="true"] {
+  box-shadow: inset 0 0 0 2px var(--kasa-color-line-strong);
+}
+/* No room beside the object on narrow screens: the button sits on its corner. */
+@media (hover: none), (max-width: 560px) {
+  .actionsButton {
+    right: 4px;
+    top: 4px;
+  }
+}
+@media (hover: none) {
+  /* On touch screens the menu is a sheet at the bottom. */
+  .entryMenu {
+    position: fixed;
+    inset: auto 0 0;
+    position-area: none;
+    box-sizing: border-box;
+    width: 100%;
+    margin: 0;
+    padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+    border-radius: 16px 16px 0 0;
+  }
+  .picker {
+    justify-content: space-between;
+  }
+}
+.reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.reaction {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  box-sizing: border-box;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--kasa-color-line);
+  border-radius: 16px;
+  background: var(--kasa-color-paper);
+  color: var(--kasa-color-ink);
+  font: 600 var(--kasa-font-size-meta) / 1 var(--kasa-font-body);
+}
+button.reaction {
+  position: relative;
+  cursor: pointer;
+}
+button.reaction::after {
+  content: "";
+  position: absolute;
+  inset: -6px -2px;
+}
+.reaction[aria-pressed="true"] {
+  border-color: var(--kasa-color-accent);
+  background: var(--kasa-color-accent-tint);
+}
+.actionError {
+  margin: 0;
+  color: var(--kasa-color-accent-hover);
+  font-size: var(--kasa-font-size-meta);
+}
+.deleted {
+  padding-left: 48px;
+}
+
+/* Full-size photos */
+.viewer {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  max-height: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  border: 0;
+  background: rgba(31, 29, 26, 0.92);
+}
+.viewer[open] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+.viewer img {
+  max-width: 100%;
+  max-height: calc(100% - 72px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  touch-action: pan-y;
+}
+.viewerBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #fff;
+  font-weight: 600;
+}
+
 .fallback {
   margin: 0;
   color: var(--kasa-color-ink-body);

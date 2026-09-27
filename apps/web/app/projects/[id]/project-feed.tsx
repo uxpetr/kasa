@@ -58,6 +58,10 @@ export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
     return () => observer.disconnect();
   }, [cursor, loadOlder]);
 
+  const onChange = useCallback((changed: FeedEntry) => {
+    setEntries((current) => current.map((e) => (e.id === changed.id ? changed : e)));
+  }, []);
+
   const onSent = (entry: FeedEntry) => {
     setEntries((current) => [...current, entry]);
     requestAnimationFrame(() => window.scrollTo(0, document.documentElement.scrollHeight));
@@ -74,7 +78,7 @@ export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
         {entries.map((entry, i) => (
           <div key={entry.id} className={styles.item}>
             {i === 0 || dayKey(entries[i - 1]!.createdAt) !== dayKey(entry.createdAt) ? <DayDivider iso={entry.createdAt} /> : null}
-            <FeedEntryView entry={entry} viewerId={viewer.id} />
+            <FeedEntryView entry={entry} viewerId={viewer.id} canAdd={can.post} isOwner={viewer.role === "owner"} onChange={onChange} />
           </div>
         ))}
       </section>

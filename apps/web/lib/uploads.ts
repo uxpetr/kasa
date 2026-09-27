@@ -1,7 +1,7 @@
 // Upload flow (F-06, D-132): request a presigned PUT, upload straight to storage,
 // then mark it complete so the worker processes it. Media is served through
 // short-lived signed URLs to project members only.
-import { and, eq, schema, type Database } from "@kasa/db";
+import { and, eq, isNotNull, schema, type Database } from "@kasa/db";
 import type { JobQueue } from "@kasa/jobs";
 import { checkUpload, keys, type Storage } from "@kasa/media";
 import { canAdd, canRead, projectAccess } from "./access";
@@ -87,6 +87,13 @@ export async function mediaUrl(
   const [upload] = await deps.db.select().from(schema.uploads).where(eq(schema.uploads.id, uploadId));
   if (!upload || upload.status !== "ready") return null;
   if (!canRead(await projectAccess(deps.db, userId, upload.projectId))) return null;
+  // A photo in a deleted entry is gone for everyone (D-155).
+  const [deleted] = await deps.db
+    .select({ id: schema.entries.id })
+    .from(schema.entryMedia)
+    .innerJoin(schema.entries, eq(schema.entries.id, schema.entryMedia.entryId))
+    .where(and(eq(schema.entryMedia.uploadId, uploadId), isNotNull(schema.entries.deletedAt)));
+  if (deleted) return null;
   const key = variant === "full" ? upload.fullKey : upload.thumbKey;
   return key ? deps.storage.presignDownload(key) : null;
 }

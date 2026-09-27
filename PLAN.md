@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** P-04 (core content types), in progress. P-14, P-15, F-09, F-10, F-11, P-05, and P-08 are also unblocked.
+**Next up:** P-06 (realtime updates), then P-07 (replies, which now include the Reply action, D-153). P-14, P-15, F-09, F-10, F-11, P-05, and P-08 are also unblocked.
 **Blocked:** nothing.
 
 ---
@@ -152,6 +152,7 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-153** · 2026-09-27 · Reply joins the actions menu in P-07, together with the paper-clip reply design, so replies look right from the start. P-04's menu has React and Delete. · Petr, P-04
 - **D-154** · 2026-09-27 · Reactions are a fixed set of six: ❤️ 👍 😂 😮 🎉 👀. In P-04 they show as small counts on the object; the sticker look comes with V-02e. · Petr, P-04
 - **D-155** · 2026-09-27 · Deleting an entry asks for confirmation first ("Delete this note?" with Delete and Cancel). The deleted entry then stays in the feed as a dashed outline reading "Mika deleted a note", as in the prototype. · Petr, P-04
+- **D-156** · 2026-09-27 · Content types and actions internals (P-04): `DELETE /api/entries/:id` soft-deletes and records `entries.deleted_by` (migration 0007), so the outline can say who deleted it ("You deleted Mika's link"). Deleted entries stay in the feed API with kind and author only, and their images stop being served. `PUT`/`DELETE /api/entries/:id/reactions` with `{ emoji }` return the entry's reaction counts. Viewers can't react, following D-003 (viewers only read). Capture screenshots are served through `/api/entries/:id/media/:mediaId` and link preview images through `/api/entries/:id/preview-image`, both members only. The capture print shows the top of the screenshot (at most 240px tall), with its pins and the first comment on pin 1. The actions button appears on hover or focus beside the object; on touch screens a 500ms long-press opens the menu as a bottom sheet. New events: `entry_deleted` (kind, own) and `reaction_added` (emoji). New `@kasa/ui` components: `IndexCard`, `DeletedOutline`, and the fanned `Polaroid` stack, whose sheets stay within the 2.5° tilt limit. · P-04
 
 ---
 
@@ -312,13 +313,13 @@ Depends on: P-01, F-08
 - [x] Analytics: `entry_created` with kind and source.
 - [x] Opening the feed sets `memberships.last_read_at`, which clears the unread count on the projects screen (added by P-02, D-147).
 
-### P-04 · Core content types · `in-progress` · branch `p-04-content-types`
+### P-04 · Core content types · `done` · branch `p-04-content-types`
 Depends on: P-03, F-06
-- [ ] Note (sticky; lined sheet when long), Photo (polaroid), generic Link (index card), Capture (taped print with pins). P-03 already renders notes, single polaroids, a plain link card, and a one-line fallback for other kinds (`app/projects/[id]/feed-entry.tsx`); P-04 replaces the link card and fallback and adds photo stacks.
-- [ ] Shared actions menu on every object: React and Delete (Reply moves to P-07, D-153; Move to category and Star come in phase 2).
-- [ ] React: six fixed reactions shown as small counts on the object (D-154).
-- [ ] Delete: authors delete their own entries and owners anyone's (D-015), after a confirmation; the entry leaves a dashed outline (D-155).
-- [ ] Same rendering regardless of source (D-016).
+- [x] Note (sticky; lined sheet when long), Photo (polaroid), generic Link (index card), Capture (taped print with pins). P-03 already renders notes, single polaroids, a plain link card, and a one-line fallback for other kinds (`app/projects/[id]/feed-entry.tsx`); P-04 replaces the link card and adds photo stacks (fanned, with a count; tap opens full size). Drawing and File keep the one-line fallback until V-02.
+- [x] Shared actions menu on every object: React and Delete (Reply moves to P-07, D-153; Move to category and Star come in phase 2).
+- [x] React: six fixed reactions shown as small counts on the object (D-154).
+- [x] Delete: authors delete their own entries and owners anyone's (D-015), after a confirmation; the entry leaves a dashed outline (D-155).
+- [x] Same rendering regardless of source (D-016).
 
 ### P-05 · Link unfurling · `todo`
 Depends on: F-06
@@ -517,3 +518,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-26 · P-01 · Project API: create, list, rename, archive; reusable 7-day invite links; owner/editor/viewer rules in one place and tested per role; `project_created`, `invite_sent`, `invite_accepted`. · [#9](https://github.com/uxpetr/kasa/pull/9)
 - 2026-09-26 · P-02 · "Your piles" projects screen: paper-stack cards with last message, unread count, members, and photo peek; New project dialog; automatic "My pile"; collapsed Archived section; `Pile` and avatar components. · [#10](https://github.com/uxpetr/kasa/pull/10)
 - 2026-09-27 · P-03 · Zen chat feed: opens at the newest entry with paging back, header menu (members, rename, archive, search placeholder), composer for notes, links, and photos (attach, drop, paste; Enter sends), read tracking, viewer and archived notices, `entry_created`. · [#11](https://github.com/uxpetr/kasa/pull/11)
+- 2026-09-27 · P-04 · Core content types: index cards for links, taped capture prints with pins, fanned photo stacks with a full-size viewer; one actions menu (hover, focus, or long-press) with six reactions and Delete behind a confirmation; deleted entries leave a dashed outline naming who deleted them; `entry_deleted`, `reaction_added`. · [#12](https://github.com/uxpetr/kasa/pull/12)

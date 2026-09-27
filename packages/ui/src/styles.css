@@ -80,6 +80,97 @@
   font-weight: 600;
 }
 
+/* Photo stack: sheets fanned out behind the top polaroid */
+.kasa-photo-stack {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  transform: rotate(var(--kasa-rotate, 0deg));
+}
+.kasa-photo-stack > .kasa-polaroid {
+  position: relative;
+  z-index: 1;
+  transform: none;
+}
+/* Sheets stay within the 2.5° tilt limit; the offset does the fanning. */
+.kasa-stack-sheet {
+  position: absolute;
+  inset: 0;
+  background: var(--kasa-color-paper);
+  box-shadow: var(--kasa-shadow-object);
+  transform: rotate(2.5deg) translate(8px, 3px);
+}
+.kasa-stack-sheet + .kasa-stack-sheet {
+  transform: rotate(-2.5deg) translate(-7px, 4px);
+}
+/* Covers the photo so the whole polaroid opens it. */
+.kasa-polaroid-open {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+}
+.kasa-polaroid-open:focus-visible {
+  outline: 2px solid var(--kasa-color-ink);
+  outline-offset: 2px;
+}
+
+/* Generic link or article: a white index card */
+.kasa-index-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 280px;
+  max-width: 100%;
+  padding: 16px 18px;
+  border-radius: 3px;
+  background: var(--kasa-color-paper);
+  color: var(--kasa-color-ink);
+  text-decoration: none;
+}
+.kasa-index-card img {
+  display: block;
+  width: calc(100% + 20px);
+  height: 130px;
+  margin: -6px -10px 6px;
+  object-fit: cover;
+}
+.kasa-index-card-label {
+  overflow: hidden;
+  color: var(--kasa-color-ink-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kasa-index-card-title {
+  font: 600 19px/1.2 var(--kasa-font-display);
+  overflow-wrap: anywhere;
+}
+.kasa-index-card:hover .kasa-index-card-title {
+  text-decoration: underline;
+}
+.kasa-index-card:focus-visible {
+  outline: 2px solid var(--kasa-color-ink);
+  outline-offset: 2px;
+}
+
+/* Deleted object: a dashed outline where it was */
+.kasa-deleted {
+  box-sizing: border-box;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  padding: 14px 16px;
+  border: 2px dashed var(--kasa-color-line-strong);
+  border-radius: 3px;
+  color: var(--kasa-color-ink-muted);
+  font-size: var(--kasa-font-size-meta);
+  transform: rotate(var(--kasa-rotate, 0deg));
+}
+
 /* Capture and drawing: a taped print */
 .kasa-print {
   position: relative;
