@@ -41,8 +41,10 @@ function mentionPresent(text: string, picked: Mentionable): boolean {
   while (from <= text.length) {
     const i = text.indexOf(token, from);
     if (i === -1) return false;
-    const before = i === 0 || /\s/.test(text[i - 1]!);
-    const after = i + token.length === text.length || /[\s.,!?;:]/.test(text[i + token.length]!);
+    // Not glued to a letter or digit on either side: "me@Aiko.com" and "@John" don't count for "@Jo",
+    // but "(@Mika)" and "@Mika's" do.
+    const before = i === 0 || !/[\p{L}\p{N}_]/u.test(text[i - 1]!);
+    const after = i + token.length === text.length || !/[\p{L}\p{N}_]/u.test(text[i + token.length]!);
     if (before && after) return true;
     from = i + 1;
   }

@@ -42,8 +42,12 @@ export async function startRealtime({ secret, databaseUrl, allowedOrigins, port 
   const reconcile = async () => {
     hub.notifyAll();
     for (const { projectId, userId } of hub.members()) {
-      const member = await sql`select 1 from memberships where project_id = ${projectId} and user_id = ${userId}`.catch(() => null);
-      if (member?.length) continue;
+      // A failed check proves nothing; only a confirmed missing membership evicts.
+      const member = await sql`select 1 from memberships where project_id = ${projectId} and user_id = ${userId}`.catch((error: unknown) => {
+        log.warn("membership recheck failed", { "project.id": projectId, "user.id": userId, message: String(error) });
+        return null;
+      });
+      if (member === null || member.length > 0) continue;
       const clients = hub.takeUser(projectId, userId);
       for (const client of clients) evict(client, projectId);
     }
