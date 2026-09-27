@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { FeedEntry, FeedPage } from "@/lib/entries";
+import type { FeedChanges, FeedEntry, FeedPage } from "@/lib/entries";
+import { connectLive, mergeChanges } from "@/lib/live";
 import { FeedComposer } from "./feed-composer";
 import { FeedEntryView, DayDivider, dayKey } from "./feed-entry";
 import { ProjectHeader } from "./project-header";
@@ -22,6 +23,11 @@ export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
   const top = useRef<HTMLDivElement>(null);
   // Keeps the view still when older entries are added above it.
   const anchor = useRef<{ height: number; y: number } | null>(null);
+  // Follows new entries when the reader is already at the bottom.
+  const follow = useRef(false);
+  const since = useRef(initialPage.syncedAt);
+  const cursorRef = useRef(cursor);
+  cursorRef.current = cursor;
 
   // Open at the newest entry (D-005) and mark the feed read (D-147).
   useEffect(() => {
@@ -31,6 +37,10 @@ export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
   }, [project.id]);
 
   useLayoutEffect(() => {
+    if (follow.current) {
+      follow.current = false;
+      window.scrollTo(0, document.documentElement.scrollHeight);
+    }
     if (!anchor.current) return;
     window.scrollTo(0, anchor.current.y + document.documentElement.scrollHeight - anchor.current.height);
     anchor.current = null;
@@ -48,6 +58,55 @@ export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
     }
     setLoadingOlder(false);
   }, [cursor, loadingOlder, project.id]);
+
+  // Live updates (P-06): the realtime service says "changed", then we fetch what changed.
+  useEffect(() => {
+    let pulling = false;
+    let again = false;
+    let stopped = false;
+    const nearBottom = () => window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 120;
+
+    async function pull() {
+      if (pulling) {
+        again = true;
+        return;
+      }
+      pulling = true;
+      do {
+        again = false;
+        const res = await fetch(`/api/projects/${project.id}/entries?since=${encodeURIComponent(since.current)}`).catch(() => null);
+        if (stopped || !res?.ok) break;
+        const changes = (await res.json()) as FeedChanges;
+        const atBottom = nearBottom();
+        if (changes.truncated) {
+          // Too much changed while away: start again from the newest page.
+          const page = await fetch(`/api/projects/${project.id}/entries`).then((r) => (r.ok ? (r.json() as Promise<FeedPage>) : null)).catch(() => null);
+          if (stopped || !page) break;
+          follow.current = atBottom;
+          setEntries(page.entries);
+          setCursor(page.nextCursor);
+          since.current = page.syncedAt;
+        } else {
+          since.current = changes.syncedAt;
+          if (changes.entries.length === 0) continue;
+          follow.current = atBottom;
+          setEntries((current) => mergeChanges(current, changes.entries, { complete: cursorRef.current === null }));
+        }
+        // New things seen while the feed is open count as read (D-147).
+        if (document.visibilityState === "visible") void fetch(`/api/projects/${project.id}/read`, { method: "POST" });
+      } while (again && !stopped);
+      pulling = false;
+    }
+
+    const live = connectLive({ projectId: project.id, onChange: () => void pull() });
+    const wake = () => live.wake();
+    window.addEventListener("online", wake);
+    return () => {
+      stopped = true;
+      live.stop();
+      window.removeEventListener("online", wake);
+    };
+  }, [project.id]);
 
   // Scrolling up to the top loads the previous page.
   useEffect(() => {

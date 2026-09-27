@@ -57,6 +57,20 @@
       "when": 1790492755582,
       "tag": "0007_entry_deleted_by",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790496280828,
+      "tag": "0008_entry_updated_at",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790496291510,
+      "tag": "0009_entry_change_notify",
+      "breakpoints": true
     }
   ]
 }

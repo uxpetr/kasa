@@ -1,4 +1,4 @@
-export type FailStatus = 400 | 403 | 404 | 409 | 410 | 413 | 415;
+export type FailStatus = 400 | 403 | 404 | 409 | 410 | 413 | 415 | 503;
 
 export type Result<T> = { ok: true; value: T } | { ok: false; status: FailStatus; error: string };
 

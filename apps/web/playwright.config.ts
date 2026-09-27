@@ -5,6 +5,9 @@ import { loadEnv } from "vite";
 Object.assign(process.env, { ...loadEnv("test", "../..", ""), ...process.env });
 
 const port = 3100;
+// Its own realtime port, so a running `pnpm dev` (3200) doesn't get in the way.
+const realtimePort = 3201;
+process.env.REALTIME_SECRET ||= "e2e-realtime-secret";
 
 export default defineConfig({
   testDir: "./e2e",
@@ -20,9 +23,17 @@ export default defineConfig({
   webServer: [
     {
       command: `pnpm start --port ${port}`,
-      env: { BETTER_AUTH_URL: `http://localhost:${port}` },
+      env: { BETTER_AUTH_URL: `http://localhost:${port}`, REALTIME_PUBLIC_URL: `ws://localhost:${realtimePort}` },
       url: `http://localhost:${port}`,
       reuseExistingServer: !process.env.CI,
+    },
+    // Live updates (P-06).
+    {
+      command: "pnpm --filter @kasa/realtime start",
+      env: { REALTIME_PORT: String(realtimePort), REALTIME_ALLOWED_ORIGINS: `http://localhost:${port}` },
+      url: `http://localhost:${realtimePort}/health`,
+      reuseExistingServer: !process.env.CI,
+      gracefulShutdown: { signal: "SIGTERM", timeout: 5000 },
     },
     // The worker processes photo uploads for the feed tests.
     {

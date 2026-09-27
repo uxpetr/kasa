@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** P-06 (realtime updates), in progress; then P-07 (replies, which now include the Reply action, D-153). P-14, P-15, F-09, F-10, F-11, P-05, and P-08 are also unblocked.
+**Next up:** P-07 (replies, which now include the Reply action, D-153). P-14, P-15, F-09, F-10, F-11, P-05, and P-08 are also unblocked.
 **Blocked:** nothing.
 
 ---
@@ -153,6 +153,7 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-154** · 2026-09-27 · Reactions are a fixed set of six: ❤️ 👍 😂 😮 🎉 👀. In P-04 they show as small counts on the object; the sticker look comes with V-02e. · Petr, P-04
 - **D-155** · 2026-09-27 · Deleting an entry asks for confirmation first ("Delete this note?" with Delete and Cancel). The deleted entry then stays in the feed as a dashed outline reading "Mika deleted a note", as in the prototype. · Petr, P-04
 - **D-156** · 2026-09-27 · Content types and actions internals (P-04): `DELETE /api/entries/:id` soft-deletes and records `entries.deleted_by` (migration 0007), so the outline can say who deleted it ("You deleted Mika's link"). Deleted entries stay in the feed API with kind and author only, and their images stop being served. `PUT`/`DELETE /api/entries/:id/reactions` with `{ emoji }` return the entry's reaction counts. Viewers can't react, following D-003 (viewers only read). Capture screenshots are served through `/api/entries/:id/media/:mediaId` and link preview images through `/api/entries/:id/preview-image`, both members only. The capture print shows the top of the screenshot (at most 240px tall), with its pins and the first comment on pin 1. The actions button appears on hover or focus beside the object; on touch screens a 500ms long-press opens the menu as a bottom sheet. New events: `entry_deleted` (kind, own) and `reaction_added` (emoji). New `@kasa/ui` components: `IndexCard`, `DeletedOutline`, and the fanned `Polaroid` stack, whose sheets stay within the 2.5° tilt limit. · P-04
+- **D-157** · 2026-09-27 · Realtime internals (P-06): triggers on `entries`, `reactions`, and `comments` bump `entries.updated_at` and `NOTIFY kasa_changes` with only the project and entry ids (migrations 0008, 0009). `apps/realtime` (`ws` plus a postgres.js `LISTEN`) sends `{type: "changed", projectId}` to that project's sockets, merging bursts within 50ms. Content never goes over the socket: the client pulls `GET /api/projects/:id/entries?since=<syncedAt>`, which checks membership, looks back 5s so late commits aren't missed, and returns `truncated` above 100 changes so the client reloads the newest page. To connect, the browser gets a ticket from `POST /api/projects/:id/realtime`: HMAC-SHA256 over the project, the user, and a 60s expiry, signed with `REALTIME_SECRET` (`@kasa/shared/realtime`). The service also checks the Origin header, so it needs no access rules of its own. Clients reconnect with backoff (1s up to 30s) and a fresh ticket, and catch up on every connect; after a lost database listener the service tells every client to catch up. The feed follows new entries only when the reader is at the bottom, and marks them read while the page is visible. Nothing changes on screen while disconnected, so no new copy was needed. Without `REALTIME_SECRET`/`REALTIME_PUBLIC_URL` the ticket endpoint returns 503 and the feed works without live updates. Playwright starts the realtime service on port 3201. · P-06
 
 ---
 
@@ -246,6 +247,7 @@ Depends on: F-03, F-04
 ### F-10 · Host realtime and worker · `todo`
 Depends on: F-03; needed by F-06 and P-06
 - [ ] Deploy `apps/realtime` and `apps/worker` to Fly.io or Railway in an EU region (D-111), deploying from main.
+- [ ] Realtime env: `REALTIME_SECRET` (shared with the web app), `REALTIME_ALLOWED_ORIGINS` (the web origin), `DATABASE_URL` on a direct, non-pooled connection (LISTEN needs one); web gets `REALTIME_SECRET` and `REALTIME_PUBLIC_URL` (`wss://…`), added by P-06.
 
 ### F-04 · Database schema v0 · `done` · branch `f-04-db`
 Depends on: F-01
@@ -327,10 +329,10 @@ Depends on: F-06
 - [ ] SSRF protection: block private IP ranges and non-HTTP schemes.
 - [ ] The preview image is re-hosted in our storage; the client never loads the original page.
 
-### P-06 · Realtime updates · `in-progress` · branch `p-06-realtime`
+### P-06 · Realtime updates · `done` · branch `p-06-realtime`
 Depends on: P-03
-- [ ] New entries, replies, comments, and reactions appear for other members within 2 seconds.
-- [ ] Reconnects cleanly and back-fills missed events.
+- [x] New entries, replies, comments, and reactions appear for other members within 2 seconds. (Replies and comments go through the same change triggers; their UI comes with P-07.)
+- [x] Reconnects cleanly and back-fills missed events.
 
 ### P-07 · Replies and capture threads · `todo`
 Depends on: P-04, P-06
@@ -385,6 +387,7 @@ Depends on: P-01
 - [ ] Members list in the project menu, with roles.
 - [ ] Owner changes a member's role (editor or viewer) and removes members.
 - [ ] Members can leave; their entries stay (D-015).
+- [ ] Removing a member or a member leaving also ends their live updates. P-06 tickets are only checked when connecting, so close that user's sockets for the project.
 - [ ] Permissions enforced on the server and tested, like P-01.
 
 ### G1 · Gate: captures get replies
@@ -519,3 +522,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-26 · P-02 · "Your piles" projects screen: paper-stack cards with last message, unread count, members, and photo peek; New project dialog; automatic "My pile"; collapsed Archived section; `Pile` and avatar components. · [#10](https://github.com/uxpetr/kasa/pull/10)
 - 2026-09-27 · P-03 · Zen chat feed: opens at the newest entry with paging back, header menu (members, rename, archive, search placeholder), composer for notes, links, and photos (attach, drop, paste; Enter sends), read tracking, viewer and archived notices, `entry_created`. · [#11](https://github.com/uxpetr/kasa/pull/11)
 - 2026-09-27 · P-04 · Core content types: index cards for links, taped capture prints with pins, fanned photo stacks with a full-size viewer; one actions menu (hover, focus, or long-press) with six reactions and Delete behind a confirmation; deleted entries leave a dashed outline naming who deleted them; `entry_deleted`, `reaction_added`. · [#12](https://github.com/uxpetr/kasa/pull/12)
+- 2026-09-27 · P-06 · Live updates: Postgres change triggers, a WebSocket service with signed per-project tickets and origin checks, catch-up through `?since=`, reconnect with backoff; new entries, reactions, and deletions reach other members in well under 2 seconds (tested end to end, including a dropped connection). · [#13](https://github.com/uxpetr/kasa/pull/13)
