@@ -1,10 +1,12 @@
 "use client";
 
-import { Fragment, useSyncExternalStore, type ReactNode } from "react";
-import { Avatar, BotCard, Note, Polaroid, tiltFor } from "@kasa/ui";
+import { Fragment, useState, useSyncExternalStore, type ReactNode } from "react";
+import { Avatar, BotCard, DeletedOutline, IndexCard, Note, Polaroid, Print, tiltFor } from "@kasa/ui";
 import type { FeedEntry } from "@/lib/entries";
 import { hostOf, previewLine } from "@/lib/preview";
+import { deletedText, EntryActions, nounFor } from "./entry-actions";
 import styles from "./feed.module.css";
+import { PhotoViewer } from "./photo-viewer";
 
 const noop = () => () => {};
 /** Dates render in the viewer's time zone, so they wait for the client. */
@@ -63,14 +65,37 @@ export function Linkified({ text }: { text: string }) {
   );
 }
 
-/**
- * One entry: avatar, "Name · time", then the object. P-04 replaces the simple
- * link and fallback cards with the full content types.
- */
-export function FeedEntryView({ entry, viewerId }: { entry: FeedEntry; viewerId: string }) {
+/** Screenshot box width inside a 330px print. Tall pages are cut off at the top part. */
+const PRINT_WIDTH = 314;
+const PRINT_MAX_HEIGHT = 240;
+
+interface EntryProps {
+  entry: FeedEntry;
+  viewerId: string;
+  /** Owners and editors, not while archived (lib/access). */
+  canAdd: boolean;
+  isOwner: boolean;
+  onChange: (entry: FeedEntry) => void;
+}
+
+/** One entry: avatar, "Name · time", then the object, the same whatever its source (D-016). */
+export function FeedEntryView({ entry, viewerId, canAdd, isOwner, onChange }: EntryProps) {
+  const [viewing, setViewing] = useState(false);
   const isBot = entry.kind === "bot";
   const name = isBot ? "Kasa Bot" : entry.author?.id === viewerId ? "You" : (entry.author?.name ?? "");
   const rotate = tiltFor(entry.id);
+
+  if (entry.deleted) {
+    return (
+      <article className={`${styles.entry} ${styles.deleted}`} aria-label={deletedText(entry, viewerId)}>
+        <DeletedOutline text={deletedText(entry, viewerId)} rotate={rotate} />
+      </article>
+    );
+  }
+
+  const owner = isBot ? "Kasa Bot's" : entry.author?.id === viewerId ? "your" : `${entry.author?.name ?? "someone"}'s`;
+  const label = `${owner} ${nounFor(entry)}`;
+  const photoAlt = entry.body ? entry.body : `Photo from ${entry.author?.name ?? "someone"}`;
 
   let object: ReactNode;
   if (entry.kind === "note" || entry.kind === "decision") {
@@ -88,23 +113,60 @@ export function FeedEntryView({ entry, viewerId }: { entry: FeedEntry; viewerId:
     );
   } else if (entry.kind === "photo" && entry.photos.length > 0) {
     const [first] = entry.photos;
-    const author = entry.author?.name ?? "someone";
+    const count = entry.photos.length;
     object = (
       <Polaroid
         src={`/api/media/${first!.uploadId}/thumb`}
-        alt={entry.body ? entry.body : `Photo from ${author}`}
+        alt={photoAlt}
         caption={entry.body ?? undefined}
-        moreCount={entry.photos.length > 1 ? entry.photos.length - 1 : undefined}
+        moreCount={count > 1 ? count - 1 : undefined}
         rotate={rotate}
         imageHeight={first!.width && first!.height ? Math.round((174 * first!.height) / first!.width) : 130}
+        onOpen={() => setViewing(true)}
+        openLabel={count > 1 ? `Open ${count} photos` : "Open photo"}
       />
     );
   } else if (entry.kind === "link" && entry.link) {
+    const host = hostOf(entry.link.url) ?? entry.link.url;
     object = (
-      <a className={`kasa-object ${styles.link}`} href={entry.link.url} target="_blank" rel="noopener noreferrer nofollow ugc">
-        <span className={styles.linkTitle}>{entry.link.title ?? hostOf(entry.link.url) ?? entry.link.url}</span>
-        <span className={styles.linkUrl}>{entry.link.url}</span>
-      </a>
+      <IndexCard
+        href={entry.link.url}
+        label={`Link · ${entry.link.siteName ?? host}`}
+        title={entry.link.title ?? host}
+        imageSrc={entry.link.hasImage ? `/api/entries/${entry.id}/preview-image` : undefined}
+        rotate={rotate}
+      >
+        {entry.link.title ? null : <span className={styles.linkUrl}>{entry.link.url}</span>}
+      </IndexCard>
+    );
+  } else if (entry.kind === "capture" && entry.capture?.screenshot) {
+    const { capture } = entry;
+    const shot = capture.screenshot!;
+    const fullHeight = shot.width && shot.height ? (PRINT_WIDTH * shot.height) / shot.width : PRINT_WIDTH * 0.625;
+    const boxHeight = Math.round(Math.min(fullHeight, PRINT_MAX_HEIGHT));
+    // Pins are fractions of the whole screenshot; the print shows its top part.
+    const pins = capture.pins.map((p) => ({ ...p, y: (p.y * fullHeight) / boxHeight })).filter((p) => p.y <= 1);
+    const host = hostOf(capture.pageUrl) ?? capture.pageUrl;
+    object = (
+      <Print
+        src={`/api/entries/${entry.id}/media/${shot.mediaId}`}
+        alt={`Capture of ${capture.pageTitle ?? host}`}
+        rotate={rotate}
+        pins={pins}
+        imageHeight={boxHeight}
+      >
+        {capture.note ? (
+          <span className={styles.printNote}>
+            <span className={styles.pinNumber}>1</span> {capture.note}
+          </span>
+        ) : null}
+        <span className={styles.printSource}>
+          from {host} ·{" "}
+          <a href={capture.pageUrl} target="_blank" rel="noopener noreferrer nofollow ugc">
+            Open original
+          </a>
+        </span>
+      </Print>
     );
   } else {
     const line = previewLine(
@@ -129,8 +191,17 @@ export function FeedEntryView({ entry, viewerId }: { entry: FeedEntry; viewerId:
         <div className={styles.meta}>
           <span className={styles.author}>{name}</span> · <Time iso={entry.createdAt} />
         </div>
-        {object}
+        <EntryActions
+          entry={entry}
+          label={label}
+          canReact={canAdd}
+          canDelete={canAdd && (isOwner || (entry.author !== null && entry.author.id === viewerId))}
+          onChange={onChange}
+        >
+          {object}
+        </EntryActions>
       </div>
+      {viewing ? <PhotoViewer entry={entry} alt={photoAlt} onClose={() => setViewing(false)} /> : null}
     </article>
   );
 }

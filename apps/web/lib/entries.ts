@@ -1,13 +1,15 @@
-// The zen chat feed (P-03): reading pages, posting, and marking read.
-// Access: members read (viewers included); owners and editors post unless archived (lib/access).
-import { and, asc, desc, eq, inArray, isNull, lt, or, schema, sql, type Database } from "@kasa/db";
+// The zen chat feed (P-03, P-04): reading pages, posting, reacting, deleting, and marking read.
+// Access: members read (viewers included); owners and editors post and react unless archived (lib/access).
+import { and, asc, count, desc, eq, inArray, isNull, lt, or, schema, sql, type Database } from "@kasa/db";
 import { track } from "@kasa/shared";
-import { canAdd, canRead, projectAccess } from "./access";
+import { canAdd, canDeleteEntry, canReact, canRead, projectAccess } from "./access";
+import { isReaction, REACTIONS, type Reaction } from "./reactions";
 import { fail, isUuid, ok, type Result } from "./result";
 
 export const PAGE_SIZE = 30;
 export const MAX_ENTRY_TEXT = 4000;
 export const MAX_PHOTOS_PER_ENTRY = 10;
+
 
 type EntryKind = (typeof schema.entryKind.enumValues)[number];
 
@@ -17,10 +19,25 @@ export interface FeedEntry {
   body: string | null;
   createdAt: string;
   author: { id: string; name: string } | null;
+  /** A deleted entry keeps its kind and author for the outline, and nothing else (D-155). */
+  deleted: boolean;
+  /** Who deleted it, when known. */
+  deletedBy: { id: string; name: string } | null;
   /** Processed images, in order; served through /api/media/<uploadId>/<variant>. */
   photos: { uploadId: string; width: number | null; height: number | null }[];
-  link: { url: string; title: string | null; siteName: string | null } | null;
-  capture: { pageUrl: string; pageTitle: string | null } | null;
+  /** `hasImage`: the preview image is served through /api/entries/<id>/preview-image. */
+  link: { url: string; title: string | null; siteName: string | null; hasImage: boolean } | null;
+  capture: {
+    pageUrl: string;
+    pageTitle: string | null;
+    /** Served through /api/entries/<id>/media/<mediaId>. */
+    screenshot: { mediaId: string; width: number | null; height: number | null } | null;
+    pins: { number: number; x: number; y: number }[];
+    /** The first comment on pin 1, shown on the print. */
+    note: string | null;
+  } | null;
+  /** Only reactions someone has used, in picker order. */
+  reactions: { emoji: Reaction; count: number; mine: boolean }[];
 }
 
 export interface FeedPage {
@@ -55,20 +72,13 @@ export async function listEntries(
   const limit = Math.min(Math.max(options.limit ?? PAGE_SIZE, 1), 100);
 
   const rows = await db
-    .select({
-      id: schema.entries.id,
-      kind: schema.entries.kind,
-      body: schema.entries.body,
-      createdAt: schema.entries.createdAt,
-      authorId: schema.entries.authorId,
-      authorName: schema.users.name,
-    })
+    .select(rowColumns)
     .from(schema.entries)
     .leftJoin(schema.users, eq(schema.users.id, schema.entries.authorId))
     .where(
       and(
         eq(schema.entries.projectId, projectId),
-        isNull(schema.entries.deletedAt),
+        // Deleted entries stay in the feed as outlines (D-155).
         cursor
           ? or(
               lt(schema.entries.createdAt, cursor.at),
@@ -81,56 +91,156 @@ export async function listEntries(
     .limit(limit + 1);
 
   const page = rows.slice(0, limit);
-  const entries = await withDetails(db, page);
+  const entries = await withDetails(db, page, userId);
   return ok({
     entries: entries.reverse(),
     nextCursor: rows.length > limit ? toCursor(page[page.length - 1]!) : null,
   });
 }
 
-type Row = { id: string; kind: EntryKind; body: string | null; createdAt: Date; authorId: string | null; authorName: string | null };
+const rowColumns = {
+  id: schema.entries.id,
+  projectId: schema.entries.projectId,
+  kind: schema.entries.kind,
+  body: schema.entries.body,
+  createdAt: schema.entries.createdAt,
+  deletedAt: schema.entries.deletedAt,
+  deletedById: schema.entries.deletedBy,
+  deletedByName: sql<string | null>`(select ${schema.users.name} from ${schema.users} where ${schema.users.id} = ${schema.entries.deletedBy})`,
+  authorId: schema.entries.authorId,
+  authorName: schema.users.name,
+};
 
-async function withDetails(db: Database, rows: Row[]): Promise<FeedEntry[]> {
-  const ids = rows.map((r) => r.id);
-  if (ids.length === 0) return [];
-  const [media, links, captures] = await Promise.all([
+type Row = {
+  id: string;
+  projectId: string;
+  kind: EntryKind;
+  body: string | null;
+  createdAt: Date;
+  deletedAt: Date | null;
+  deletedById: string | null;
+  deletedByName: string | null;
+  authorId: string | null;
+  authorName: string | null;
+};
+
+async function rowById(db: Database, entryId: string): Promise<Row | undefined> {
+  const [row] = await db
+    .select(rowColumns)
+    .from(schema.entries)
+    .leftJoin(schema.users, eq(schema.users.id, schema.entries.authorId))
+    .where(eq(schema.entries.id, entryId));
+  return row;
+}
+
+async function withDetails(db: Database, rows: Row[], viewerId: string): Promise<FeedEntry[]> {
+  // Nothing of a deleted entry's content leaves the server.
+  const ids = rows.filter((r) => !r.deletedAt).map((r) => r.id);
+  if (ids.length === 0) return rows.map((r) => toFeedEntry(r));
+  const [media, links, captures, pins, pinNotes, reactions] = await Promise.all([
     db
       .select({
+        id: schema.entryMedia.id,
         entryId: schema.entryMedia.entryId,
         uploadId: schema.entryMedia.uploadId,
+        role: schema.entryMedia.role,
         width: schema.entryMedia.width,
         height: schema.entryMedia.height,
       })
       .from(schema.entryMedia)
-      .where(and(inArray(schema.entryMedia.entryId, ids), eq(schema.entryMedia.role, "photo")))
+      .where(and(inArray(schema.entryMedia.entryId, ids), inArray(schema.entryMedia.role, ["photo", "screenshot"])))
       .orderBy(asc(schema.entryMedia.position)),
     db
-      .select({ entryId: schema.linkPreviews.entryId, url: schema.linkPreviews.url, title: schema.linkPreviews.title, siteName: schema.linkPreviews.siteName })
+      .select({
+        entryId: schema.linkPreviews.entryId,
+        url: schema.linkPreviews.url,
+        title: schema.linkPreviews.title,
+        siteName: schema.linkPreviews.siteName,
+        hasImage: sql<boolean>`${schema.linkPreviews.imageKey} is not null`,
+      })
       .from(schema.linkPreviews)
       .where(inArray(schema.linkPreviews.entryId, ids)),
     db
       .select({ entryId: schema.captures.entryId, pageUrl: schema.captures.pageUrl, pageTitle: schema.captures.pageTitle })
       .from(schema.captures)
       .where(inArray(schema.captures.entryId, ids)),
+    db
+      .select({ entryId: schema.pins.captureEntryId, number: schema.pins.number, x: schema.pins.x, y: schema.pins.y })
+      .from(schema.pins)
+      .where(inArray(schema.pins.captureEntryId, ids))
+      .orderBy(asc(schema.pins.number)),
+    db
+      .selectDistinctOn([schema.comments.entryId], { entryId: schema.comments.entryId, body: schema.comments.body })
+      .from(schema.comments)
+      .innerJoin(schema.pins, eq(schema.pins.id, schema.comments.pinId))
+      .where(and(inArray(schema.comments.entryId, ids), eq(schema.pins.number, 1)))
+      .orderBy(schema.comments.entryId, asc(schema.comments.createdAt)),
+    db
+      .select({
+        entryId: schema.reactions.entryId,
+        emoji: schema.reactions.emoji,
+        count: count(),
+        mine: sql<boolean>`bool_or(${schema.reactions.userId} = ${viewerId})`,
+      })
+      .from(schema.reactions)
+      .where(inArray(schema.reactions.entryId, ids))
+      .groupBy(schema.reactions.entryId, schema.reactions.emoji),
   ]);
   const photosOf = new Map<string, FeedEntry["photos"]>();
+  const screenshotOf = new Map<string, NonNullable<FeedEntry["capture"]>["screenshot"]>();
   for (const m of media) {
-    if (!m.uploadId) continue;
-    photosOf.set(m.entryId, [...(photosOf.get(m.entryId) ?? []), { uploadId: m.uploadId, width: m.width, height: m.height }]);
+    if (m.role === "screenshot") {
+      if (!screenshotOf.has(m.entryId)) screenshotOf.set(m.entryId, { mediaId: m.id, width: m.width, height: m.height });
+    } else if (m.uploadId) {
+      photosOf.set(m.entryId, [...(photosOf.get(m.entryId) ?? []), { uploadId: m.uploadId, width: m.width, height: m.height }]);
+    }
+  }
+  const pinsOf = new Map<string, NonNullable<FeedEntry["capture"]>["pins"]>();
+  for (const { entryId, ...pin } of pins) pinsOf.set(entryId, [...(pinsOf.get(entryId) ?? []), pin]);
+  const noteOf = new Map(pinNotes.map((n) => [n.entryId, n.body]));
+  const reactionsOf = new Map<string, FeedEntry["reactions"]>();
+  for (const emoji of REACTIONS) {
+    for (const r of reactions) {
+      if (r.emoji !== emoji) continue;
+      reactionsOf.set(r.entryId, [...(reactionsOf.get(r.entryId) ?? []), { emoji, count: Number(r.count), mine: Boolean(r.mine) }]);
+    }
   }
   const linkOf = new Map(links.map(({ entryId, ...l }) => [entryId, l]));
-  const captureOf = new Map(captures.map(({ entryId, ...c }) => [entryId, c]));
+  const captureOf = new Map(
+    captures.map(({ entryId, ...c }) => [
+      entryId,
+      { ...c, screenshot: screenshotOf.get(entryId) ?? null, pins: pinsOf.get(entryId) ?? [], note: noteOf.get(entryId) ?? null },
+    ]),
+  );
 
-  return rows.map((r) => ({
+  return rows.map((r) =>
+    r.deletedAt
+      ? toFeedEntry(r)
+      : {
+          ...toFeedEntry(r),
+          photos: photosOf.get(r.id) ?? [],
+          link: linkOf.get(r.id) ?? null,
+          capture: captureOf.get(r.id) ?? null,
+          reactions: reactionsOf.get(r.id) ?? [],
+        },
+  );
+}
+
+/** The entry without its details; all a deleted entry ever shows. */
+function toFeedEntry(r: Row): FeedEntry {
+  return {
     id: r.id,
     kind: r.kind,
-    body: r.body,
+    body: r.deletedAt ? null : r.body,
     createdAt: r.createdAt.toISOString(),
     author: r.authorId ? { id: r.authorId, name: r.authorName ?? "" } : null,
-    photos: photosOf.get(r.id) ?? [],
-    link: linkOf.get(r.id) ?? null,
-    capture: captureOf.get(r.id) ?? null,
-  }));
+    deleted: r.deletedAt !== null,
+    deletedBy: r.deletedAt && r.deletedById ? { id: r.deletedById, name: r.deletedByName ?? "" } : null,
+    photos: [],
+    link: null,
+    capture: null,
+    reactions: [],
+  };
 }
 
 /** A whole message that is one http(s) URL, or null (D-149). */
@@ -223,19 +333,56 @@ export async function createEntry(
   if (!entryId) return fail(409, "Some photos aren't ready or can't be used");
 
   await track("entry_created", userId, { projectId, kind, source: "app" });
-  const [row] = await db
-    .select({
-      id: schema.entries.id,
-      kind: schema.entries.kind,
-      body: schema.entries.body,
-      createdAt: schema.entries.createdAt,
-      authorId: schema.entries.authorId,
-      authorName: schema.users.name,
-    })
-    .from(schema.entries)
-    .leftJoin(schema.users, eq(schema.users.id, schema.entries.authorId))
-    .where(eq(schema.entries.id, entryId));
-  return ok((await withDetails(db, [row!]))[0]!);
+  return ok((await withDetails(db, [(await rowById(db, entryId))!], userId))[0]!);
+}
+
+/** A live entry and the user's access to its project; 404 for missing, deleted, or not-a-member alike. */
+async function entryWithAccess(db: Database, userId: string, entryId: string) {
+  const row = isUuid(entryId) ? await rowById(db, entryId) : undefined;
+  const access = row ? await projectAccess(db, userId, row.projectId) : null;
+  return row && canRead(access) ? { row, access: access! } : null;
+}
+
+/** Soft-deletes an entry, leaving an outline in the feed (D-015, D-155). Deleting twice is fine. */
+export async function deleteEntry(db: Database, userId: string, entryId: string): Promise<Result<FeedEntry>> {
+  const found = await entryWithAccess(db, userId, entryId);
+  if (!found) return fail(404, "Entry not found");
+  const { row, access } = found;
+  if (!canDeleteEntry(access, row.authorId, userId)) {
+    return fail(403, access.archived ? "Project is archived" : "Only the author or the owner can delete this");
+  }
+  if (!row.deletedAt) {
+    await db
+      .update(schema.entries)
+      .set({ deletedAt: sql`now()`, deletedBy: userId })
+      .where(and(eq(schema.entries.id, entryId), isNull(schema.entries.deletedAt)));
+    await track("entry_deleted", userId, { projectId: row.projectId, kind: row.kind, own: row.authorId === userId });
+  }
+  return ok(toFeedEntry((await rowById(db, entryId))!));
+}
+
+/** Adds or removes the user's reaction (D-154); returns the entry's reactions afterwards. */
+export async function setReaction(
+  db: Database,
+  userId: string,
+  entryId: string,
+  input: { emoji?: unknown },
+  on: boolean,
+): Promise<Result<{ reactions: FeedEntry["reactions"] }>> {
+  if (!isReaction(input.emoji)) return fail(400, `emoji must be one of ${REACTIONS.join(" ")}`);
+  const found = await entryWithAccess(db, userId, entryId);
+  if (!found || found.row.deletedAt) return fail(404, "Entry not found");
+  if (!canReact(found.access)) return fail(403, found.access.archived ? "Project is archived" : "Viewers can't react");
+
+  const key = and(eq(schema.reactions.entryId, entryId), eq(schema.reactions.userId, userId), eq(schema.reactions.emoji, input.emoji));
+  if (on) {
+    const added = await db.insert(schema.reactions).values({ entryId, userId, emoji: input.emoji }).onConflictDoNothing().returning();
+    if (added.length) await track("reaction_added", userId, { projectId: found.row.projectId, emoji: input.emoji });
+  } else {
+    await db.delete(schema.reactions).where(key);
+  }
+  const [entry] = await withDetails(db, [found.row], userId);
+  return ok({ reactions: entry!.reactions });
 }
 
 function isUniqueViolation(error: unknown): boolean {
@@ -266,4 +413,28 @@ export async function uploadStatus(
     .from(schema.uploads)
     .where(and(eq(schema.uploads.id, uploadId), eq(schema.uploads.uploaderId, userId)));
   return row ? ok(row) : fail(404, "Upload not found");
+}
+
+/**
+ * The storage key behind an entry's image: a screenshot or photo (`mediaId`) or the
+ * link preview image. Members only; nothing for deleted entries.
+ */
+export async function entryImageKey(
+  db: Database,
+  userId: string,
+  entryId: string,
+  image: { mediaId: string } | "preview",
+): Promise<string | null> {
+  const found = await entryWithAccess(db, userId, entryId);
+  if (!found || found.row.deletedAt) return null;
+  if (image === "preview") {
+    const [row] = await db.select({ key: schema.linkPreviews.imageKey }).from(schema.linkPreviews).where(eq(schema.linkPreviews.entryId, entryId));
+    return row?.key ?? null;
+  }
+  if (!isUuid(image.mediaId)) return null;
+  const [row] = await db
+    .select({ key: schema.entryMedia.storageKey })
+    .from(schema.entryMedia)
+    .where(and(eq(schema.entryMedia.id, image.mediaId), eq(schema.entryMedia.entryId, entryId)));
+  return row?.key ?? null;
 }

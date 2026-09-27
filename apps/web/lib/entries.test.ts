@@ -3,7 +3,9 @@ import { and, eq, schema } from "@kasa/db";
 import { createTestDatabase, type TestDatabase } from "@kasa/db/testing";
 import { setAnalyticsSink, type TrackedEvent } from "@kasa/shared";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { createEntry, listEntries, markRead, soleUrl, uploadStatus } from "./entries";
+import type { FeedEntry } from "./entries";
+import { createEntry, deleteEntry, entryImageKey, listEntries, markRead, setReaction, soleUrl, uploadStatus } from "./entries";
+import { mediaUrl } from "./uploads";
 import { listMembers } from "./projects";
 
 describe("soleUrl (D-149)", () => {
@@ -160,24 +162,180 @@ describe.skipIf(!process.env.DATABASE_URL)("entries", () => {
       await db().insert(schema.entries).values({ projectId: pid, authorId: u.owner, kind: "note", body: "gone", deletedAt: new Date() });
 
       const seen: string[] = [];
+      const outlines: FeedEntry[] = [];
       let before: string | undefined;
       for (let i = 0; i < 5; i++) {
         const page = await listEntries(db(), u.owner, pid, { before });
         if (!page.ok) throw new Error(page.error);
         const times = page.value.entries.map((e) => e.createdAt);
         expect([...times].sort()).toEqual(times);
-        seen.unshift(...page.value.entries.map((e) => e.body!));
+        seen.unshift(...page.value.entries.filter((e) => !e.deleted).map((e) => e.body!));
+        outlines.push(...page.value.entries.filter((e) => e.deleted));
         if (!page.value.nextCursor) break;
         before = page.value.nextCursor;
       }
       expect(seen).toHaveLength(65);
       expect(new Set(seen).size).toBe(65);
-      expect(seen).not.toContain("gone");
       expect(seen.at(-1)).toBe("n64");
+      // The deleted note stays as an outline, without its text (D-155).
+      expect(outlines).toEqual([expect.objectContaining({ kind: "note", body: null, deleted: true, author: { id: u.owner, name: "owner" } })]);
+      expect(JSON.stringify(outlines)).not.toContain("gone");
     });
 
     it("rejects malformed cursors", async () => {
       expect(await listEntries(db(), u.owner, projectId, { before: "yesterday" })).toMatchObject({ ok: false, status: 400 });
+    });
+  });
+
+  describe("details", () => {
+    it("returns capture pins, the first pin comment, the screenshot, and link images, whatever the source (D-016)", async () => {
+      const pid = randomUUID();
+      await db().insert(schema.projects).values({ id: pid, name: "Details", ownerId: u.owner });
+      await db().insert(schema.memberships).values([{ projectId: pid, userId: u.owner, role: "owner" }]);
+      const [capture, link] = await db()
+        .insert(schema.entries)
+        .values([
+          { projectId: pid, authorId: u.owner, kind: "capture", source: "extension" },
+          { projectId: pid, authorId: u.owner, kind: "link", source: "telegram" },
+        ])
+        .returning();
+      await db().insert(schema.captures).values({ entryId: capture!.id, pageUrl: "https://example.com/tower", pageTitle: "Tower" });
+      const [shot] = await db()
+        .insert(schema.entryMedia)
+        .values({ entryId: capture!.id, storageKey: "k/shot.jpg", role: "screenshot", width: 1440, height: 900 })
+        .returning();
+      const [pin1, pin2] = await db()
+        .insert(schema.pins)
+        .values([
+          { captureEntryId: capture!.id, number: 1, x: 0.4, y: 0.3 },
+          { captureEntryId: capture!.id, number: 2, x: 0.7, y: 0.2 },
+        ])
+        .returning();
+      await db()
+        .insert(schema.comments)
+        .values([
+          { entryId: capture!.id, pinId: pin2!.id, authorId: u.owner, body: "second pin", createdAt: new Date(Date.now() - 3000) },
+          { entryId: capture!.id, pinId: pin1!.id, authorId: u.owner, body: "Go at sunset?", createdAt: new Date(Date.now() - 2000) },
+          { entryId: capture!.id, pinId: pin1!.id, authorId: u.owner, body: "a later reply", createdAt: new Date(Date.now() - 1000) },
+        ]);
+      await db().insert(schema.linkPreviews).values({ entryId: link!.id, url: "https://example.com/a", title: "A", imageKey: "k/preview.jpg" });
+
+      const page = await listEntries(db(), u.owner, pid);
+      if (!page.ok) throw new Error(page.error);
+      const byKind = Object.fromEntries(page.value.entries.map((e) => [e.kind, e]));
+      expect(byKind.capture!.capture).toEqual({
+        pageUrl: "https://example.com/tower",
+        pageTitle: "Tower",
+        screenshot: { mediaId: shot!.id, width: 1440, height: 900 },
+        pins: [
+          { number: 1, x: 0.4, y: 0.3 },
+          { number: 2, x: 0.7, y: 0.2 },
+        ],
+        note: "Go at sunset?",
+      });
+      expect(byKind.link!.link).toEqual({ url: "https://example.com/a", title: "A", siteName: null, hasImage: true });
+      expect(Object.keys(byKind.capture!).sort()).toEqual(Object.keys(byKind.link!).sort());
+
+      expect(await entryImageKey(db(), u.owner, capture!.id, { mediaId: shot!.id })).toBe("k/shot.jpg");
+      expect(await entryImageKey(db(), u.owner, link!.id, "preview")).toBe("k/preview.jpg");
+      // Not across entries, not for outsiders, not once deleted.
+      expect(await entryImageKey(db(), u.owner, link!.id, { mediaId: shot!.id })).toBeNull();
+      expect(await entryImageKey(db(), u.outsider, capture!.id, { mediaId: shot!.id })).toBeNull();
+      await db().update(schema.entries).set({ deletedAt: new Date() }).where(eq(schema.entries.id, link!.id));
+      expect(await entryImageKey(db(), u.owner, link!.id, "preview")).toBeNull();
+    });
+  });
+
+  describe("reactions (D-154)", () => {
+    it("adds and removes the user's reactions, counts everyone's, and emits reaction_added once", async () => {
+      const posted = await createEntry(db(), u.editor, projectId, { text: "Ryokan with a private onsen" });
+      if (!posted.ok) throw new Error(posted.error);
+      const id = posted.value.id;
+      events.length = 0;
+
+      expect(await setReaction(db(), u.owner, id, { emoji: "❤️" }, true)).toEqual({ ok: true, value: { reactions: [{ emoji: "❤️", count: 1, mine: true }] } });
+      await setReaction(db(), u.owner, id, { emoji: "❤️" }, true);
+      await setReaction(db(), u.editor, id, { emoji: "👀" }, true);
+      expect(await setReaction(db(), u.editor, id, { emoji: "❤️" }, true)).toEqual({
+        ok: true,
+        value: {
+          reactions: [
+            { emoji: "❤️", count: 2, mine: true },
+            { emoji: "👀", count: 1, mine: true },
+          ],
+        },
+      });
+      expect(events.filter((e) => e.event === "reaction_added")).toHaveLength(3);
+      expect(await setReaction(db(), u.owner, id, { emoji: "❤️" }, false)).toMatchObject({ value: { reactions: [{ emoji: "❤️", count: 1, mine: false }, { emoji: "👀" }] } });
+
+      const page = await listEntries(db(), u.viewer, projectId);
+      if (!page.ok) throw new Error(page.error);
+      expect(page.value.entries.find((e) => e.id === id)!.reactions).toEqual([
+        { emoji: "❤️", count: 1, mine: false },
+        { emoji: "👀", count: 1, mine: false },
+      ]);
+    });
+
+    it("accepts only the six reactions, from owners and editors, on live entries", async () => {
+      const posted = await createEntry(db(), u.editor, projectId, { text: "react to me" });
+      if (!posted.ok) throw new Error(posted.error);
+      const id = posted.value.id;
+      for (const emoji of ["🔥", "", 1, undefined]) expect(await setReaction(db(), u.owner, id, { emoji }, true)).toMatchObject({ status: 400 });
+      expect(await setReaction(db(), u.viewer, id, { emoji: "👍" }, true)).toMatchObject({ ok: false, status: 403 });
+      expect(await setReaction(db(), u.outsider, id, { emoji: "👍" }, true)).toMatchObject({ ok: false, status: 404 });
+      expect(await setReaction(db(), u.owner, "nope", { emoji: "👍" }, true)).toMatchObject({ ok: false, status: 404 });
+      await deleteEntry(db(), u.editor, id);
+      expect(await setReaction(db(), u.owner, id, { emoji: "👍" }, true)).toMatchObject({ ok: false, status: 404 });
+    });
+  });
+
+  describe("deleteEntry (D-015, D-155)", () => {
+    it("lets authors delete their own entries and the owner delete anyone's, the bot's included", async () => {
+      const mine = await createEntry(db(), u.editor, projectId, { text: "mine" });
+      const theirs = await createEntry(db(), u.owner, projectId, { text: "the owner's" });
+      const byEditor = await createEntry(db(), u.editor, projectId, { text: "by the editor" });
+      const [bot] = await db().insert(schema.entries).values({ projectId, authorId: null, kind: "bot", body: "tip" }).returning();
+      if (!mine.ok || !theirs.ok || !byEditor.ok) throw new Error("post failed");
+      events.length = 0;
+
+      expect(await deleteEntry(db(), u.editor, mine.value.id)).toMatchObject({
+        ok: true,
+        value: { deleted: true, body: null, kind: "note", author: { id: u.editor }, deletedBy: { id: u.editor, name: "editor" } },
+      });
+      expect(events).toEqual([expect.objectContaining({ event: "entry_deleted", properties: { projectId, kind: "note", own: true } })]);
+      expect(await deleteEntry(db(), u.editor, theirs.value.id)).toMatchObject({ ok: false, status: 403 });
+      expect(await deleteEntry(db(), u.editor, bot!.id)).toMatchObject({ ok: false, status: 403 });
+      expect(await deleteEntry(db(), u.viewer, byEditor.value.id)).toMatchObject({ ok: false, status: 403 });
+      expect(await deleteEntry(db(), u.outsider, byEditor.value.id)).toMatchObject({ ok: false, status: 404 });
+      expect(await deleteEntry(db(), u.owner, byEditor.value.id)).toMatchObject({ ok: true, value: { deleted: true, author: { id: u.editor }, deletedBy: { id: u.owner } } });
+      expect(await deleteEntry(db(), u.owner, bot!.id)).toMatchObject({ ok: true, value: { deleted: true } });
+      // Twice is fine and doesn't count again.
+      expect(await deleteEntry(db(), u.editor, mine.value.id)).toMatchObject({ ok: true, value: { deleted: true } });
+      expect(events.filter((e) => e.event === "entry_deleted")).toHaveLength(3);
+    });
+
+    it("hides a deleted photo's images from everyone", async () => {
+      const upload = await readyUpload();
+      await db().update(schema.uploads).set({ thumbKey: "k/thumb.jpg" }).where(eq(schema.uploads.id, upload));
+      const posted = await createEntry(db(), u.editor, projectId, { uploadIds: [upload] });
+      if (!posted.ok) throw new Error(posted.error);
+      const storage = { presignDownload: async (key: string) => `signed:${key}` } as never;
+      expect(await mediaUrl({ db: db(), storage }, u.viewer, upload, "thumb")).toBe("signed:k/thumb.jpg");
+      await deleteEntry(db(), u.editor, posted.value.id);
+      expect(await mediaUrl({ db: db(), storage }, u.viewer, upload, "thumb")).toBeNull();
+      expect(await mediaUrl({ db: db(), storage }, u.editor, upload, "full")).toBeNull();
+    });
+
+    it("freezes archived projects", async () => {
+      const posted = await createEntry(db(), u.owner, projectId, { text: "frozen" });
+      if (!posted.ok) throw new Error(posted.error);
+      await db().update(schema.projects).set({ archivedAt: new Date() }).where(eq(schema.projects.id, projectId));
+      try {
+        expect(await deleteEntry(db(), u.owner, posted.value.id)).toMatchObject({ ok: false, status: 403 });
+        expect(await setReaction(db(), u.owner, posted.value.id, { emoji: "👍" }, true)).toMatchObject({ ok: false, status: 403 });
+      } finally {
+        await db().update(schema.projects).set({ archivedAt: null }).where(eq(schema.projects.id, projectId));
+      }
     });
   });
 
