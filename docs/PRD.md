@@ -1,32 +1,33 @@
 # Kasa — PRD (draft)
 
-Exported 2026-09-26 from the Claude Doc "Kasa — PRD (draft)" by Petr. The Claude Doc is the original; if it changes, re-export this file.
+Exported 2026-09-26 from the Claude Doc "Kasa — PRD (draft)" by Petr. Edited in the repo on 2026-09-27 to move the Chrome extension from v1 to v2 (PLAN.md D-158 to D-161), so this file is now ahead of the Claude Doc. Update the Doc from this file before exporting it again.
 
 ## TL;DR
 
-Kasa is a web app plus Chrome extension where a small group collects ideas from around the web, whether for a trip, a wedding, a talk, or design inspiration, and discusses them in context. You comment or draw directly on any website, and the result lands in a project feed that only that project's members can see.
+Kasa is a web app where a small group collects ideas from around the web, whether for a trip, a wedding, a talk, or design inspiration, and discusses them in context. You paste a link, drop a photo, or write a note, and it lands in a project feed that only that project's members can see. A Chrome extension for commenting and drawing directly on any website follows in v2.
 
 **Name.** Kasa comes from Finnish, where it means "pile": a heap of things gathered in one place.
 
 **Problem.** When a group plans something together, the ideas end up scattered: links in a group chat, screenshots in camera rolls, bookmarks nobody shares. The context gets lost. A screenshot of a hotel page doesn't say which room you liked or why, and the discussion gets buried under other messages.
 
-**Bet.** If saving something from any website into a shared space is as easy as sending it to a chat, and you can point at exactly what you mean, groups will collect more and decide faster.
+**Bet.** If saving something from the web into a shared space is as easy as sending it to a chat, and it lands as a tidy object the group can discuss, groups will collect more and decide faster. In v2, the extension lets people point at exactly what they mean on the page itself.
 
 ## Goals and non-goals
 
-v1 proves one loop: capture on a website, discuss in a shared project, come back to it later.
+v1 proves one loop: collect in a shared project, discuss, come back to it later.
 
 **Goals**
 
-- Capture from any website in under 5 seconds: a comment, a drawing, or a whole-page screenshot.
-- Keep every capture tied to its source: URL, page title, the exact spot commented on.
-- Make shared projects the permission boundary. Only members see a project's captures and comments.
-- Let people find old captures again through search and tags.
+- Add a link, photo, or note to a project in under 5 seconds, from the web app or the project's Telegram group.
+- Keep every link tied to its source: URL, page title, and a preview.
+- Make shared projects the permission boundary. Only members see a project's entries and comments.
+- Let people find old entries again through search and tags.
 
 **Non-goals for v1**
 
 - A freeform infinite canvas. The feed is a chat-style timeline, not a whiteboard.
-- Showing comments overlaid on the live site for other members. v1 stores the data this needs, v2 ships it.
+- The Chrome extension: commenting, drawing, and saving pages directly on websites. It moves to v2 (D-158).
+- Showing comments overlaid on the live site for other members. This comes with the extension in v2.
 - Mobile apps, and browsers other than Chromium-based ones.
 - Public boards, discovery, or social features.
 - Hidden automatic sorting. Kasa Bot's categories are always visible and editable.
@@ -45,10 +46,12 @@ The product is for any small group, 2 to 10 people, collecting ideas toward a sh
 
 **Core use cases**
 
-1. Planning a Japan trip, a friend pins a comment on a ryokan's room photo ("this one has a private onsen") and drops it into the "Japan 2027" project.
-2. A couple circles a table layout on a venue's gallery page with the draw tool and asks each other what they think.
+1. Planning a Japan trip, a friend pastes a ryokan's link into the "Japan 2027" project with a note ("this one has a private onsen").
+2. A couple drops photos of two venues' table layouts into their wedding project and asks each other what they think.
 3. Before a meeting, students scroll the project feed to review every source collected that week.
-4. Months later, someone searches for "kyoto dinner" and finds the capture with its discussion intact.
+4. Months later, someone searches for "kyoto dinner" and finds the link with its discussion intact.
+
+In v2, the extension adds the in-context versions: pinning a comment on the ryokan's room photo, or circling the table layout on the venue's page.
 
 ## Core concepts
 
@@ -57,11 +60,11 @@ Four objects make up the product. "Personal" and "shared" are not separate types
 | Concept | What it is | Key fields |
 | --- | --- | --- |
 | Project | A container with members and a feed | Name, owner, members with roles (owner, editor, viewer) |
-| Entry | One item in a project's feed | Type (link, image, text, capture), author, created time, tags |
-| Capture | An entry made by the extension | Page URL and title, screenshot, optional drawing layer, anchor |
-| Comment | A threaded note on an entry or on a spot in a capture | Author, body, parent comment, pin position |
+| Entry | One item in a project's feed | Type (link, image, text; capture from v2), author, created time, tags |
+| Capture | An entry made by the extension (v2) | Page URL and title, screenshot, optional drawing layer, anchor |
+| Comment | A threaded note on an entry, or on a spot in a capture (v2) | Author, body, parent comment, pin position |
 
-**Anchor.** Every capture stores where on the page it points: the URL, a DOM selector, coordinates relative to that element, the scroll position, and the screenshot as a fallback. v1 only displays the screenshot. The rest is stored so v2 can show pins on the live site.
+**Anchor.** Every capture stores where on the page it points: the URL, a DOM selector, coordinates relative to that element, the scroll position, and the screenshot as a fallback. The data model has this from v1, so captures made in v2 can show pins on the live site.
 
 ## Web app requirements (v1)
 
@@ -69,7 +72,7 @@ The web app is where projects live and where the discussion happens. The feed wo
 
 | Area | Requirement | Priority |
 | --- | --- | --- |
-| Auth | Sign in with Google via OAuth (other providers later); one session shared with the extension | Must |
+| Auth | Sign in with Google via OAuth (other providers later); in v2, one session shared with the extension | Must |
 | Navigation | Project selection is its own screen. Opening a project enters a zen mode: only the chat and the input field, with a back button and a project menu for members, settings, and search | Must |
 | Projects | Create, rename, archive; invite members by link or email; roles: owner, editor, viewer | Must |
 | Feed | Oldest to newest, opening at the latest entry; scroll up to load history; drop in links, images, and text from a composer at the bottom | Must |
@@ -77,7 +80,7 @@ The web app is where projects live and where the discussion happens. The feed wo
 | Feed | A reply to an older entry posts at the bottom and quotes the original, like a chat reply, so threads don't get buried | Must |
 | Feed | Smart grouping: consecutive entries of the same kind from one person, such as several hotel links in a row, render as one visual group (a card row or grid with previews). Order stays strictly chronological; grouping only changes the layout. | Must |
 | Feed | Previews shaped by content type: a hotel or place link shows its photo and title, a video link shows a playable thumbnail, a capture shows its screenshot with pins | Should |
-| Comments | Threaded replies, pins on capture screenshots, @mentions, resolve | Must |
+| Comments | Threaded replies, @mentions, resolve; pins on capture screenshots come with the extension in v2 | Must |
 | Retrieval | Search across entries, comments, and page titles; manual tags plus Kasa Bot categories; filter by category or source domain | Must |
 | Notifications | Email for mentions and replies, plus a daily digest per project | Must |
 | Notifications | Slack notifications per project | Should |
@@ -97,7 +100,7 @@ Every entry is a physical object on a near-white table: paper, prints, and cards
 
 - **Everything is an object.** Each entry is one thing, such as a note, print, or card, with no bare text.
 - **Chronological, always.** Oldest at the top, newest at the bottom. Grouping and categories change the layout and filtering, never the order.
-- **Same object everywhere.** An item looks the same whether it came from the app, the extension, or Telegram. Only the meta line says where it came from.
+- **Same object everywhere.** An item looks the same whether it came from the app, Telegram, or (from v2) the extension. Only the meta line says where it came from.
 - **One actions menu.** Hover or long-press any object for Reply, React, Move to category, Star, and Delete.
 
 | Type | Looks like | Behaviour | Priority |
@@ -107,17 +110,17 @@ Every entry is a physical object on a near-white table: paper, prints, and cards
 | Link: place | A postcard with photo, name, type, and area from the page | Hotels also show price and dates when the page has them; a Map view shows every place in the pile; Kasa Bot files it as Stays, Sights, or Food | Must |
 | Link: article, video | An index card for articles; a still with a play button for videos | Videos play inline, muted; articles show the headline and first lines; timestamps in video links become chapters | Must |
 | Smart group | A small, slightly overlapping spread of the same kind of object | Forms when one person posts 2 or more items of the same kind within a few minutes; tap spreads it into a scrollable row; anyone can pull an item out | Must |
-| Capture | A taped-down print of the page with numbered pins | Tap a pin to open its thread; "Open original" goes to the live page at the pinned spot; only the extension makes captures | Must |
-| Drawing | The same print as a capture, with ink on top | The drawing is a separate layer with a "Hide ink" toggle; text drawn with the text tool is searchable; sent to Telegram as one flattened image | Must |
+| Capture | A taped-down print of the page with numbered pins | Tap a pin to open its thread; "Open original" goes to the live page at the pinned spot; only the extension makes captures | v2 |
+| Drawing | The same print as a capture, with ink on top | The drawing is a separate layer with a "Hide ink" toggle; text drawn with the text tool is searchable; sent to Telegram as one flattened image | v2 |
 | Reply | A note paper-clipped to a small print of what it answers | Posts at the bottom like a chat reply; tapping the clipped print jumps to the original; Telegram replies map to this | Must |
 | Kasa Bot | A pine index card with the k mark | Three kinds: answers when tagged, rare unprompted tips, and quiet sorting receipts. Unprompted cards always have "Not now"; receipts batch into one card per burst | Must |
 | Decision | A ballot sheet where each person sticks a coloured dot next to their pick | Started from any group ("Decide between these"); closes on a date or when everyone has voted; the winner gets a ✓ stamp; Kasa Bot can suggest one | Should |
 | File | A sheet with a folded corner, showing its first page | Kasa Bot pulls key facts such as dates and price from confirmations; files go under Plans and are never sent to the web; opens in a full-screen viewer | Should |
 | Reactions and states | Reactions as small stickers on a corner; deleted items as a dashed outline | Edited items say "edited" with history one tap away; starred items collect in a "Keep" strip at the top of the feed | Should |
 
-## Chrome extension requirements (v1)
+## Chrome extension requirements (v2)
 
-The extension is the product's main way in, and the part that makes it different. It has three modes, all ending in the same send step.
+Moved from v1 to v2 (D-158). v1 is the web app, where people add links, photos, and notes from the composer or Telegram. In v2 the extension becomes a second way in, and the part that makes Kasa different. It has three modes, all ending in the same send step.
 
 | Mode | What the user does | What's saved |
 | --- | --- | --- |
@@ -146,7 +149,7 @@ v1 ships two-way sync with Telegram. WhatsApp follows later, and only if v1 prov
 | Replies | A Telegram reply maps to a reply on the quoted entry, and the other way round | Must |
 | Identity | Members link their Telegram account in settings; unlinked senders show as guests | Must |
 | Loop prevention | A synced message never syncs back as a duplicate | Must |
-| Fidelity | Pins and drawings post as a flattened image with a link to the full capture | Must |
+| Fidelity | Pins and drawings post as a flattened image with a link to the full capture (from v2, with the extension) | Must |
 | WhatsApp two-way sync | Needs an Official Business Account; groups cap at 8 participants; priced per message | Later |
 
 ## Kasa Bot
@@ -176,7 +179,7 @@ The paywall gates collaboration. Free covers everything you do alone, plus joini
 | Personal projects | Unlimited | Unlimited |
 | Own a shared project (invite others) | No | Yes |
 | Join shared projects others own | Unlimited | Unlimited |
-| Extension capture | Yes | Yes |
+| Extension capture (v2) | Yes | Yes |
 | Search, tags, notifications | Yes | Yes |
 | Price | Free | Owner plan at about €4–6/month, or a one-off project pass |
 
@@ -191,7 +194,7 @@ Every client goes through one API, so the mobile app later is mostly UI work.
 ```mermaid
 flowchart TB
   web[Web app] --> api
-  ext[Chrome extension] --> api
+  ext[Chrome extension, v2] -.-> api
   mob[Mobile app, later] -.-> api
   subgraph api[Shared backend API]
     auth[OAuth and sessions]
@@ -204,9 +207,9 @@ flowchart TB
   end
 ```
 
-The path from extension to captures is the differentiator and the riskiest part to build.
+In v1 the web app's composer and Telegram are the ways in. The path from the extension to captures comes in v2; it's the riskiest part to build, so the data model and auth are ready for it from v1.
 
-- **Auth:** OAuth with Google only in v1. The extension reuses the web app's session rather than signing in separately.
+- **Auth:** OAuth with Google only in v1. In v2 the extension reuses the web app's session rather than signing in separately.
 - **Storage:** screenshots and images go to object storage behind a CDN; metadata and anchors go to a relational database.
 - **Link previews:** fetched server-side so the client never loads untrusted pages directly.
 - **Realtime:** new entries and comments are pushed to open feeds over websockets.
@@ -217,39 +220,39 @@ Kasa Bot runs as a service with read access to one project at a time. It calls a
 
 ## Success metrics
 
-The main question is whether captures lead to conversation. Targets below are placeholders to calibrate in the pilot.
+The main question is whether shared items lead to conversation. Targets below are placeholders to calibrate in the pilot.
 
 | Metric | What it tells us | Pilot target |
 | --- | --- | --- |
-| Captures per active user per week | Is capture a habit? | To be set after baseline |
-| Share of captures with at least one reply | Do captures start discussions? This is the north star. | To be set after baseline |
+| Items added per active user per week | Is collecting in Kasa a habit? | To be set after baseline |
+| Share of links and photos with at least one reply | Do shared items start discussions? This is the north star. | To be set after baseline |
 | Shared projects with 3 or more active members | Is collaboration real, or is it solo use? | To be set after baseline |
-| Week-4 retention of extension installs | Does the extension stick after novelty wears off? | To be set after baseline |
+| Week-4 retention of extension installs (v2) | Does the extension stick after novelty wears off? | Set when the extension ships |
 | Invites accepted per shared project | Is the product spreading between people? | To be set after baseline |
 | Free to paid conversion | Is the paywall in the right place? | Measured after launch |
 
 ## Risks and mitigations
 
-The biggest risk is that commenting on sites feels novel but doesn't become a habit. The pilot exists to test that before the web app gets polished.
+The biggest risk is that collecting in Kasa doesn't become a habit: groups go back to dropping links in their chat. The pilot tests that before the web app gets polished.
 
 | Risk | Impact | Mitigation |
 | --- | --- | --- |
-| Web capture isn't sticky | The product becomes another bookmark tool | Build the extension first; pilot with one group of friends planning a real trip; watch the reply rate |
-| Private data in screenshots | A trust breach inside shared projects | A required preview step with crop and blur before sending |
+| Collecting isn't sticky | The product becomes another bookmark tool | Make adding as fast as sending to a chat, with Telegram sync; pilot with one group of friends planning a real trip; watch the reply rate |
+| Private data in screenshots (v2) | A trust breach inside shared projects | A required preview step with crop and blur before sending |
 | Anchors break when sites change | v2 live-site pins point at nothing | Always store the screenshot; treat the live pin as best effort |
 | Threads buried in the chronological feed | Discussions die after a week | Replies post at the bottom, quoting the entry; add notifications and a digest |
 | Paywall on sharing slows adoption | Teams never try collaboration | Keep joining free; consider a trial for the first shared project |
 | Crowded market (Are.na, Milanote, Kosmik, Markup.io) | Hard to explain why it's different | Lead with private, in-context website comments, not with "a board" |
-| Safari users excluded | Many Mac designers can't use the extension | Accept for v1; revisit if pilot users ask for it |
+| Safari users excluded (v2) | Many Mac designers can't use the extension | Accept for v2; revisit if users ask for it |
 
 ## Roadmap
 
-Start with the riskiest part: the extension and a bare feed, tested with a group of friends planning a real trip. No dates yet. Each phase starts only when the gate before it is met.
+Start with the web app's collect-and-discuss loop, tested with a group of friends planning a real trip. The extension comes in v2 (D-158). No dates yet. Each phase starts only when the gate before it is met.
 
 ```mermaid
 flowchart LR
-  p0["Prototype<br/>Extension, 3 modes<br/>Bare-bones feed<br/>Trip-planning pilot"] -->|"Gate: captures get replies"| p1["v1 launch<br/>Full web app<br/>Search, tags, alerts<br/>Free and paid plans<br/>Telegram sync"]
-  p1 -->|"Gate: week-4 retention holds"| p2["v2<br/>Pins on live sites<br/>Presence, export<br/>Safari, if asked<br/>WhatsApp sync"]
+  p0["Prototype<br/>Web app feed: links, photos, notes<br/>Replies and live updates<br/>Trip-planning pilot"] -->|"Gate: shared items get replies"| p1["v1 launch<br/>Full web app<br/>Search, tags, alerts<br/>Free and paid plans<br/>Telegram sync"]
+  p1 -->|"Gate: week-4 retention holds"| p2["v2<br/>Chrome extension, 3 modes<br/>Pins on live sites<br/>Presence, export<br/>Safari, if asked<br/>WhatsApp sync"]
   p2 -->|"Gate: users ask for phone capture"| p3["Mobile<br/>iOS and Android<br/>Share sheet capture<br/>Same API"]
 ```
 

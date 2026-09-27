@@ -49,19 +49,19 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | Phase | Goal | Status | Gate |
 | --- | --- | --- | --- |
 | 0. Foundations | Repo, CI, auth, database, storage | `in-progress` | none |
-| 1. Prototype | The capture → discuss loop, tested with one trip-planning group | `todo` | G1: captures get replies |
+| 1. Prototype | The collect → discuss loop in the web app, tested with one trip-planning group | `in-progress` | G1: shared items get replies (D-159) |
 | 2. v1 launch | Full web app, Kasa Bot, Telegram, billing | `todo` | G2: week-4 retention holds |
-| 3. v2 | Pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
+| 3. v2 | Chrome extension (D-158), pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** P-07 (replies, which now include the Reply action, D-153). P-14, P-15, F-09, F-10, F-11, P-05, and P-08 are also unblocked.
+**Next up:** P-07 (replies, including the Reply action, D-153; pin threads moved to v2, D-160). P-14, P-15, F-09, F-10, F-11, and P-05 are also unblocked.
 **Blocked:** nothing.
 
 ---
 
 ## Product in one paragraph
 
-Kasa is a web app plus Chrome extension where a small group collects ideas from around the web (a trip, a wedding, a talk, or design inspiration) and discusses them in context. Each project is a chat-style feed of physical-looking objects (sticky notes, polaroids, taped prints). The extension lets you comment on or draw over any website and send the result to a project. Kasa Bot lives in every project: it answers when tagged with `@kasa`, sorts entries into categories, and occasionally suggests things. Projects can sync two ways with a Telegram group.
+Kasa is a web app where a small group collects ideas from around the web (a trip, a wedding, a talk, or design inspiration) and discusses them in context. Each project is a chat-style feed of physical-looking objects (sticky notes, polaroids, index cards). People paste links, drop photos, and write notes. A Chrome extension for commenting on or drawing over any website comes in v2 (D-158). Kasa Bot lives in every project: it answers when tagged with `@kasa`, sorts entries into categories, and occasionally suggests things. Projects can sync two ways with a Telegram group.
 
 ---
 
@@ -154,6 +154,10 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-155** · 2026-09-27 · Deleting an entry asks for confirmation first ("Delete this note?" with Delete and Cancel). The deleted entry then stays in the feed as a dashed outline reading "Mika deleted a note", as in the prototype. · Petr, P-04
 - **D-156** · 2026-09-27 · Content types and actions internals (P-04): `DELETE /api/entries/:id` soft-deletes and records `entries.deleted_by` (migration 0007), so the outline can say who deleted it ("You deleted Mika's link"). Deleted entries stay in the feed API with kind and author only, and their images stop being served. `PUT`/`DELETE /api/entries/:id/reactions` with `{ emoji }` return the entry's reaction counts. Viewers can't react, following D-003 (viewers only read). Capture screenshots are served through `/api/entries/:id/media/:mediaId` and link preview images through `/api/entries/:id/preview-image`, both members only. The capture print shows the top of the screenshot (at most 240px tall), with its pins and the first comment on pin 1. The actions button appears on hover or focus beside the object; on touch screens a 500ms long-press opens the menu as a bottom sheet. New events: `entry_deleted` (kind, own) and `reaction_added` (emoji). New `@kasa/ui` components: `IndexCard`, `DeletedOutline`, and the fanned `Polaroid` stack, whose sheets stay within the 2.5° tilt limit. · P-04
 - **D-157** · 2026-09-27 · Realtime internals (P-06): triggers on `entries`, `reactions`, and `comments` bump `entries.updated_at` and `NOTIFY kasa_changes` with only the project and entry ids (migrations 0008, 0009). `apps/realtime` (`ws` plus a postgres.js `LISTEN`) sends `{type: "changed", projectId}` to that project's sockets, merging bursts within 50ms. Content never goes over the socket: the client pulls `GET /api/projects/:id/entries?since=<syncedAt>`, which checks membership, looks back 5s so late commits aren't missed, and returns `truncated` above 100 changes so the client reloads the newest page. To connect, the browser gets a ticket from `POST /api/projects/:id/realtime`: HMAC-SHA256 over the project, the user, and a 60s expiry, signed with `REALTIME_SECRET` (`@kasa/shared/realtime`). The service also checks the Origin header, so it needs no access rules of its own. Clients reconnect with backoff (1s up to 30s) and a fresh ticket, and catch up on every connect; after a lost database listener the service tells every client to catch up. The feed follows new entries only when the reader is at the bottom, and marks them read while the page is visible. Nothing changes on screen while disconnected, so no new copy was needed. Without `REALTIME_SECRET`/`REALTIME_PUBLIC_URL` the ticket endpoint returns 503 and the feed works without live updates. Playwright starts the realtime service on port 3201. · P-06
+- **D-158** · 2026-09-27 · **The Chrome extension moves to v2** (phase 3). v1 is web-first: links, photos, and notes from the composer, and Telegram in phase 2. P-08 to P-11 are dropped from phase 1 and collected in L-06; extension items in V-03, V-11, V-13, and V-14 move there too. Supersedes the v1 timing in D-010 (the extension's scope is unchanged) and makes D-018 ("offered after sign-up") apply from v2. What's already built stays: the one-time-code handoff (D-128), the `captures`/`pins` data model with anchors (D-011), and capture rendering (P-04). · Petr
+- **D-159** · 2026-09-27 · Gate G1 becomes **"shared items get replies"**: the share of links and photos that get at least one reply. OD-03 still sets the pilot length and pass bar. · Petr
+- **D-160** · 2026-09-27 · Pin threads on captures (tap a pin, comment per pin, `pin_comment_created`) move from P-07 to L-06 with the extension. P-07 is now replies only. · Petr
+- **D-161** · 2026-09-27 · `docs/PRD.md` was rewritten for the web-first plan (TL;DR, goals, use cases, concepts, extension section marked v2, metrics, risks, roadmap). It's now ahead of the Claude Doc it was exported from; update the Doc from the repo before exporting again. · Petr
 
 ---
 
@@ -163,7 +167,7 @@ Questions only Petr can answer. Agents add to this list and don't guess. When on
 
 - [x] **OD-01** → D-110. Confirm or change the proposed stack (D-100 to D-109). Blocks F-01.
 - [x] **OD-02** → D-111. Hosting and region. Suggested: EU hosting, since users and the company are in Finland, for GDPR. Blocks F-03.
-- [ ] **OD-03** Pilot length and the numeric pass bar for gate G1 (for example, share of captures with at least one reply). Blocks P-13.
+- [ ] **OD-03** Pilot length and the numeric pass bar for gate G1 (the share of links and photos with at least one reply, D-159). Blocks P-13.
 - [ ] **OD-04** Positioning line for the product (PRD open question).
 - [ ] **OD-05** Kasa Bot: free or paid, given model costs, and which phase it first ships in. The PRD has it in v1; confirm. Blocks V-04.
 - [ ] **OD-06** Kasa Bot: what triggers an unprompted post, and the maximum frequency. Blocks V-06.
@@ -292,7 +296,7 @@ Depends on: F-01
 
 ## Phase 1: Prototype
 
-Goal: prove the core loop (capture on a website, discuss in a shared project, come back later) with one trip-planning group. Keep everything else bare.
+Goal: prove the core loop (collect in a shared project, discuss, come back later) in the web app with one trip-planning group. Keep everything else bare. The extension is v2 (D-158).
 
 ### P-01 · Projects and invites · `done` · branch `p-01-projects`
 Depends on: F-05
@@ -334,30 +338,34 @@ Depends on: P-03
 - [x] New entries, replies, comments, and reactions appear for other members within 2 seconds. (Replies and comments go through the same change triggers; their UI comes with P-07.)
 - [x] Reconnects cleanly and back-fills missed events.
 
-### P-07 · Replies and capture threads · `todo`
+### P-07 · Replies · `todo`
 Depends on: P-04, P-06
 - [ ] Reply in the actions menu (D-153); the reply posts at the bottom with the quoted original (paper-clip style); tapping the clip scrolls to the original.
-- [ ] Tapping a pin on a capture opens its thread; comments can be added per pin.
-- [ ] Analytics: `reply_created`, `pin_comment_created`.
+- [ ] ~~Tapping a pin on a capture opens its thread; comments can be added per pin.~~ Moved to L-06 (D-160).
+- [ ] Analytics: `reply_created` (`pin_comment_created` moved to L-06, D-160).
 
-### P-08 · Extension scaffold · `todo`
+### P-08 · Extension scaffold · `dropped`
+Moved to v2 as part of L-06 (D-158); the criteria below carry over unchanged.
 Depends on: F-05
 - [ ] MV3 extension with `activeTab` only, and no "all websites" permission.
 - [ ] Toolbar with Comment, Draw, Save page, Close, as in the prototype.
 - [ ] Signs in through the web session; shows a clear message on pages extensions can't access.
 
-### P-09 · Extension: Comment mode · `todo`
+### P-09 · Extension: Comment mode · `dropped`
+Moved to v2 as part of L-06 (D-158); the criteria below carry over unchanged.
 Depends on: P-08
 - [ ] Click any element to highlight it and drop a numbered pin with a note.
 - [ ] Stores the full anchor (D-011) plus a screenshot of the visible area.
 - [ ] Inline project picker, defaulting to the last project used.
 
-### P-10 · Extension: Draw mode · `todo`
+### P-10 · Extension: Draw mode · `dropped`
+Moved to v2 as part of L-06 (D-158); the criteria below carry over unchanged.
 Depends on: P-08
 - [ ] Pen, arrow, box, highlighter, text, three ink colours, undo.
 - [ ] The drawing is saved as a separate layer as well as flattened into the screenshot.
 
-### P-11 · Extension: Save page and send step · `todo`
+### P-11 · Extension: Save page and send step · `dropped`
+Moved to v2 as part of L-06 (D-158); the criteria below carry over unchanged.
 Depends on: P-09, P-10
 - [ ] Full-page screenshot for Save page.
 - [ ] Send step with preview, crop, and blur (required), a note, and a searchable project picker.
@@ -370,9 +378,9 @@ Depends on: P-07
 - [ ] Unsubscribe link and per-project mute.
 
 ### P-13 · Pilot readiness · `todo`
-Depends on: P-02 to P-12, P-14, P-15, OD-03
-- [ ] Dashboard for the pilot metrics: captures per active user per week, share of captures with a reply, week-4 extension retention.
-- [ ] Onboarding for the pilot group, with the extension offered after sign-up (D-018).
+Depends on: P-02 to P-07, P-12, P-14, P-15, OD-03 (P-08 to P-11 dropped, D-158)
+- [ ] Dashboard for the pilot metrics: items added per active user per week, and the share of links and photos with a reply (G1, D-159). Week-4 extension retention moves to L-06.
+- [ ] Onboarding for the pilot group. The extension offer (D-018) comes with L-06.
 - [ ] A way for pilot users to send feedback from inside the app.
 
 ### P-14 · Invite page · `todo`
@@ -390,7 +398,7 @@ Depends on: P-01
 - [ ] Removing a member or a member leaving also ends their live updates. P-06 tickets are only checked when connecting, so close that user's sockets for the project.
 - [ ] Permissions enforced on the server and tested, like P-01.
 
-### G1 · Gate: captures get replies
+### G1 · Gate: shared items get replies (D-159)
 Pass bar set in OD-03. Record the result and Petr's go/no-go in the Decision log. If it fails, stop and rethink the core loop with Petr before phase 2.
 
 ---
@@ -412,7 +420,7 @@ Split into sub-tasks as you go:
 - [ ] V-02e Reactions as stickers, edited and deleted states, Star. (P-04 already ships plain reaction counts, D-154, and the deleted outline, D-155.)
 
 ### V-03 · Search and filters · `todo`
-- [ ] Search across entries, comments, page titles, and text drawn with the text tool.
+- [ ] Search across entries, comments, and page titles. Text drawn with the text tool comes with L-06 (D-158).
 - [ ] Filter by category and source domain.
 
 ### V-04 · Kasa Bot: tagged answers · `todo`
@@ -454,7 +462,7 @@ Depends on: OD-09
 - [ ] Downgrade path: shared projects become read-only, never deleted.
 
 ### V-11 · Onboarding · `todo`
-- [ ] First-run flow: create a pile, invite people, then offer the extension (D-018).
+- [ ] First-run flow: create a pile, invite people. Offering the extension (D-018) comes with L-06.
 - [ ] Empty states use the mascot (after OD-08).
 
 ### V-12 · Landing page · `todo`
@@ -462,12 +470,12 @@ Depends on: OD-09
 - [ ] Only "Start a pile" calls to action; no Chrome button (D-018).
 
 ### V-13 · Security and privacy review · `todo`
-- [ ] Threat model for the extension, uploads, unfurling, the bot, and Telegram.
+- [ ] Threat model for uploads, unfurling, the bot, and Telegram (the extension's comes with L-06).
 - [ ] Permission checks tested for every API route; the bot can't read other projects.
 - [ ] Privacy policy and terms published.
 
 ### V-14 · Launch checklist · `todo`
-- [ ] Chrome Web Store listing and review.
+- [ ] ~~Chrome Web Store listing and review.~~ Moved to L-06 (D-158).
 - [ ] Load test of the feed and realtime service at 10× pilot usage.
 - [ ] Backups and restore tested.
 
@@ -483,6 +491,7 @@ Record the result and Petr's go/no-go in the Decision log.
 - **L-03** Export a project as a zip of images plus JSON.
 - **L-04** Safari extension, if pilot users ask for it.
 - **L-05** WhatsApp two-way sync (D-012), once an Official Business Account is in place.
+- **L-06** Chrome extension (D-158): the dropped P-08 to P-11 with their criteria (scaffold, Comment, Draw, Save page and send step, `capture_created`), plus pin threads on captures and `pin_comment_created` (D-160), the extension offer after sign-up (D-018), the extension threat model, the Chrome Web Store listing, searchable drawn text, and week-4 extension retention in the metrics dashboard. Split into tasks when phase 3 starts.
 
 ### G3 · Gate: users ask for phone capture
 
@@ -523,3 +532,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-27 · P-03 · Zen chat feed: opens at the newest entry with paging back, header menu (members, rename, archive, search placeholder), composer for notes, links, and photos (attach, drop, paste; Enter sends), read tracking, viewer and archived notices, `entry_created`. · [#11](https://github.com/uxpetr/kasa/pull/11)
 - 2026-09-27 · P-04 · Core content types: index cards for links, taped capture prints with pins, fanned photo stacks with a full-size viewer; one actions menu (hover, focus, or long-press) with six reactions and Delete behind a confirmation; deleted entries leave a dashed outline naming who deleted them; `entry_deleted`, `reaction_added`. · [#12](https://github.com/uxpetr/kasa/pull/12)
 - 2026-09-27 · P-06 · Live updates: Postgres change triggers, a WebSocket service with signed per-project tickets and origin checks, catch-up through `?since=`, reconnect with backoff; new entries, reactions, and deletions reach other members in well under 2 seconds (tested end to end, including a dropped connection). · [#13](https://github.com/uxpetr/kasa/pull/13)
+- 2026-09-27 · Plan · Chrome extension moved to v2 (D-158): P-08 to P-11 dropped and collected in L-06, G1 is now "shared items get replies" (D-159), pin threads moved out of P-07 (D-160), and the PRD rewritten for the web-first plan (D-161). · [#14](https://github.com/uxpetr/kasa/pull/14)
