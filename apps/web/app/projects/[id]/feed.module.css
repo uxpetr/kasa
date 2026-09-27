@@ -354,6 +354,58 @@ button.reaction::after {
   font-weight: 600;
 }
 
+/* A reply's original, briefly marked after jumping to it. */
+.jumpTarget {
+  border-radius: 12px;
+  transition: background-color 0.4s;
+}
+.jumpTarget[data-highlight] {
+  background: var(--kasa-color-accent-tint);
+}
+.entry:focus {
+  outline: none;
+}
+
+.replyBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 4px 0 20px;
+  color: var(--kasa-color-ink-muted);
+  font-size: var(--kasa-font-size-meta);
+}
+.replyBar span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.replyBar button {
+  position: relative;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--kasa-color-ink);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.replyBar button::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+}
+.replyBar button:hover {
+  background: var(--kasa-color-table-alt);
+}
+.replyBar button:focus-visible {
+  outline: 2px solid var(--kasa-color-ink);
+  outline-offset: 2px;
+}
+
 .fallback {
   margin: 0;
   color: var(--kasa-color-ink-body);

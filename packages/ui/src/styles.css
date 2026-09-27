@@ -171,6 +171,81 @@
   transform: rotate(var(--kasa-rotate, 0deg));
 }
 
+/* Reply: the answer paper-clipped to a small print of the original */
+.kasa-reply {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  max-width: 100%;
+}
+.kasa-quote {
+  position: relative;
+  z-index: 0;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  width: 112px;
+  margin: 12px -10px 0 0;
+  padding: 5px 5px 14px;
+  border: 0;
+  background: var(--kasa-color-paper);
+  color: var(--kasa-color-ink-body);
+  font: 12px/1.35 var(--kasa-font-body);
+  text-align: left;
+  cursor: pointer;
+  --kasa-rotate: -2.5deg;
+}
+.kasa-quote img {
+  display: block;
+  width: 100%;
+  height: 72px;
+  object-fit: cover;
+}
+.kasa-quote-text {
+  display: -webkit-box;
+  overflow: hidden;
+  padding: 4px 3px 0;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow-wrap: anywhere;
+}
+.kasa-quote-note {
+  background: var(--kasa-color-sticky);
+}
+.kasa-quote-bot {
+  background: var(--kasa-color-bot-paper);
+}
+.kasa-quote:focus-visible {
+  outline: 2px solid var(--kasa-color-ink);
+  outline-offset: 2px;
+}
+.kasa-clip {
+  position: absolute;
+  z-index: 2;
+  left: 88px;
+  top: -4px;
+  color: var(--kasa-color-ink-muted);
+  transform: rotate(-12deg);
+  pointer-events: none;
+}
+.kasa-reply-object {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+/* No room side by side: the print sits above, tucked under the answer. */
+@media (max-width: 560px) {
+  .kasa-reply {
+    flex-direction: column;
+  }
+  .kasa-quote {
+    margin: 0 0 -12px 0;
+  }
+  .kasa-clip {
+    top: -6px;
+  }
+}
+
 /* Capture and drawing: a taped print */
 .kasa-print {
   position: relative;

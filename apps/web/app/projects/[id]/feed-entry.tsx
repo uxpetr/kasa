@@ -1,10 +1,10 @@
 "use client";
 
 import { Fragment, useState, useSyncExternalStore, type ReactNode } from "react";
-import { Avatar, BotCard, DeletedOutline, IndexCard, Note, Polaroid, Print, tiltFor } from "@kasa/ui";
+import { Avatar, BotCard, DeletedOutline, IndexCard, Note, Polaroid, Print, Reply, tiltFor } from "@kasa/ui";
 import type { FeedEntry } from "@/lib/entries";
 import { hostOf, previewLine } from "@/lib/preview";
-import { deletedText, EntryActions, nounFor } from "./entry-actions";
+import { deletedText, EntryActions, nounFor, objectLabel } from "./entry-actions";
 import styles from "./feed.module.css";
 import { PhotoViewer } from "./photo-viewer";
 
@@ -76,10 +76,13 @@ interface EntryProps {
   canAdd: boolean;
   isOwner: boolean;
   onChange: (entry: FeedEntry) => void;
+  onReply: (entry: FeedEntry) => void;
+  /** Scrolls to an entry, loading older pages if needed. */
+  onJump: (id: string) => void;
 }
 
 /** One entry: avatar, "Name · time", then the object, the same whatever its source (D-016). */
-export function FeedEntryView({ entry, viewerId, canAdd, isOwner, onChange }: EntryProps) {
+export function FeedEntryView({ entry, viewerId, canAdd, isOwner, onChange, onReply, onJump }: EntryProps) {
   const [viewing, setViewing] = useState(false);
   const isBot = entry.kind === "bot";
   const name = isBot ? "Kasa Bot" : entry.author?.id === viewerId ? "You" : (entry.author?.name ?? "");
@@ -87,14 +90,13 @@ export function FeedEntryView({ entry, viewerId, canAdd, isOwner, onChange }: En
 
   if (entry.deleted) {
     return (
-      <article className={`${styles.entry} ${styles.deleted}`} aria-label={deletedText(entry, viewerId)}>
+      <article id={`entry-${entry.id}`} tabIndex={-1} className={`${styles.entry} ${styles.deleted}`} aria-label={deletedText(entry, viewerId)}>
         <DeletedOutline text={deletedText(entry, viewerId)} rotate={rotate} />
       </article>
     );
   }
 
-  const owner = isBot ? "Kasa Bot's" : entry.author?.id === viewerId ? "your" : `${entry.author?.name ?? "someone"}'s`;
-  const label = `${owner} ${nounFor(entry)}`;
+  const label = objectLabel(entry, viewerId);
   const photoAlt = entry.body ? entry.body : `Photo from ${entry.author?.name ?? "someone"}`;
 
   let object: ReactNode;
@@ -176,8 +178,22 @@ export function FeedEntryView({ entry, viewerId, canAdd, isOwner, onChange }: En
     object = <p className={styles.fallback}>{line}</p>;
   }
 
+  const quoted = entry.replyTo;
+  if (quoted) {
+    object = (
+      <Reply
+        quote={<QuotePrint entry={quoted} viewerId={viewerId} />}
+        quoteLabel={`Go to ${quoted.deleted ? `the deleted ${nounFor(quoted)}` : objectLabel(quoted, viewerId)}`}
+        paper={quoted.deleted ? "plain" : quoted.kind === "note" || quoted.kind === "decision" ? "note" : quoted.kind === "bot" ? "bot" : "plain"}
+        onSelectQuote={() => onJump(quoted.id)}
+      >
+        {object}
+      </Reply>
+    );
+  }
+
   return (
-    <article className={styles.entry} aria-label={`${name}, ${entry.kind}`}>
+    <article id={`entry-${entry.id}`} tabIndex={-1} className={styles.entry} aria-label={`${name}, ${entry.kind}`}>
       {isBot ? (
         <span className={styles.botMark} aria-hidden="true">
           k
@@ -197,11 +213,35 @@ export function FeedEntryView({ entry, viewerId, canAdd, isOwner, onChange }: En
           canReact={canAdd}
           canDelete={canAdd && (isOwner || (entry.author !== null && entry.author.id === viewerId))}
           onChange={onChange}
+          onReply={canAdd ? onReply : undefined}
         >
           {object}
         </EntryActions>
       </div>
       {viewing ? <PhotoViewer entry={entry} alt={photoAlt} onClose={() => setViewing(false)} /> : null}
     </article>
+  );
+}
+
+/** The small print of an original on a reply: its image, or its first words. */
+function QuotePrint({ entry, viewerId }: { entry: FeedEntry; viewerId: string }) {
+  if (entry.deleted) return <span className="kasa-quote-text">{deletedText(entry, viewerId)}</span>;
+  const image = entry.photos[0]
+    ? `/api/media/${entry.photos[0].uploadId}/thumb`
+    : entry.capture?.screenshot
+      ? `/api/entries/${entry.id}/media/${entry.capture.screenshot.mediaId}`
+      : entry.link?.hasImage
+        ? `/api/entries/${entry.id}/preview-image`
+        : null;
+  const text =
+    entry.kind === "link" && entry.link
+      ? (entry.link.title ?? hostOf(entry.link.url) ?? entry.link.url)
+      : entry.body ??
+        previewLine({ kind: entry.kind, body: null, authorId: null, authorName: null, linkTitle: null, pageUrl: entry.capture?.pageUrl ?? null }, viewerId);
+  return (
+    <>
+      {image ? <img src={image} alt="" /> : null}
+      {!image || entry.body ? <span className="kasa-quote-text">{text}</span> : null}
+    </>
   );
 }

@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Chrome extension (D-158), pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** P-07 (in progress; replies, including the Reply action, D-153; pin threads moved to v2, D-160). P-14, P-15, F-09, F-10, F-11, and P-05 are also unblocked.
+**Next up:** P-12 (minimal notifications). P-14, P-15, F-09, F-10, F-11, and P-05 are also unblocked.
 **Blocked:** nothing.
 
 ---
@@ -158,6 +158,7 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-159** · 2026-09-27 · Gate G1 becomes **"shared items get replies"**: the share of links and photos that get at least one reply. OD-03 still sets the pilot length and pass bar. · Petr
 - **D-160** · 2026-09-27 · Pin threads on captures (tap a pin, comment per pin, `pin_comment_created`) move from P-07 to L-06 with the extension. P-07 is now replies only. · Petr
 - **D-161** · 2026-09-27 · `docs/PRD.md` was rewritten for the web-first plan (TL;DR, goals, use cases, concepts, extension section marked v2, metrics, risks, roadmap). It's now ahead of the Claude Doc it was exported from; update the Doc from the repo before exporting again. · Petr
+- **D-162** · 2026-09-27 · Replies (P-07): `POST /api/projects/:id/entries` takes `replyToId`, which must be a live entry in the same project (404 otherwise). Every `FeedEntry` carries `replyTo`: the original as a `FeedEntry`, one level deep, as an outline if deleted, and only from the same project, even for rows written directly to the database. `@kasa/ui` `Reply` draws the small print (the original's image or first words, on sticky, bot, or white paper), the paper clip, and the answer; on screens under 560px the print sits above. Tapping the print scrolls to the original, loading up to 20 older pages if needed, then focuses and briefly tints it. The composer shows "Replying to Mika's note" with a × (Escape also cancels), after the prototype's "replying to Aiko". Any kind can be a reply (note, link, photos). `reply_created` carries kind, the original's kind, and whether it's your own; `entry_created` still fires too. · P-07
 
 ---
 
@@ -338,11 +339,11 @@ Depends on: P-03
 - [x] New entries, replies, comments, and reactions appear for other members within 2 seconds. (Replies and comments go through the same change triggers; their UI comes with P-07.)
 - [x] Reconnects cleanly and back-fills missed events.
 
-### P-07 · Replies · `in-progress` · branch `p-07-replies`
+### P-07 · Replies · `done` · branch `p-07-replies`
 Depends on: P-04, P-06
-- [ ] Reply in the actions menu (D-153); the reply posts at the bottom with the quoted original (paper-clip style); tapping the clip scrolls to the original.
+- [x] Reply in the actions menu (D-153); the reply posts at the bottom with the quoted original (paper-clip style); tapping the clip scrolls to the original.
 - [ ] ~~Tapping a pin on a capture opens its thread; comments can be added per pin.~~ Moved to L-06 (D-160).
-- [ ] Analytics: `reply_created` (`pin_comment_created` moved to L-06, D-160).
+- [x] Analytics: `reply_created` (`pin_comment_created` moved to L-06, D-160).
 
 ### P-08 · Extension scaffold · `dropped`
 Moved to v2 as part of L-06 (D-158); the criteria below carry over unchanged.
@@ -533,3 +534,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-27 · P-04 · Core content types: index cards for links, taped capture prints with pins, fanned photo stacks with a full-size viewer; one actions menu (hover, focus, or long-press) with six reactions and Delete behind a confirmation; deleted entries leave a dashed outline naming who deleted them; `entry_deleted`, `reaction_added`. · [#12](https://github.com/uxpetr/kasa/pull/12)
 - 2026-09-27 · P-06 · Live updates: Postgres change triggers, a WebSocket service with signed per-project tickets and origin checks, catch-up through `?since=`, reconnect with backoff; new entries, reactions, and deletions reach other members in well under 2 seconds (tested end to end, including a dropped connection). · [#13](https://github.com/uxpetr/kasa/pull/13)
 - 2026-09-27 · Plan · Chrome extension moved to v2 (D-158): P-08 to P-11 dropped and collected in L-06, G1 is now "shared items get replies" (D-159), pin threads moved out of P-07 (D-160), and the PRD rewritten for the web-first plan (D-161). · [#14](https://github.com/uxpetr/kasa/pull/14)
+- 2026-09-27 · P-07 · Replies: Reply in the actions menu, a reply bar in the composer, the answer paper-clipped to a small print of the original, tap to jump (loading older pages if needed), deleted originals as outlines, `reply_created`. · [#15](https://github.com/uxpetr/kasa/pull/15)

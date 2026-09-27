@@ -28,6 +28,13 @@ const NOUN: Record<FeedEntry["kind"], string> = {
 
 export const nounFor = (entry: FeedEntry) => NOUN[entry.kind];
 
+/** "Mika's note", "your photo", "Kasa Bot's message": the object's accessible name. */
+export function objectLabel(entry: FeedEntry, viewerId: string): string {
+  if (entry.kind === "bot") return "Kasa Bot's message";
+  const owner = entry.author?.id === viewerId ? "your" : `${entry.author?.name ?? "someone"}'s`;
+  return `${owner} ${nounFor(entry)}`;
+}
+
 /** "Mika deleted a note", "You deleted Mika's photo" (D-155). */
 export function deletedText(entry: FeedEntry, viewerId: string): string {
   const noun = nounFor(entry);
@@ -57,6 +64,8 @@ interface ActionsProps {
   canReact: boolean;
   canDelete: boolean;
   onChange: (entry: FeedEntry) => void;
+  /** Starts a reply in the composer (D-153); absent when the viewer can't post. */
+  onReply?: (entry: FeedEntry) => void;
   children: ReactNode;
 }
 
@@ -64,14 +73,14 @@ interface ActionsProps {
  * The one actions menu (D-016): hover or focus shows the button, long-press opens it on touch.
  * React and Delete for now (D-153); reactions show as counts under the object (D-154).
  */
-export function EntryActions({ entry, label, canReact, canDelete, onChange, children }: ActionsProps) {
+export function EntryActions({ entry, label, canReact, canDelete, onChange, onReply, children }: ActionsProps) {
   const menu = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
   const press = useRef<number | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const menuId = `actions-${entry.id}`;
-  const hasMenu = canReact || canDelete;
+  const hasMenu = canReact || canDelete || !!onReply;
 
   async function toggle(emoji: Reaction, on: boolean) {
     menu.current?.hidePopover();
@@ -153,6 +162,19 @@ export function EntryActions({ entry, label, canReact, canDelete, onChange, chil
             </svg>
           </button>
           <div id={menuId} ref={menu} popover="auto" role="menu" aria-label={`Actions for ${label}`} className={`${controls.menu} ${styles.entryMenu}`}>
+            {onReply ? (
+              <button
+                type="button"
+                role="menuitem"
+                className={controls.menuItem}
+                onClick={() => {
+                  menu.current?.hidePopover();
+                  onReply(entry);
+                }}
+              >
+                Reply
+              </button>
+            ) : null}
             {canReact ? (
               <div role="group" aria-label="React" className={styles.picker}>
                 {REACTIONS.map((emoji) => (

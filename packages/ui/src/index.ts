@@ -5,6 +5,7 @@ export { LinedSheet, Note, noteVariant, Sticky, STICKY_MAX_CHARS } from "./compo
 export { Polaroid } from "./components/polaroid";
 export { IndexCard } from "./components/index-card";
 export { DeletedOutline } from "./components/deleted";
+export { Reply } from "./components/reply";
 export { PinMarker, Print, type Pin } from "./components/print";
 export { BotButton, BotCard } from "./components/bot-card";
 export { CategoryChip, CategoryStamp } from "./components/category";

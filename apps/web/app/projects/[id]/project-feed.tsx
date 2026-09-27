@@ -4,6 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import type { FeedChanges, FeedEntry, FeedPage } from "@/lib/entries";
 import { connectLive, mergeChanges } from "@/lib/live";
 import { FeedComposer } from "./feed-composer";
+import { objectLabel } from "./entry-actions";
 import { FeedEntryView, DayDivider, dayKey } from "./feed-entry";
 import { ProjectHeader } from "./project-header";
 import styles from "./feed.module.css";
@@ -20,6 +21,8 @@ export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
   const [cursor, setCursor] = useState(initialPage.nextCursor);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<FeedEntry | null>(null);
+  const [highlight, setHighlight] = useState<string | null>(null);
   const top = useRef<HTMLDivElement>(null);
   // Keeps the view still when older entries are added above it.
   const anchor = useRef<{ height: number; y: number } | null>(null);
@@ -121,7 +124,38 @@ export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
     setEntries((current) => current.map((e) => (e.id === changed.id ? changed : e)));
   }, []);
 
+  // Tapping a reply's clipped print: go to the original, loading older pages until it's there.
+  const jumpTo = useCallback(
+    async (id: string) => {
+      const show = () => {
+        const el = document.getElementById(`entry-${id}`);
+        if (!el) return false;
+        el.scrollIntoView({ block: "center", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+        el.focus({ preventScroll: true });
+        setHighlight(id);
+        window.setTimeout(() => setHighlight((current) => (current === id ? null : current)), 2000);
+        return true;
+      };
+      if (show()) return;
+      let before = cursorRef.current;
+      const older: FeedEntry[] = [];
+      for (let i = 0; before && i < 20 && !older.some((e) => e.id === id); i++) {
+        const res = await fetch(`/api/projects/${project.id}/entries?before=${encodeURIComponent(before)}`).catch(() => null);
+        if (!res?.ok) return;
+        const page = (await res.json()) as FeedPage;
+        older.unshift(...page.entries);
+        before = page.nextCursor;
+      }
+      if (!older.length) return;
+      setEntries((current) => [...older.filter((e) => !current.some((c) => c.id === e.id)), ...current]);
+      setCursor(before);
+      requestAnimationFrame(() => requestAnimationFrame(show));
+    },
+    [project.id],
+  );
+
   const onSent = (entry: FeedEntry) => {
+    setReplyingTo(null);
     setEntries((current) => [...current, entry]);
     requestAnimationFrame(() => window.scrollTo(0, document.documentElement.scrollHeight));
   };
@@ -137,14 +171,30 @@ export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
         {entries.map((entry, i) => (
           <div key={entry.id} className={styles.item}>
             {i === 0 || dayKey(entries[i - 1]!.createdAt) !== dayKey(entry.createdAt) ? <DayDivider iso={entry.createdAt} /> : null}
-            <FeedEntryView entry={entry} viewerId={viewer.id} canAdd={can.post} isOwner={viewer.role === "owner"} onChange={onChange} />
+            <div className={styles.jumpTarget} data-highlight={highlight === entry.id || undefined}>
+              <FeedEntryView
+                entry={entry}
+                viewerId={viewer.id}
+                canAdd={can.post}
+                isOwner={viewer.role === "owner"}
+                onChange={onChange}
+                onReply={setReplyingTo}
+                onJump={jumpTo}
+              />
+            </div>
           </div>
         ))}
       </section>
       </main>
       <footer className={styles.footer}>
         {can.post ? (
-          <FeedComposer projectId={project.id} projectName={project.name} onSent={onSent} />
+          <FeedComposer
+            projectId={project.id}
+            projectName={project.name}
+            onSent={onSent}
+            replyTo={replyingTo ? { id: replyingTo.id, label: objectLabel(replyingTo, viewer.id) } : null}
+            onCancelReply={() => setReplyingTo(null)}
+          />
         ) : project.archived ? (
           <ArchivedNotice projectId={project.id} canUnarchive={can.archive} />
         ) : (

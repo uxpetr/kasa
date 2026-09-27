@@ -38,6 +38,8 @@ export interface FeedEntry {
   } | null;
   /** Only reactions someone has used, in picker order. */
   reactions: { emoji: Reaction; count: number; mine: boolean }[];
+  /** What this entry replies to (D-006), shown as a small clipped print; its own replyTo is always null. */
+  replyTo: FeedEntry | null;
 }
 
 export interface FeedPage {
@@ -154,6 +156,7 @@ const rowColumns = {
   deletedByName: sql<string | null>`(select ${schema.users.name} from ${schema.users} where ${schema.users.id} = ${schema.entries.deletedBy})`,
   authorId: schema.entries.authorId,
   authorName: schema.users.name,
+  replyToId: schema.entries.replyToId,
 };
 
 type Row = {
@@ -167,6 +170,7 @@ type Row = {
   deletedByName: string | null;
   authorId: string | null;
   authorName: string | null;
+  replyToId: string | null;
 };
 
 async function rowById(db: Database, entryId: string): Promise<Row | undefined> {
@@ -178,10 +182,11 @@ async function rowById(db: Database, entryId: string): Promise<Row | undefined> 
   return row;
 }
 
-async function withDetails(db: Database, rows: Row[], viewerId: string): Promise<FeedEntry[]> {
+async function withDetails(db: Database, rows: Row[], viewerId: string, { quotes = true } = {}): Promise<FeedEntry[]> {
   // Nothing of a deleted entry's content leaves the server.
   const ids = rows.filter((r) => !r.deletedAt).map((r) => r.id);
   if (ids.length === 0) return rows.map((r) => toFeedEntry(r));
+  const quoteOf = quotes ? await quotedEntries(db, rows, viewerId) : new Map<string, FeedEntry>();
   const [media, links, captures, pins, pinNotes, reactions] = await Promise.all([
     db
       .select({
@@ -267,8 +272,24 @@ async function withDetails(db: Database, rows: Row[], viewerId: string): Promise
           link: linkOf.get(r.id) ?? null,
           capture: captureOf.get(r.id) ?? null,
           reactions: reactionsOf.get(r.id) ?? [],
+          replyTo: (r.replyToId && quoteOf.get(r.replyToId)) || null,
         },
   );
+}
+
+/** The originals that live entries reply to, from the same project only, one level deep. */
+async function quotedEntries(db: Database, rows: Row[], viewerId: string): Promise<Map<string, FeedEntry>> {
+  const wanted = rows.filter((r) => !r.deletedAt && r.replyToId);
+  if (wanted.length === 0) return new Map();
+  const originals = await db
+    .select(rowColumns)
+    .from(schema.entries)
+    .leftJoin(schema.users, eq(schema.users.id, schema.entries.authorId))
+    .where(inArray(schema.entries.id, [...new Set(wanted.map((r) => r.replyToId!))]));
+  const projectOf = new Map(rows.map((r) => [r.id, r.projectId]));
+  const sameProject = originals.filter((o) => wanted.some((r) => r.replyToId === o.id && projectOf.get(r.id) === o.projectId));
+  const details = await withDetails(db, sameProject, viewerId, { quotes: false });
+  return new Map(details.map((e) => [e.id, e]));
 }
 
 /** The entry without its details; all a deleted entry ever shows. */
@@ -285,6 +306,7 @@ function toFeedEntry(r: Row): FeedEntry {
     link: null,
     capture: null,
     reactions: [],
+    replyTo: null,
   };
 }
 
@@ -307,7 +329,7 @@ export async function createEntry(
   db: Database,
   userId: string,
   projectId: string,
-  input: { text?: unknown; uploadIds?: unknown },
+  input: { text?: unknown; uploadIds?: unknown; replyToId?: unknown },
 ): Promise<Result<FeedEntry>> {
   const access = isUuid(projectId) ? await projectAccess(db, userId, projectId) : null;
   if (!access) return fail(404, "Project not found");
@@ -322,6 +344,14 @@ export async function createEntry(
   if (new Set(uploadIds).size !== uploadIds.length) return fail(400, "uploadIds must not repeat");
   if (uploadIds.length > MAX_PHOTOS_PER_ENTRY) return fail(400, `At most ${MAX_PHOTOS_PER_ENTRY} photos per message`);
   if (!text && uploadIds.length === 0) return fail(400, "Write something or attach a photo");
+
+  // A reply answers a live entry in the same project (D-006).
+  let original: Row | undefined;
+  if (input.replyToId !== undefined && input.replyToId !== null) {
+    if (!isUuid(input.replyToId)) return fail(400, "replyToId must be an entry id");
+    original = await rowById(db, input.replyToId);
+    if (!original || original.projectId !== projectId || original.deletedAt) return fail(404, "The entry you're replying to is gone");
+  }
 
   // Only the uploader's own, processed images from this project, each used once.
   const uploads = uploadIds.length
@@ -357,7 +387,7 @@ export async function createEntry(
     .transaction(async (tx) => {
     const [entry] = await tx
       .insert(schema.entries)
-      .values({ projectId, authorId: userId, kind, body: kind === "link" ? null : text || null, source: "app" })
+      .values({ projectId, authorId: userId, kind, body: kind === "link" ? null : text || null, source: "app", replyToId: original?.id ?? null })
       .returning({ id: schema.entries.id });
     if (kind === "photo") {
       await tx.insert(schema.entryMedia).values(
@@ -378,6 +408,7 @@ export async function createEntry(
   if (!entryId) return fail(409, "Some photos aren't ready or can't be used");
 
   await track("entry_created", userId, { projectId, kind, source: "app" });
+  if (original) await track("reply_created", userId, { projectId, kind, toKind: original.kind, own: original.authorId === userId });
   return ok((await withDetails(db, [(await rowById(db, entryId))!], userId))[0]!);
 }
 
