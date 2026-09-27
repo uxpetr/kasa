@@ -297,7 +297,7 @@ Depends on: P-12, F-10
 - [ ] `RESEND_API_KEY`, `EMAIL_FROM`, and `UNSUBSCRIBE_SECRET` set for the worker, and `UNSUBSCRIBE_SECRET` for the web app, in each environment (not in the repo).
 - [ ] A reply on staging sends a real email whose unsubscribe link and one-click header both mute the project.
 
-### F-14 · PostHog project · `todo`
+### F-14 · PostHog project · `in-progress` · branch `f-14-posthog`
 Depends on: P-13
 - [ ] Petr creates a PostHog EU Cloud project for Kasa (personal, not a work account) and sets `POSTHOG_API_KEY` for the web app and worker in each environment (not in the repo).
 - [ ] The pilot dashboard from `docs/pilot-dashboard.md` is built in that project and shows real events from staging.
