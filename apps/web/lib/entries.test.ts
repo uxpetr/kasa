@@ -65,10 +65,11 @@ describe.skipIf(!process.env.DATABASE_URL)("entries", () => {
   }
 
   describe("createEntry", () => {
-    it("posts a note and emits entry_created with kind and source only", async () => {
+    it("posts a note and emits entry_created with ids, kind, and source only", async () => {
       const res = await createEntry(db(), u.editor, projectId, { text: "  Ramen at Fuunji?  " });
       expect(res).toMatchObject({ ok: true, value: { kind: "note", body: "Ramen at Fuunji?", author: { id: u.editor, name: "editor" } } });
-      expect(events).toEqual([expect.objectContaining({ event: "entry_created", userId: u.editor, properties: { projectId, kind: "note", source: "app" } })]);
+      const entryId = res.ok ? res.value.id : "";
+      expect(events).toEqual([expect.objectContaining({ event: "entry_created", userId: u.editor, properties: { projectId, entryId, kind: "note", source: "app" } })]);
     });
 
     it("turns a message that is only a URL into a link entry (D-149)", async () => {
@@ -198,7 +199,7 @@ describe.skipIf(!process.env.DATABASE_URL)("entries", () => {
         value: { kind: "note", body: "Yes, book it!", replyTo: { id: original.value.id, kind: "note", body: "Ryokan with a private onsen", author: { id: u.owner }, replyTo: null } },
       });
       expect(events.map((e) => e.event)).toEqual(["entry_created", "reply_created"]);
-      expect(events[1]!.properties).toEqual({ projectId, kind: "note", toKind: "note", own: false });
+      expect(events[1]!.properties).toEqual({ projectId, entryId: reply.ok ? reply.value.id : "", replyToId: original.value.id, kind: "note", toKind: "note", own: false });
 
       // Replies to replies quote one level only, and the page carries the quote too.
       if (!reply.ok) throw new Error(reply.error);
@@ -406,6 +407,15 @@ describe.skipIf(!process.env.DATABASE_URL)("entries", () => {
       await markRead(db(), u.viewer, projectId);
       expect(await read()).toEqual(future);
       expect(await markRead(db(), u.outsider, projectId)).toMatchObject({ ok: false, status: 404 });
+      expect(events).toEqual([]);
+    });
+
+    it("emits feed_opened only when the feed first opens", async () => {
+      await markRead(db(), u.viewer, projectId, true);
+      expect(events).toEqual([expect.objectContaining({ event: "feed_opened", userId: u.viewer, properties: { projectId } })]);
+      events.length = 0;
+      await markRead(db(), u.outsider, projectId, true);
+      expect(events).toEqual([]);
     });
 
     it("lists members owner first, for members only", async () => {
