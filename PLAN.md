@@ -55,7 +55,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
 **Next up:** P-13 (pilot readiness) once OD-03 (pilot length and pass bar) is decided. F-09, F-10, F-11, and F-13 are also unblocked.
-**Blocked:** nothing. Real emails need F-13 (a Resend account and a sender domain from Petr).
+**Blocked:** P-13, on OD-03 (pilot length and pass bar from Petr). Real emails need F-13 (a Resend account and a sender domain from Petr).
 
 ---
 
@@ -561,3 +561,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-27 · P-05 · Link unfurling: the worker reads Open Graph, Twitter, and oEmbed metadata behind an SSRF-safe fetcher (address checked at connect time, every redirect re-checked, timeouts and size caps) and re-hosts the preview image as a metadata-free WebP; cards fill in live. · [#16](https://github.com/uxpetr/kasa/pull/16)
 - 2026-09-27 · P-12 · Minimal notifications: @mention autocomplete, reply and mention emails batched to one per 15 minutes per project (Resend, worded per D-167), a Mute emails toggle, and one-click unsubscribe links; runs without a Resend key until F-13. · [#18](https://github.com/uxpetr/kasa/pull/18)
 - 2026-09-27 · P-15 · Members: the owner changes roles and removes members from the Members dialog, everyone else can leave (entries stay), and a removed member's live connection closes at once, sending them to Your piles; the realtime service now also checks membership on connect. · [#19](https://github.com/uxpetr/kasa/pull/19)
+- 2026-09-27 · P-14 · Invite page: `/invite/<token>` shows who invited you and how many are in the pile (also signed out), joins in one click (straight after Google sign-in too), explains expired and broken links, and the owner's Invite people dialog creates, copies, renews, and turns off the link. · [#20](https://github.com/uxpetr/kasa/pull/20)
