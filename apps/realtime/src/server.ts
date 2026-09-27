@@ -1,5 +1,6 @@
 // WebSocket service (P-06, D-103): Postgres NOTIFY -> "changed" messages to the members
 // watching that project. Clients connect with a ticket signed by the web app for one project.
+// When a member leaves or is removed (P-15), their sockets for that project get "removed" and close.
 import { createServer, type IncomingMessage } from "node:http";
 import { createLogger } from "@kasa/observability";
 import { verifyTicket } from "@kasa/shared/realtime";
@@ -11,6 +12,8 @@ export const CHANNEL = "kasa_changes";
 const HEARTBEAT_MS = 30_000;
 /** Bursts (a photo stack, a batch of bot receipts) become one message per project. */
 const COALESCE_MS = 50;
+/** Close code for a member who left or was removed; clients don't reconnect. */
+export const REMOVED_CLOSE_CODE = 4403;
 
 export interface RealtimeOptions {
   secret: string;
@@ -28,18 +31,32 @@ export async function startRealtime({ secret, databaseUrl, allowedOrigins, port 
   const pending = new Map<string, NodeJS.Timeout>();
   const alive = new WeakSet<WebSocket>();
 
-  const sql = postgres(databaseUrl, { max: 1, onnotice: () => {} });
+  // LISTEN holds its own connection; the other one checks membership on connect.
+  const sql = postgres(databaseUrl, { max: 2, onnotice: () => {} });
+
+  const evict = (client: WebSocket, projectId: string) => {
+    client.send(JSON.stringify({ type: "removed", projectId }));
+    client.close(REMOVED_CLOSE_CODE, "removed");
+  };
   let listening = false;
   await sql.listen(
     CHANNEL,
     (payload) => {
       let projectId: unknown;
+      let removedUserId: unknown;
       try {
-        projectId = (JSON.parse(payload) as { projectId?: unknown }).projectId;
+        ({ projectId, removedUserId } = JSON.parse(payload) as { projectId?: unknown; removedUserId?: unknown });
       } catch {
         return;
       }
-      if (typeof projectId !== "string" || pending.has(projectId)) return;
+      if (typeof projectId !== "string") return;
+      if (typeof removedUserId === "string") {
+        const clients = hub.takeUser(projectId, removedUserId);
+        for (const client of clients) evict(client, projectId);
+        if (clients.length) log.info("member removed, sockets closed", { "project.id": projectId, "user.id": removedUserId, closed: clients.length });
+        return;
+      }
+      if (pending.has(projectId)) return;
       pending.set(
         projectId,
         setTimeout(() => {
@@ -76,13 +93,20 @@ export async function startRealtime({ secret, databaseUrl, allowedOrigins, port 
     const ticket = new URL(req.url ?? "/", "http://realtime").searchParams.get("ticket");
     const claims = verifyTicket(secret, ticket);
     if (!claims) return refuse(401);
-    wss.handleUpgrade(req, socket, head, (ws) => {
+    wss.handleUpgrade(req, socket, head, async (ws) => {
       alive.add(ws);
-      hub.add(claims.projectId, ws);
-      log.info("client connected", { "project.id": claims.projectId, "user.id": claims.userId, clients: hub.size });
+      hub.add(claims.projectId, ws, claims.userId);
       ws.on("pong", () => alive.add(ws));
       // Clients only listen; anything they send is ignored.
       ws.on("close", () => hub.remove(claims.projectId, ws));
+      // A ticket lives 60s, so someone removed meanwhile could still hold one. Checked after
+      // joining the hub, so a removal notice can't slip between the check and the join.
+      const member = await sql`select 1 from memberships where project_id = ${claims.projectId} and user_id = ${claims.userId}`.catch(() => null);
+      if (!member?.length) {
+        hub.remove(claims.projectId, ws);
+        return evict(ws, claims.projectId);
+      }
+      log.info("client connected", { "project.id": claims.projectId, "user.id": claims.userId, clients: hub.size });
       ws.send(JSON.stringify({ type: "ready", projectId: claims.projectId }));
     });
   });

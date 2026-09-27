@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Chrome extension (D-158), pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** P-15 (members), in progress. P-14, F-09, F-10, F-11, and F-13 are also unblocked.
+**Next up:** P-14 (invite page) is the last task before P-13 (pilot readiness). F-09, F-10, F-11, and F-13 are also unblocked.
 **Blocked:** nothing. Real emails need F-13 (a Resend account and a sender domain from Petr).
 
 ---
@@ -168,6 +168,7 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-169** · 2026-09-27 · **Managing members**: in the Members dialog the owner sees an Editor/Viewer select and a Remove button on each member's row; everyone else sees the read-only list. Everyone but the owner has a "Leave this pile" button. The owner can't leave (they can archive instead); ownership transfer stays out of scope. · Petr, P-15
 - **D-170** · 2026-09-27 · **Remove and leave wording**: removing asks "Remove Mika from Japan 2027?" with "Their entries stay in the pile." and Remove / Cancel. Leaving asks "Leave Japan 2027?" with "Your entries stay in the pile. You'll need a new invite to come back." and Leave / Cancel. · Petr, P-15
 - **D-171** · 2026-09-27 · **After leaving or removal**: leaving opens Your piles. A removed member with the feed open is sent to Your piles right away (their live connection closes), with no message. · Petr, P-15
+- **D-172** · 2026-09-27 · Members internals (P-15): `PATCH /api/projects/:id/members/:userId` `{ role }` (editor or viewer) and `DELETE /api/projects/:id/members/:userId`, where deleting yourself means leaving. New rules in `access.ts`: `canManageMembers` (owner, not while archived, matching D-140's read-only archive) and `canLeave` (anyone but the owner, archived or not). The owner's own role can't change and the owner can't be removed. Migration 0011 adds an `AFTER DELETE` trigger on `memberships` that sends `NOTIFY kasa_changes` with `{ projectId, removedUserId }`. The realtime service then sends that user's sockets for the project `{ type: "removed" }` and closes them with code 4403, and the client goes to Your piles without reconnecting. The service now also checks membership on connect (after joining the hub, so a removal can't slip in between), because a ticket stays valid for 60s. A 404 from the ticket endpoint on reconnect also counts as removed. No new analytics events, since the task names none. · P-15
 
 ---
 
@@ -408,13 +409,13 @@ Depends on: P-01, F-08
 - [ ] Owner can copy, renew, and revoke the link from the project menu.
 - [ ] Copy and layout need a design; add an Open decision if the prototype doesn't cover it.
 
-### P-15 · Members · `in-progress` · branch `p-15-members`
+### P-15 · Members · `done` · branch `p-15-members`
 Depends on: P-01
-- [ ] Members list in the project menu, with roles.
-- [ ] Owner changes a member's role (editor or viewer) and removes members.
-- [ ] Members can leave; their entries stay (D-015).
-- [ ] Removing a member or a member leaving also ends their live updates. P-06 tickets are only checked when connecting, so close that user's sockets for the project.
-- [ ] Permissions enforced on the server and tested, like P-01.
+- [x] Members list in the project menu, with roles. (From P-03.)
+- [x] Owner changes a member's role (editor or viewer) and removes members.
+- [x] Members can leave; their entries stay (D-015).
+- [x] Removing a member or a member leaving also ends their live updates. P-06 tickets are only checked when connecting, so close that user's sockets for the project.
+- [x] Permissions enforced on the server and tested, like P-01.
 
 ### G1 · Gate: shared items get replies (D-159)
 Pass bar set in OD-03. Record the result and Petr's go/no-go in the Decision log. If it fails, stop and rethink the core loop with Petr before phase 2.

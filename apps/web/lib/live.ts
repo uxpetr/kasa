@@ -27,6 +27,8 @@ export interface LiveOptions {
   projectId: string;
   /** Called when the project changed, and after every (re)connect to catch up. */
   onChange: () => void;
+  /** The viewer left or was removed from the project (P-15); the connection stays closed. */
+  onRemoved?: () => void;
   fetch?: typeof fetch;
   createSocket?: (url: string) => SocketLike;
   /** Retry delays grow from 1s to 30s. */
@@ -39,6 +41,7 @@ export const backoff = (attempt: number) => Math.min(30_000, 1000 * 2 ** attempt
 export function connectLive({
   projectId,
   onChange,
+  onRemoved,
   fetch: doFetch = (...args) => fetch(...args),
   createSocket = (url) => new WebSocket(url),
   delay = backoff,
@@ -60,8 +63,12 @@ export function connectLive({
     if (stopped || socket) return;
     const res = await doFetch(`/api/projects/${projectId}/realtime`, { method: "POST" }).catch(() => null);
     if (stopped) return;
-    // Not set up (503) or no longer a member (404): nothing to retry.
-    if (res && (res.status === 503 || res.status === 404 || res.status === 401)) return;
+    // Not set up (503) or signed out (401): nothing to retry. No longer a member (404): removed.
+    if (res?.status === 404) {
+      stopped = true;
+      return onRemoved?.();
+    }
+    if (res && (res.status === 503 || res.status === 401)) return;
     if (!res?.ok) return retry();
     const { url, ticket } = (await res.json()) as { url: string; ticket: string };
     if (stopped) return;
@@ -76,6 +83,10 @@ export function connectLive({
       }
       if (type === "ready") attempt = 0;
       if (type === "ready" || type === "changed") onChange();
+      if (type === "removed") {
+        stopped = true;
+        onRemoved?.();
+      }
     };
     ws.onclose = () => {
       if (socket === ws) socket = null;

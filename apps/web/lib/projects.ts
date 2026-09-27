@@ -3,7 +3,7 @@
 import { randomBytes } from "node:crypto";
 import { and, count, desc, eq, gt, isNull, schema, sql, type Database, type SQL } from "@kasa/db";
 import { track } from "@kasa/shared";
-import { canArchive, canInvite, canRename, projectAccess, type Role } from "./access";
+import { canArchive, canInvite, canLeave, canManageMembers, canRename, projectAccess, type Role } from "./access";
 import { fail, isUuid, ok, type Result } from "./result";
 
 export const MAX_PROJECT_NAME = 80;
@@ -134,6 +134,47 @@ export async function listMembers(
     .where(eq(schema.memberships.projectId, projectId))
     .orderBy(sql`case ${schema.memberships.role} when 'owner' then 0 when 'editor' then 1 else 2 end`, schema.memberships.joinedAt);
   return ok({ members });
+}
+
+const memberWhere = (projectId: string, memberId: string) =>
+  and(eq(schema.memberships.projectId, projectId), eq(schema.memberships.userId, memberId));
+
+/** The owner makes a member an editor or a viewer (D-169). The owner's own role can't change. */
+export async function changeRole(
+  db: Database,
+  userId: string,
+  projectId: string,
+  memberId: string,
+  role: unknown,
+): Promise<Result<{ id: string; role: Role }>> {
+  const access = isUuid(projectId) ? await projectAccess(db, userId, projectId) : null;
+  if (!access) return fail(404, "Project not found");
+  if (!canManageMembers(access)) return fail(403, access.archived ? "Project is archived" : "Only the owner can change roles");
+  if (role !== "editor" && role !== "viewer") return fail(400, "role must be editor or viewer");
+  const target = isUuid(memberId) ? await projectAccess(db, memberId, projectId) : null;
+  if (!target) return fail(404, "Member not found");
+  if (target.role === "owner") return fail(403, "The owner's role can't change");
+  await db.update(schema.memberships).set({ role }).where(memberWhere(projectId, memberId));
+  return ok({ id: memberId, role });
+}
+
+/**
+ * Removes a member (owner, D-169) or leaves (anyone but the owner). Their entries stay (D-015).
+ * Deleting the membership fires a trigger that closes their live connection (migration 0011).
+ */
+export async function removeMember(db: Database, userId: string, projectId: string, memberId: string): Promise<Result<{ removed: string }>> {
+  const access = isUuid(projectId) ? await projectAccess(db, userId, projectId) : null;
+  if (!access) return fail(404, "Project not found");
+  const leaving = memberId === userId;
+  if (leaving && !canLeave(access)) return fail(403, "The owner can't leave; archive the pile instead");
+  if (!leaving) {
+    if (!canManageMembers(access)) return fail(403, access.archived ? "Project is archived" : "Only the owner can remove members");
+    const target = isUuid(memberId) ? await projectAccess(db, memberId, projectId) : null;
+    if (!target) return fail(404, "Member not found");
+    if (target.role === "owner") return fail(403, "The owner can't be removed");
+  }
+  await db.delete(schema.memberships).where(memberWhere(projectId, memberId));
+  return ok({ removed: memberId });
 }
 
 const liveInvite = (now: Date) => and(isNull(schema.invites.revokedAt), gt(schema.invites.expiresAt, now));

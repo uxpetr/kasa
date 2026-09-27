@@ -113,7 +113,10 @@ test.describe("zen chat feed", () => {
 
     await page.getByRole("menuitem", { name: "Members" }).click();
     const members = page.getByRole("dialog", { name: "Members" });
-    await expect(members.getByRole("listitem")).toHaveText([/Petr\s*Owner/, /Mika\s*Editor/, /Vera\s*Viewer/]);
+    await expect(members.getByRole("listitem")).toHaveText([/Petr\s*Owner/, /Mika/, /Vera/]);
+    // The owner manages roles from the list (D-169).
+    await expect(members.getByRole("combobox", { name: "Role for Mika" })).toHaveValue("editor");
+    await expect(members.getByRole("combobox", { name: "Role for Vera" })).toHaveValue("viewer");
     await members.getByRole("button", { name: "Close" }).click();
 
     await page.getByRole("button", { name: "Project menu" }).click();

@@ -38,3 +38,7 @@ export const canReact = canAdd;
 /** Authors delete their own entries; the owner deletes anyone's, the bot's included (D-015). Not while archived. */
 export const canDeleteEntry = (a: Access | null, authorId: string | null, userId: string) =>
   !!a && !a.archived && (a.role === "owner" || (authorId !== null && authorId === userId));
+/** Only the owner changes roles and removes members (D-169); not while archived (D-140). */
+export const canManageMembers = (a: Access | null) => !!a && !a.archived && a.role === "owner";
+/** Everyone but the owner can leave, archived or not (D-169). */
+export const canLeave = (a: Access | null) => !!a && a.role !== "owner";
