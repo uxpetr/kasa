@@ -113,4 +113,28 @@ describe("connectLive", () => {
       vi.useRealTimers();
     }
   });
+
+  it("stops for good and reports removal on a 'removed' message or a 404 ticket (P-15)", async () => {
+    vi.useFakeTimers();
+    try {
+      const live = fakes();
+      const onRemoved = vi.fn();
+      connectLive({ projectId: "p1", onChange: () => {}, onRemoved, fetch: live.fetch, createSocket: live.createSocket, delay: () => 1000 });
+      await vi.advanceTimersByTimeAsync(0);
+      live.sockets[0]!.onmessage!({ data: '{"type":"removed","projectId":"p1"}' });
+      live.sockets[0]!.onclose!();
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(onRemoved).toHaveBeenCalledTimes(1);
+      expect(live.fetch).toHaveBeenCalledTimes(1);
+
+      const gone = fakes([404]);
+      const onGone = vi.fn();
+      connectLive({ projectId: "p1", onChange: () => {}, onRemoved: onGone, fetch: gone.fetch, createSocket: gone.createSocket, delay: () => 1000 });
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(onGone).toHaveBeenCalledTimes(1);
+      expect(gone.sockets).toHaveLength(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

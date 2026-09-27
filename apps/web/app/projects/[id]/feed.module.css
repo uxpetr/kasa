@@ -80,6 +80,35 @@
   color: var(--kasa-color-ink-muted);
   font-size: var(--kasa-font-size-meta);
 }
+/* Owner controls (D-169): a role select and Remove on each member's row. */
+.memberRoleSelect {
+  height: 36px;
+  padding: 0 8px;
+  border: 1px solid var(--kasa-color-line-strong);
+  border-radius: 10px;
+  background: var(--kasa-color-paper);
+  color: var(--kasa-color-ink);
+  font: inherit;
+  font-size: var(--kasa-font-size-meta);
+}
+.memberRemove {
+  height: 36px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--kasa-color-accent);
+  font: 600 var(--kasa-font-size-meta) / 1 var(--kasa-font-body);
+  cursor: pointer;
+}
+.memberRemove:hover {
+  background: var(--kasa-color-accent-tint);
+}
+.memberRoleSelect:focus-visible,
+.memberRemove:focus-visible {
+  outline: 2px solid var(--kasa-color-ink);
+  outline-offset: 2px;
+}
 
 .main {
   display: flex;

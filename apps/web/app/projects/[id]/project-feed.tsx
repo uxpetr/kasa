@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { FeedChanges, FeedEntry, FeedPage } from "@/lib/entries";
 import { connectLive, mergeChanges } from "@/lib/live";
@@ -12,11 +13,12 @@ import styles from "./feed.module.css";
 export interface FeedProps {
   project: { id: string; name: string; archived: boolean };
   viewer: { id: string; name: string; role: "owner" | "editor" | "viewer"; emailsMuted: boolean };
-  can: { post: boolean; rename: boolean; archive: boolean };
+  can: { post: boolean; rename: boolean; archive: boolean; manageMembers: boolean; leave: boolean };
   initialPage: FeedPage;
 }
 
 export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
+  const router = useRouter();
   const [entries, setEntries] = useState<FeedEntry[]>(initialPage.entries);
   const [cursor, setCursor] = useState(initialPage.nextCursor);
   const [loadingOlder, setLoadingOlder] = useState(false);
@@ -101,7 +103,8 @@ export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
       pulling = false;
     }
 
-    const live = connectLive({ projectId: project.id, onChange: () => void pull() });
+    // Removed from the pile, or left in another tab: back to Your piles, no message (D-171).
+    const live = connectLive({ projectId: project.id, onChange: () => void pull(), onRemoved: () => router.replace("/") });
     const wake = () => live.wake();
     window.addEventListener("online", wake);
     return () => {
@@ -109,7 +112,7 @@ export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
       live.stop();
       window.removeEventListener("online", wake);
     };
-  }, [project.id]);
+  }, [project.id, router]);
 
   // Scrolling up to the top loads the previous page.
   useEffect(() => {

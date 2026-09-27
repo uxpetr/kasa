@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Avatar } from "@kasa/ui";
 import type { FeedProps } from "./project-feed";
 import controls from "../../controls.module.css";
@@ -11,6 +11,7 @@ import styles from "./feed.module.css";
 type Member = { id: string; name: string; role: "owner" | "editor" | "viewer" };
 
 const ROLE_LABEL = { owner: "Owner", editor: "Editor", viewer: "Viewer" } as const;
+const firstName = (name: string) => name.trim().split(/\s+/)[0] || name;
 
 /** Back, the project name, and the project menu (D-008, D-148). */
 export function ProjectHeader({ project, viewer, can }: Pick<FeedProps, "project" | "viewer" | "can">) {
@@ -22,6 +23,49 @@ export function ProjectHeader({ project, viewer, can }: Pick<FeedProps, "project
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [muted, setMuted] = useState(viewer.emailsMuted);
+  const confirmDialog = useRef<HTMLDialogElement>(null);
+  const [confirm, setConfirm] = useState<{ kind: "remove"; member: Member } | { kind: "leave" } | null>(null);
+  const [memberError, setMemberError] = useState<string | null>(null);
+
+  // The confirmation opens over the Members dialog.
+  useEffect(() => {
+    if (confirm) {
+      setMemberError(null);
+      confirmDialog.current?.showModal();
+    }
+  }, [confirm]);
+
+  async function memberRequest(memberId: string, init: RequestInit) {
+    setPending(true);
+    setMemberError(null);
+    const res = await fetch(`/api/projects/${project.id}/members/${memberId}`, init).catch(() => null);
+    setPending(false);
+    if (res?.ok) return true;
+    setMemberError(res ? (((await res.json().catch(() => null)) as { error?: string } | null)?.error ?? "Something went wrong") : "Something went wrong");
+    return false;
+  }
+
+  async function changeRole(member: Member, role: "editor" | "viewer") {
+    const ok = await memberRequest(member.id, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ role }),
+    });
+    if (ok) setMemberList((list) => list?.map((m) => (m.id === member.id ? { ...m, role } : m)) ?? null);
+  }
+
+  async function confirmAction() {
+    if (!confirm) return;
+    const memberId = confirm.kind === "remove" ? confirm.member.id : viewer.id;
+    if (!(await memberRequest(memberId, { method: "DELETE" }))) return;
+    if (confirm.kind === "leave") {
+      router.replace("/"); // D-171
+      return;
+    }
+    setMemberList((list) => list?.filter((m) => m.id !== memberId) ?? null);
+    confirmDialog.current?.close();
+    setConfirm(null);
+  }
 
   const closeMenu = () => menu.current?.hidePopover();
 
@@ -130,15 +174,76 @@ export function ProjectHeader({ project, viewer, can }: Pick<FeedProps, "project
             <li key={m.id}>
               <Avatar person={m} size={32} />
               <span className={styles.memberName}>{m.name}</span>
-              <span className={styles.memberRole}>{ROLE_LABEL[m.role]}</span>
+              {can.manageMembers && m.role !== "owner" ? (
+                <>
+                  <select
+                    className={styles.memberRoleSelect}
+                    aria-label={`Role for ${m.name}`}
+                    value={m.role}
+                    disabled={pending}
+                    onChange={(e) => void changeRole(m, e.target.value as "editor" | "viewer")}
+                  >
+                    <option value="editor">Editor</option>
+                    <option value="viewer">Viewer</option>
+                  </select>
+                  <button type="button" className={styles.memberRemove} onClick={() => setConfirm({ kind: "remove", member: m })}>
+                    Remove
+                  </button>
+                </>
+              ) : (
+                <span className={styles.memberRole}>{ROLE_LABEL[m.role]}</span>
+              )}
             </li>
           ))}
         </ul>
+        {memberError && !confirm ? (
+          <p role="alert" className={controls.error}>
+            {memberError}
+          </p>
+        ) : null}
         <div className={controls.actions}>
+          {can.leave ? (
+            <button type="button" className={controls.secondary} onClick={() => setConfirm({ kind: "leave" })}>
+              Leave this pile
+            </button>
+          ) : null}
           <button type="button" className={controls.secondary} onClick={() => members.current?.close()}>
             Close
           </button>
         </div>
+      </dialog>
+
+      <dialog
+        ref={confirmDialog}
+        className={controls.dialog}
+        aria-labelledby="member-confirm-title"
+        onClose={() => !pending && setConfirm(null)}
+      >
+        {confirm ? (
+          <>
+            <h2 id="member-confirm-title">
+              {confirm.kind === "remove" ? `Remove ${firstName(confirm.member.name)} from ${project.name}?` : `Leave ${project.name}?`}
+            </h2>
+            <p>
+              {confirm.kind === "remove"
+                ? "Their entries stay in the pile."
+                : "Your entries stay in the pile. You'll need a new invite to come back."}
+            </p>
+            {memberError ? (
+              <p role="alert" className={controls.error}>
+                {memberError}
+              </p>
+            ) : null}
+            <div className={controls.actions}>
+              <button type="button" className={controls.secondary} onClick={() => confirmDialog.current?.close()}>
+                Cancel
+              </button>
+              <button type="button" className={controls.primary} disabled={pending} onClick={() => void confirmAction()}>
+                {confirm.kind === "remove" ? "Remove" : "Leave"}
+              </button>
+            </div>
+          </>
+        ) : null}
       </dialog>
 
       <dialog ref={rename} className={controls.dialog} aria-labelledby="rename-title">

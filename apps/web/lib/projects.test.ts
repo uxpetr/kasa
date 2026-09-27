@@ -5,12 +5,14 @@ import { setAnalyticsSink, type TrackedEvent } from "@kasa/shared";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   acceptInvite,
+  changeRole,
   createInvite,
   createProject,
   currentInvite,
   INVITE_TTL_MS,
   listProjects,
   previewInvite,
+  removeMember,
   revokeInvites,
   updateProject,
 } from "./projects";
@@ -146,6 +148,54 @@ describe.skipIf(!ready)("projects and invites", () => {
       const second = await updateProject(db(), u.owner, id, { archived: true });
       if (!first.ok || !second.ok) throw new Error("archive failed");
       expect(second.value.archivedAt).toEqual(first.value.archivedAt);
+    });
+  });
+
+  describe("members (P-15)", () => {
+    const roleOf = async (projectId: string, userId: string) =>
+      (await db().select({ role: schema.memberships.role, userId: schema.memberships.userId }).from(schema.memberships).where(eq(schema.memberships.projectId, projectId))).find(
+        (m) => m.userId === userId,
+      )?.role ?? null;
+
+    it("lets only the owner change roles, never the owner's own", async () => {
+      const projectId = await groupProject();
+      expect(await changeRole(db(), u.owner, projectId, u.editor, "viewer")).toEqual({ ok: true, value: { id: u.editor, role: "viewer" } });
+      expect(await roleOf(projectId, u.editor)).toBe("viewer");
+      expect(await changeRole(db(), u.owner, projectId, u.viewer, "editor")).toMatchObject({ ok: true });
+
+      expect(await changeRole(db(), u.viewer, projectId, u.editor, "editor")).toMatchObject({ ok: false, status: 403 });
+      expect(await changeRole(db(), u.editor, projectId, u.viewer, "viewer")).toMatchObject({ ok: false, status: 403 });
+      expect(await changeRole(db(), u.outsider, projectId, u.editor, "viewer")).toMatchObject({ ok: false, status: 404 });
+      expect(await changeRole(db(), u.owner, projectId, u.owner, "viewer")).toMatchObject({ ok: false, status: 403 });
+      expect(await changeRole(db(), u.owner, projectId, u.editor, "owner")).toMatchObject({ ok: false, status: 400 });
+      expect(await changeRole(db(), u.owner, projectId, u.outsider, "viewer")).toMatchObject({ ok: false, status: 404 });
+      expect(await changeRole(db(), u.owner, projectId, "nope", "viewer")).toMatchObject({ ok: false, status: 404 });
+    });
+
+    it("lets only the owner remove members; entries stay (D-015)", async () => {
+      const projectId = await groupProject();
+      await db().insert(schema.entries).values({ projectId, authorId: u.editor, kind: "note", body: "Mine" });
+      expect(await removeMember(db(), u.editor, projectId, u.viewer)).toMatchObject({ ok: false, status: 403 });
+      expect(await removeMember(db(), u.outsider, projectId, u.viewer)).toMatchObject({ ok: false, status: 404 });
+      expect(await removeMember(db(), u.editor, projectId, u.owner)).toMatchObject({ ok: false, status: 403 });
+      expect(await removeMember(db(), u.owner, projectId, u.owner)).toMatchObject({ ok: false, status: 403 });
+      expect(await removeMember(db(), u.owner, projectId, u.outsider)).toMatchObject({ ok: false, status: 404 });
+
+      expect(await removeMember(db(), u.owner, projectId, u.editor)).toEqual({ ok: true, value: { removed: u.editor } });
+      expect(await roleOf(projectId, u.editor)).toBeNull();
+      const entries = await db().select().from(schema.entries).where(eq(schema.entries.projectId, projectId));
+      expect(entries.map((e) => e.body)).toEqual(["Mine"]);
+    });
+
+    it("lets everyone but the owner leave, even while archived", async () => {
+      const projectId = await groupProject();
+      await updateProject(db(), u.owner, projectId, { archived: true });
+      expect(await removeMember(db(), u.owner, projectId, u.editor)).toMatchObject({ ok: false, status: 403 });
+      expect(await changeRole(db(), u.owner, projectId, u.editor, "viewer")).toMatchObject({ ok: false, status: 403 });
+      expect(await removeMember(db(), u.viewer, projectId, u.viewer)).toMatchObject({ ok: true });
+      expect(await removeMember(db(), u.editor, projectId, u.editor)).toMatchObject({ ok: true });
+      expect(await removeMember(db(), u.owner, projectId, u.owner)).toMatchObject({ ok: false, status: 403 });
+      expect(await roleOf(projectId, u.owner)).toBe("owner");
     });
   });
 

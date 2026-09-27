@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { eq, schema } from "@kasa/db";
-import { canAdd, canArchive, canRename, projectAccess } from "@/lib/access";
+import { canAdd, canArchive, canLeave, canManageMembers, canRename, projectAccess } from "@/lib/access";
 import { getAuth, isAuthConfigured } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { listEntries } from "@/lib/entries";
@@ -40,7 +40,13 @@ export default async function ProjectPage(props: PageProps<"/projects/[id]">) {
     <ProjectFeed
       project={{ id, name: project!.name, archived: access.archived }}
       viewer={{ id: userId, name: session.user.name, role: access.role, emailsMuted: muted }}
-      can={{ post: canAdd(access), rename: canRename(access), archive: canArchive(access) }}
+      can={{
+        post: canAdd(access),
+        rename: canRename(access),
+        archive: canArchive(access),
+        manageMembers: canManageMembers(access),
+        leave: canLeave(access),
+      }}
       initialPage={page.value}
     />
   );
