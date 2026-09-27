@@ -180,6 +180,7 @@ export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
                 viewerId={viewer.id}
                 canAdd={can.post}
                 isOwner={viewer.role === "owner"}
+                archived={project.archived}
                 onChange={onChange}
                 onReply={setReplyingTo}
                 onJump={jumpTo}

@@ -70,7 +70,18 @@ export async function completeUpload(
     .set({ status: "processing" })
     .where(and(eq(schema.uploads.id, upload.id), eq(schema.uploads.status, "pending")))
     .returning({ id: schema.uploads.id });
-  if (moved.length === 1) await deps.queue.send("media.process", { uploadId: upload.id });
+  if (moved.length === 1) {
+    try {
+      await deps.queue.send("media.process", { uploadId: upload.id });
+    } catch {
+      // Don't leave the row processing with no job; the client can complete again.
+      await deps.db
+        .update(schema.uploads)
+        .set({ status: "pending" })
+        .where(and(eq(schema.uploads.id, upload.id), eq(schema.uploads.status, "processing")));
+      return fail(503, "Couldn't start processing");
+    }
+  }
   return { ok: true, value: { status: "processing" } };
 }
 

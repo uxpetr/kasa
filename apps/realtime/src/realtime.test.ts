@@ -35,6 +35,34 @@ describe("Hub", () => {
     expect(hub.size).toBe(2);
     expect(hub.takeUser("p1", "ann")).toEqual([]);
   });
+
+  it("does not send changes to a client until membership is confirmed", () => {
+    const hub = new Hub();
+    const pendingGot: string[] = [];
+    const readyGot: string[] = [];
+    const pending = { send: (m: string) => pendingGot.push(m) };
+    const ready = { send: (m: string) => readyGot.push(m) };
+    hub.add("p1", pending, "ann", true);
+    hub.add("p1", ready, "bob");
+    hub.notify("p1");
+    expect(pendingGot).toEqual([]);
+    expect(readyGot).toEqual(['{"type":"changed","projectId":"p1"}']);
+    hub.confirm(pending);
+    hub.notify("p1");
+    expect(pendingGot).toEqual(['{"type":"changed","projectId":"p1"}']);
+  });
+
+  it("lists distinct connected members", () => {
+    const hub = new Hub();
+    const [a, b, a2] = [0, 1, 2].map(() => ({ send: () => {} }));
+    hub.add("p1", a!, "ann", true);
+    hub.add("p1", a2!, "ann");
+    hub.add("p2", b!, "bob");
+    expect(hub.members()).toEqual([
+      { projectId: "p1", userId: "ann" },
+      { projectId: "p2", userId: "bob" },
+    ]);
+  });
 });
 
 describe.skipIf(!process.env.DATABASE_URL)("realtime server", () => {

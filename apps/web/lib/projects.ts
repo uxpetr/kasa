@@ -201,6 +201,8 @@ export async function createInvite(db: Database, userId: string, projectId: stri
 
   const now = new Date();
   const invite = await db.transaction(async (tx) => {
+    // Serialize create/revoke so two owners can't each insert a live link (READ COMMITTED).
+    await tx.select({ id: schema.projects.id }).from(schema.projects).where(eq(schema.projects.id, projectId)).for("update");
     await tx
       .update(schema.invites)
       .set({ revokedAt: now })
@@ -293,18 +295,39 @@ export async function previewInvite(db: Database, userId: string | null, token: 
 
 /** Joins the project as editor; existing members keep their role (D-138). */
 export async function acceptInvite(db: Database, userId: string, token: unknown): Promise<Result<{ projectId: string; role: Role }>> {
-  const invite = await usableInvite(db, token);
-  if (!invite.ok) return invite;
-  const { projectId, inviteId } = invite.value;
-  const inserted = await db
-    .insert(schema.memberships)
-    .values({ projectId, userId, role: "editor" })
-    .onConflictDoNothing()
-    .returning({ role: schema.memberships.role });
-  if (inserted.length === 0) {
-    const access = await projectAccess(db, userId, projectId);
-    return ok({ projectId, role: access!.role });
-  }
-  await track("invite_accepted", userId, { projectId, inviteId });
-  return ok({ projectId, role: "editor" });
+  if (typeof token !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(token)) return fail(404, "Invite not found");
+  return db.transaction(async (tx) => {
+    // Lock invite + project so a concurrent revoke/archive is visible before we insert membership.
+    const [row] = await tx
+      .select({
+        inviteId: schema.invites.id,
+        projectId: schema.projects.id,
+        expiresAt: schema.invites.expiresAt,
+        revokedAt: schema.invites.revokedAt,
+        archivedAt: schema.projects.archivedAt,
+      })
+      .from(schema.invites)
+      .innerJoin(schema.projects, eq(schema.projects.id, schema.invites.projectId))
+      .where(and(eq(schema.invites.token, token), isNull(schema.projects.deletedAt)))
+      .for("update");
+    if (!row) return fail<{ projectId: string; role: Role }>(404, "Invite not found");
+    if (row.revokedAt || row.expiresAt <= new Date() || row.archivedAt) {
+      return fail<{ projectId: string; role: Role }>(410, "This invite link no longer works");
+    }
+    const { projectId, inviteId } = row;
+    const inserted = await tx
+      .insert(schema.memberships)
+      .values({ projectId, userId, role: "editor" })
+      .onConflictDoNothing()
+      .returning({ role: schema.memberships.role });
+    if (inserted.length === 0) {
+      const [existing] = await tx
+        .select({ role: schema.memberships.role })
+        .from(schema.memberships)
+        .where(and(eq(schema.memberships.projectId, projectId), eq(schema.memberships.userId, userId)));
+      return ok({ projectId, role: existing!.role });
+    }
+    await track("invite_accepted", userId, { projectId, inviteId });
+    return ok({ projectId, role: "editor" as const });
+  });
 }

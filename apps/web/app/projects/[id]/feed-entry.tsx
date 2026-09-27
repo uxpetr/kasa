@@ -75,6 +75,7 @@ interface EntryProps {
   /** Owners and editors, not while archived (lib/access). */
   canAdd: boolean;
   isOwner: boolean;
+  archived: boolean;
   onChange: (entry: FeedEntry) => void;
   onReply: (entry: FeedEntry) => void;
   /** Scrolls to an entry, loading older pages if needed. */
@@ -82,7 +83,7 @@ interface EntryProps {
 }
 
 /** One entry: avatar, "Name · time", then the object, the same whatever its source (D-016). */
-export function FeedEntryView({ entry, viewerId, canAdd, isOwner, onChange, onReply, onJump }: EntryProps) {
+export function FeedEntryView({ entry, viewerId, canAdd, isOwner, archived, onChange, onReply, onJump }: EntryProps) {
   const [viewing, setViewing] = useState(false);
   const isBot = entry.kind === "bot";
   const name = isBot ? "Kasa Bot" : entry.author?.id === viewerId ? "You" : (entry.author?.name ?? "");
@@ -211,7 +212,7 @@ export function FeedEntryView({ entry, viewerId, canAdd, isOwner, onChange, onRe
           entry={entry}
           label={label}
           canReact={canAdd}
-          canDelete={canAdd && (isOwner || (entry.author !== null && entry.author.id === viewerId))}
+          canDelete={!archived && (isOwner || (entry.author !== null && entry.author.id === viewerId))}
           onChange={onChange}
           onReply={canAdd ? onReply : undefined}
         >

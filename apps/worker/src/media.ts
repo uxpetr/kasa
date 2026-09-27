@@ -15,9 +15,16 @@ export interface MediaDeps {
  */
 export async function processUpload(deps: MediaDeps, uploadId: string): Promise<void> {
   const [upload] = await deps.db.select().from(schema.uploads).where(eq(schema.uploads.id, uploadId));
-  if (!upload || upload.status !== "processing") return;
+  if (!upload) return;
 
   const rawKey = keys.raw(upload.projectId, upload.id);
+  // A previous run may have marked ready/failed then died before deleting GPS-tagged raw.
+  if (upload.status === "ready" || upload.status === "failed") {
+    await deps.storage.remove(rawKey);
+    return;
+  }
+  if (upload.status !== "processing") return;
+
   const markFailed = async (reason: string) => {
     deps.log?.warn("upload rejected", { "upload.id": upload.id, "project.id": upload.projectId, reason });
     await deps.db

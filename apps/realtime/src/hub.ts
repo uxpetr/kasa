@@ -6,16 +6,25 @@ export interface Client {
 export class Hub<C extends Client = Client> {
   private readonly byProject = new Map<string, Set<C>>();
   private readonly userOf = new Map<C, string>();
+  /** Connected but membership not confirmed yet; they must not receive `changed`. */
+  private readonly pending = new Set<C>();
 
-  add(projectId: string, client: C, userId?: string) {
+  add(projectId: string, client: C, userId?: string, pending = false) {
     const set = this.byProject.get(projectId) ?? new Set<C>();
     set.add(client);
     this.byProject.set(projectId, set);
     if (userId) this.userOf.set(client, userId);
+    if (pending) this.pending.add(client);
+  }
+
+  /** Membership confirmed; this client may receive `changed`. */
+  confirm(client: C) {
+    this.pending.delete(client);
   }
 
   remove(projectId: string, client: C) {
     this.userOf.delete(client);
+    this.pending.delete(client);
     const set = this.byProject.get(projectId);
     if (!set) return;
     set.delete(client);
@@ -29,15 +38,35 @@ export class Hub<C extends Client = Client> {
     return taken;
   }
 
-  /** Tells every client of one project that something changed. Only ids travel; content comes from the web API. */
+  /** Tells every confirmed client of one project that something changed. Only ids travel; content comes from the web API. */
   notify(projectId: string) {
     const message = JSON.stringify({ type: "changed", projectId });
-    for (const client of this.byProject.get(projectId) ?? []) client.send(message);
+    for (const client of this.byProject.get(projectId) ?? []) {
+      if (this.pending.has(client)) continue;
+      client.send(message);
+    }
   }
 
   /** After a lost database connection nobody knows what was missed, so everyone catches up. */
   notifyAll() {
     for (const projectId of this.byProject.keys()) this.notify(projectId);
+  }
+
+  /** Distinct (project, user) pairs currently connected, for membership reconciliation after LISTEN reconnects. */
+  members(): { projectId: string; userId: string }[] {
+    const seen = new Set<string>();
+    const out: { projectId: string; userId: string }[] = [];
+    for (const [projectId, set] of this.byProject) {
+      for (const client of set) {
+        const userId = this.userOf.get(client);
+        if (!userId) continue;
+        const key = `${projectId}:${userId}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push({ projectId, userId });
+      }
+    }
+    return out;
   }
 
   get size() {
