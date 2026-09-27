@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** P-04 (core content types). P-14, P-15, F-09, F-10, F-11, P-05, and P-08 are also unblocked.
+**Next up:** P-04 (core content types), in progress. P-14, P-15, F-09, F-10, F-11, P-05, and P-08 are also unblocked.
 **Blocked:** nothing.
 
 ---
@@ -149,6 +149,9 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-150** · 2026-09-27 · Composer images: all images from one send become one Photo entry (a stack when there are several), and any text is its caption. · Petr, P-03
 - **D-151** · 2026-09-27 · Feed notices: viewers see "You can view this pile but not add to it." in place of the composer; archived projects show "This pile is archived." with an Unarchive button for the owner; an empty feed says "Nothing here yet. Paste a link, drop a photo, or write a note." · Petr, P-03
 - **D-152** · 2026-09-27 · Feed internals: `GET /api/projects/:id/entries?before=<cursor>` returns 30 entries per page, oldest first within the page; the cursor is `<createdAt ISO>_<id>` of the oldest entry, using the D-005 index. `POST /api/projects/:id/entries` takes `{ text, uploadIds }` (text up to 4,000 characters, up to 10 photos); photos must be the poster's own `ready` uploads from the same project, and `entry_media.upload_id` (unique) ties each upload to at most one entry. The composer uploads through F-06, polls `GET /api/uploads/:id` until the worker finishes, then posts; images are shown through `/api/media/<uploadId>/thumb`. `POST /api/projects/:id/read` marks the feed read from the browser, so link prefetching never counts as reading. `GET /api/projects/:id/members` backs the Members dialog. Times and day dividers render in the viewer's time zone on the client. Playwright now also starts the worker, so the photo flow is tested end to end. The shared button, dialog, and menu styles live in `app/controls.module.css`; menus sit under their button using CSS anchor positioning. `BotCard` takes `header={false}` in the feed. · P-03
+- **D-153** · 2026-09-27 · Reply joins the actions menu in P-07, together with the paper-clip reply design, so replies look right from the start. P-04's menu has React and Delete. · Petr, P-04
+- **D-154** · 2026-09-27 · Reactions are a fixed set of six: ❤️ 👍 😂 😮 🎉 👀. In P-04 they show as small counts on the object; the sticker look comes with V-02e. · Petr, P-04
+- **D-155** · 2026-09-27 · Deleting an entry asks for confirmation first ("Delete this note?" with Delete and Cancel). The deleted entry then stays in the feed as a dashed outline reading "Mika deleted a note", as in the prototype. · Petr, P-04
 
 ---
 
@@ -309,10 +312,12 @@ Depends on: P-01, F-08
 - [x] Analytics: `entry_created` with kind and source.
 - [x] Opening the feed sets `memberships.last_read_at`, which clears the unread count on the projects screen (added by P-02, D-147).
 
-### P-04 · Core content types · `todo`
+### P-04 · Core content types · `in-progress` · branch `p-04-content-types`
 Depends on: P-03, F-06
 - [ ] Note (sticky; lined sheet when long), Photo (polaroid), generic Link (index card), Capture (taped print with pins). P-03 already renders notes, single polaroids, a plain link card, and a one-line fallback for other kinds (`app/projects/[id]/feed-entry.tsx`); P-04 replaces the link card and fallback and adds photo stacks.
-- [ ] Shared actions menu on every object: Reply, React, Delete (Move to category and Star come in phase 2).
+- [ ] Shared actions menu on every object: React and Delete (Reply moves to P-07, D-153; Move to category and Star come in phase 2).
+- [ ] React: six fixed reactions shown as small counts on the object (D-154).
+- [ ] Delete: authors delete their own entries and owners anyone's (D-015), after a confirmation; the entry leaves a dashed outline (D-155).
 - [ ] Same rendering regardless of source (D-016).
 
 ### P-05 · Link unfurling · `todo`
@@ -328,7 +333,7 @@ Depends on: P-03
 
 ### P-07 · Replies and capture threads · `todo`
 Depends on: P-04, P-06
-- [ ] Reply posts at the bottom with the quoted original (paper-clip style); tapping the clip scrolls to the original.
+- [ ] Reply in the actions menu (D-153); the reply posts at the bottom with the quoted original (paper-clip style); tapping the clip scrolls to the original.
 - [ ] Tapping a pin on a capture opens its thread; comments can be added per pin.
 - [ ] Analytics: `reply_created`, `pin_comment_created`.
 
@@ -400,7 +405,7 @@ Split into sub-tasks as you go:
 - [ ] V-02b Article and video links (inline muted video, timestamps as chapters); photo stacks; screenshot detection.
 - [ ] V-02c Decision (ballot with dot stickers) and Keep strip. Blocked by OD-07.
 - [ ] V-02d File (folded-corner sheet, full-screen viewer).
-- [ ] V-02e Reactions as stickers, edited and deleted states, Star.
+- [ ] V-02e Reactions as stickers, edited and deleted states, Star. (P-04 already ships plain reaction counts, D-154, and the deleted outline, D-155.)
 
 ### V-03 · Search and filters · `todo`
 - [ ] Search across entries, comments, page titles, and text drawn with the text tool.
