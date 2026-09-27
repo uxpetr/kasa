@@ -8,6 +8,7 @@ const port = 3100;
 // Its own realtime port, so a running `pnpm dev` (3200) doesn't get in the way.
 const realtimePort = 3201;
 process.env.REALTIME_SECRET ||= "e2e-realtime-secret";
+process.env.UNSUBSCRIBE_SECRET ||= "e2e-unsubscribe-secret";
 
 export default defineConfig({
   testDir: "./e2e",
@@ -35,11 +36,12 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       gracefulShutdown: { signal: "SIGTERM", timeout: 5000 },
     },
-    // The worker processes photo uploads and unfurls links for the feed tests;
-    // links unfurl only from local test servers, never the internet.
+    // The worker processes photo uploads, unfurls links, and handles notifications for the
+    // feed tests; links unfurl only from local test servers, never the internet.
     {
       command: "pnpm --filter @kasa/worker start",
-      env: { UNFURL_LOOPBACK_ONLY: "1" },
+      // Never real emails from tests, even if the local .env has a Resend key.
+      env: { UNFURL_LOOPBACK_ONLY: "1", RESEND_API_KEY: "" },
       wait: { stdout: /worker started/ },
       reuseExistingServer: !process.env.CI,
       gracefulShutdown: { signal: "SIGTERM", timeout: 5000 },

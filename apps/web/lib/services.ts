@@ -12,6 +12,12 @@ export function getStorage(): Storage {
 }
 
 export function getQueue(): Promise<JobQueue> {
-  queue ??= startQueue(requireDatabaseUrl(), "producer").then((q) => q.queue);
+  queue ??= startQueue(requireDatabaseUrl(), "producer").then(
+    (q) => q.queue,
+    (error: unknown) => {
+      queue = undefined; // try again on the next request
+      throw error;
+    },
+  );
   return queue;
 }

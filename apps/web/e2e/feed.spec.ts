@@ -63,7 +63,7 @@ test.describe("zen chat feed", () => {
   test("sends notes, links, and photos from the composer", async ({ page }) => {
     await signIn(page, "Mika");
     await openFeed(page);
-    const composer = page.getByRole("textbox", { name: "Add to Japan 2027" });
+    const composer = page.getByRole("combobox", { name: "Add to Japan 2027" });
 
     await composer.fill("Ramen at Fuunji?");
     await composer.press("Enter");
@@ -129,7 +129,7 @@ test.describe("zen chat feed", () => {
     await signIn(page, "Vera");
     await openFeed(page);
     await expect(page.getByText("You can view this pile but not add to it.")).toBeVisible();
-    await expect(page.getByRole("textbox", { name: /Add to/ })).toHaveCount(0);
+    await expect(page.getByRole("combobox", { name: /Add to/ })).toHaveCount(0);
     await page.getByRole("button", { name: "Project menu" }).click();
     await expect(page.getByRole("menuitem", { name: "Rename" })).toHaveCount(0);
     await expect(page.getByRole("menuitem", { name: "Archive" })).toHaveCount(0);
@@ -141,10 +141,10 @@ test.describe("zen chat feed", () => {
     await page.getByRole("button", { name: "Project menu" }).click();
     await page.getByRole("menuitem", { name: "Archive" }).click();
     await expect(page.getByText("This pile is archived.")).toBeVisible();
-    await expect(page.getByRole("textbox", { name: /Add to/ })).toHaveCount(0);
+    await expect(page.getByRole("combobox", { name: /Add to/ })).toHaveCount(0);
 
     await page.getByRole("button", { name: "Unarchive" }).click();
-    await expect(page.getByRole("textbox", { name: "Add to Japan 2027" })).toBeVisible();
+    await expect(page.getByRole("combobox", { name: "Add to Japan 2027" })).toBeVisible();
   });
 
   test("has no axe violations and fits a phone", async ({ page }) => {

@@ -71,6 +71,13 @@
       "when": 1790496291510,
       "tag": "0009_entry_change_notify",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790515452780,
+      "tag": "0010_notifications",
+      "breakpoints": true
     }
   ]
 }

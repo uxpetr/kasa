@@ -6,14 +6,25 @@ import { createStorage, storageConfigFromEnv } from "@kasa/media";
 import { telemetry } from "./telemetry";
 import { log, runJob } from "./jobs";
 import { processUpload } from "./media";
+import { sendNotifications } from "./notify";
+import { mailerFromEnv } from "./notify/mailer";
 import { unfurlEntry } from "./unfurl";
 import { addressPolicyFromEnv } from "./unfurl/address";
 
 const databaseUrl = requireDatabaseUrl();
 const { db, close } = createDb(databaseUrl, { max: 5 });
 const storage = createStorage(storageConfigFromEnv());
-const { boss } = await startQueue(databaseUrl, "worker");
+const { boss, queue } = await startQueue(databaseUrl, "worker");
 const policy = addressPolicyFromEnv(process.env);
+const mailer = mailerFromEnv(process.env, log);
+const notifyDeps = {
+  db,
+  queue,
+  mailer,
+  appUrl: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
+  unsubscribeSecret: process.env.UNSUBSCRIBE_SECRET,
+  log,
+};
 
 await boss.work<JobData<"media.process">>("media.process", { localConcurrency: 2 }, async ([job]) => {
   if (job) await runJob("media.process", job.id, job.data, () => processUpload({ db, storage, log }, job.data.uploadId));
@@ -23,7 +34,11 @@ await boss.work<JobData<"link.unfurl">>("link.unfurl", { localConcurrency: 4 }, 
   if (job) await runJob("link.unfurl", job.id, job.data, () => unfurlEntry({ db, storage, log, policy }, job.data.entryId));
 });
 
-log.info("worker started", { jobs: "media.process,link.unfurl", unfurl_policy: policy });
+await boss.work<JobData<"notify.send">>("notify.send", { localConcurrency: 2 }, async ([job]) => {
+  if (job) await runJob("notify.send", job.id, job.data, () => sendNotifications(notifyDeps, job.data.userId, job.data.projectId));
+});
+
+log.info("worker started", { jobs: "media.process,link.unfurl,notify.send", unfurl_policy: policy, mailer: mailer.kind });
 
 async function shutdown() {
   await boss.stop({ graceful: true, timeout: 20_000 });

@@ -1,4 +1,3 @@
-import { errorAttributes } from "@kasa/observability";
 import { getSessionUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { createEntry, listChanges, listEntries } from "@/lib/entries";
@@ -22,7 +21,7 @@ export async function GET(request: Request, { params }: Context) {
   return toResponse(await listEntries(getDb(), user.id, id, { before: query.get("before") ?? undefined }));
 }
 
-/** POST { text?, uploadIds?, replyToId? } -> 201 entry. Owners and editors, not while archived. Links are unfurled by the worker (P-05). */
+/** POST { text?, uploadIds?, replyToId?, mentions? } -> 201 entry. Owners and editors, not while archived. */
 export async function POST(request: Request, { params }: Context) {
   const user = await getSessionUser(request.headers);
   if (!user) return Response.json({ error: "Sign in required" }, { status: 401 });
@@ -30,18 +29,14 @@ export async function POST(request: Request, { params }: Context) {
   if (!body) return Response.json({ error: "JSON body required" }, { status: 400 });
 
   const { id } = await params;
-  const result = await createEntry(getDb(), user.id, id, body);
   const log = requestLog(request.headers).child({ "user.id": user.id, "project.id": id });
-  if (result.ok) {
-    log.info("entry created", { "entry.id": result.value.id, kind: result.value.kind });
-    if (result.value.kind === "link") {
-      // The entry is saved either way; without the job it stays a plain link.
-      try {
-        await (await getQueue()).send("link.unfurl", { entryId: result.value.id });
-      } catch (error) {
-        log.error("unfurl not queued", { "entry.id": result.value.id, ...errorAttributes(error) });
-      }
-    }
-  } else log.warn("entry refused", { status: result.status });
+  // Without the queue the entry is still saved; it just isn't unfurled or emailed about.
+  const queue = await getQueue().catch((error: unknown) => {
+    log.error("queue unavailable", { message: error instanceof Error ? error.message : String(error) });
+    return undefined;
+  });
+  const result = await createEntry(getDb(), user.id, id, body, queue);
+  if (result.ok) log.info("entry created", { "entry.id": result.value.id, kind: result.value.kind });
+  else log.warn("entry refused", { status: result.status });
   return toResponse(result, 201);
 }

@@ -5,6 +5,7 @@ import { canAdd, canArchive, canRename, projectAccess } from "@/lib/access";
 import { getAuth, isAuthConfigured } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { listEntries } from "@/lib/entries";
+import { emailsMuted } from "@/lib/notifications";
 import { isUuid } from "@/lib/result";
 import { ProjectFeed } from "./project-feed";
 
@@ -28,16 +29,17 @@ export default async function ProjectPage(props: PageProps<"/projects/[id]">) {
   const access = isUuid(id) ? await projectAccess(getDb(), userId, id) : null;
   if (!access) notFound();
 
-  const [[project], page] = await Promise.all([
+  const [[project], page, muted] = await Promise.all([
     getDb().select({ name: schema.projects.name }).from(schema.projects).where(eq(schema.projects.id, id)),
     listEntries(getDb(), userId, id),
+    emailsMuted(getDb(), userId, id),
   ]);
   if (!page.ok) notFound();
 
   return (
     <ProjectFeed
       project={{ id, name: project!.name, archived: access.archived }}
-      viewer={{ id: userId, name: session.user.name, role: access.role }}
+      viewer={{ id: userId, name: session.user.name, role: access.role, emailsMuted: muted }}
       can={{ post: canAdd(access), rename: canRename(access), archive: canArchive(access) }}
       initialPage={page.value}
     />
