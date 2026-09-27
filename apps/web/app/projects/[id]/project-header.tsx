@@ -26,6 +26,23 @@ export function ProjectHeader({ project, viewer, can }: Pick<FeedProps, "project
   const confirmDialog = useRef<HTMLDialogElement>(null);
   const [confirm, setConfirm] = useState<{ kind: "remove"; member: Member } | { kind: "leave" } | null>(null);
   const [memberError, setMemberError] = useState<string | null>(null);
+  // Invite people (D-176): undefined while loading, null when there's no live link.
+  const invite = useRef<HTMLDialogElement>(null);
+  const [inviteLink, setInviteLink] = useState<string | null | undefined>(undefined);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  async function inviteRequest(method: "GET" | "POST" | "DELETE") {
+    setPending(true);
+    setInviteError(null);
+    setCopied(false);
+    const res = await fetch(`/api/projects/${project.id}/invites`, { method }).catch(() => null);
+    setPending(false);
+    const body = (await res?.json().catch(() => null)) as { url?: string; error?: string } | null;
+    if (!res?.ok) return setInviteError(body?.error ?? "Something went wrong");
+    setInviteLink(method === "DELETE" ? null : (body?.url ?? null));
+  }
+  const loadInvite = () => inviteRequest("GET");
 
   // The confirmation opens over the Members dialog.
   useEffect(() => {
@@ -121,6 +138,19 @@ export function ProjectHeader({ project, viewer, can }: Pick<FeedProps, "project
         >
           Members
         </button>
+        {can.invite ? (
+          <button
+            type="button"
+            role="menuitem" className={controls.menuItem}
+            onClick={() => {
+              closeMenu();
+              invite.current?.showModal();
+              void loadInvite();
+            }}
+          >
+            Invite people
+          </button>
+        ) : null}
         {can.rename ? (
           <button
             type="button"
@@ -208,6 +238,53 @@ export function ProjectHeader({ project, viewer, can }: Pick<FeedProps, "project
             </button>
           ) : null}
           <button type="button" className={controls.secondary} onClick={() => members.current?.close()}>
+            Close
+          </button>
+        </div>
+      </dialog>
+
+      <dialog ref={invite} className={controls.dialog} aria-labelledby="invite-title" onClose={() => setCopied(false)}>
+        <h2 id="invite-title">Invite people</h2>
+        <p>Anyone with this link can join as an editor. It works for 7 days.</p>
+        {inviteLink ? (
+          <label className={controls.field}>
+            <span className="kasa-visually-hidden">Invite link</span>
+            <input readOnly value={inviteLink} onFocus={(e) => e.currentTarget.select()} />
+          </label>
+        ) : null}
+        {inviteError ? (
+          <p role="alert" className={controls.error}>
+            {inviteError}
+          </p>
+        ) : null}
+        <div className={`${controls.actions} ${styles.inviteActions}`}>
+          {inviteLink ? (
+            <>
+              <button type="button" className={controls.secondary} disabled={pending} onClick={() => void inviteRequest("DELETE")}>
+                Turn off link
+              </button>
+              <button type="button" className={controls.secondary} disabled={pending} onClick={() => void inviteRequest("POST")}>
+                New link
+              </button>
+              <button
+                type="button"
+                className={controls.primary}
+                onClick={async () => {
+                  await navigator.clipboard.writeText(inviteLink).then(
+                    () => setCopied(true),
+                    () => setInviteError("Couldn't copy; select the link and copy it"),
+                  );
+                }}
+              >
+                {copied ? "Copied" : "Copy link"}
+              </button>
+            </>
+          ) : inviteLink === null ? (
+            <button type="button" className={controls.primary} disabled={pending} onClick={() => void inviteRequest("POST")}>
+              Create link
+            </button>
+          ) : null}
+          <button type="button" className={controls.secondary} onClick={() => invite.current?.close()}>
             Close
           </button>
         </div>

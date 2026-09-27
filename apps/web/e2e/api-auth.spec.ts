@@ -20,6 +20,10 @@ test("project and invite routes reject anonymous requests", async ({ request }) 
   expect((await request.get(`/api/projects/${id}/invites`)).status()).toBe(401);
   expect((await request.post(`/api/projects/${id}/invites`)).status()).toBe(401);
   expect((await request.delete(`/api/projects/${id}/invites`)).status()).toBe(401);
-  expect((await request.get(`/api/invites/${token}`)).status()).toBe(401);
+  // The preview is public, for the invite page (D-174): an unknown token is simply not found.
+  expect((await request.get(`/api/invites/${token}`)).status()).toBe(404);
   expect((await request.post(`/api/invites/${token}/accept`)).status()).toBe(401);
+  expect((await request.patch(`/api/projects/${id}/members/${id}`, { data: { role: "viewer" } })).status()).toBe(401);
+  expect((await request.delete(`/api/projects/${id}/members/${id}`)).status()).toBe(401);
+  expect((await request.put(`/api/projects/${id}/email-mute`, { data: { muted: true } })).status()).toBe(401);
 });
