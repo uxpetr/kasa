@@ -38,7 +38,7 @@ export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
   useEffect(() => {
     setHydrated(true);
     window.scrollTo(0, document.documentElement.scrollHeight);
-    void fetch(`/api/projects/${project.id}/read`, { method: "POST" });
+    void fetch(`/api/projects/${project.id}/read?opened=1`, { method: "POST" });
   }, [project.id]);
 
   useLayoutEffect(() => {

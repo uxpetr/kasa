@@ -8,12 +8,13 @@ export interface JobPayloads {
   "media.process": { uploadId: string };
   "link.unfurl": { entryId: string };
   "notify.send": { userId: string; projectId: string };
+  "feedback.send": { feedbackId: string };
 }
 export type JobName = keyof JobPayloads;
 
 /** What's stored: the payload plus the sender's trace context, so the job continues its trace (D-137). */
 export type JobData<N extends JobName> = JobPayloads[N] & { _trace?: TraceCarrier };
-export const JOB_NAMES = ["media.process", "link.unfurl", "notify.send"] as const satisfies readonly JobName[];
+export const JOB_NAMES = ["media.process", "link.unfurl", "notify.send", "feedback.send"] as const satisfies readonly JobName[];
 
 export interface SendOptions {
   /** Don't run before this moment. */

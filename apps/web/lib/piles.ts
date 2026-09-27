@@ -69,7 +69,8 @@ export async function listPiles(deps: { db: Database; storage: Pick<Storage, "pr
     db
       .select({ projectId: schema.entries.projectId, n: count() })
       .from(schema.entries)
-      .where(and(inArray(schema.entries.projectId, ids), isNull(schema.entries.deletedAt)))
+      // "Things saved" counts people's entries, not Kasa Bot's.
+      .where(and(inArray(schema.entries.projectId, ids), isNull(schema.entries.deletedAt), ne(schema.entries.kind, "bot")))
       .groupBy(schema.entries.projectId),
   ]);
 

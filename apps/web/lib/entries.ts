@@ -21,6 +21,8 @@ export interface FeedEntry {
   id: string;
   kind: EntryKind;
   body: string | null;
+  /** A Kasa Bot card with an action, e.g. "welcome" (D-180). */
+  botCard: string | null;
   createdAt: string;
   author: { id: string; name: string } | null;
   /** A deleted entry keeps its kind and author for the outline, and nothing else (D-155). */
@@ -154,6 +156,7 @@ const rowColumns = {
   projectId: schema.entries.projectId,
   kind: schema.entries.kind,
   body: schema.entries.body,
+  botCard: schema.entries.botCard,
   createdAt: schema.entries.createdAt,
   deletedAt: schema.entries.deletedAt,
   deletedById: schema.entries.deletedBy,
@@ -168,6 +171,7 @@ type Row = {
   projectId: string;
   kind: EntryKind;
   body: string | null;
+  botCard: string | null;
   createdAt: Date;
   deletedAt: Date | null;
   deletedById: string | null;
@@ -302,6 +306,7 @@ function toFeedEntry(r: Row): FeedEntry {
     id: r.id,
     kind: r.kind,
     body: r.deletedAt ? null : r.body,
+    botCard: r.deletedAt ? null : r.botCard,
     createdAt: r.createdAt.toISOString(),
     author: r.authorId ? { id: r.authorId, name: r.authorName ?? "" } : null,
     deleted: r.deletedAt !== null,
@@ -426,8 +431,10 @@ export async function createEntry(
       log.error("follow-up jobs not queued", { "entry.id": entryId, "project.id": projectId, ...errorAttributes(error) });
     }
   }
-  await track("entry_created", userId, { projectId, kind, source: "app" });
-  if (original) await track("reply_created", userId, { projectId, kind, toKind: original.kind, own: original.authorId === userId });
+  // Entry ids let the pilot dashboard join replies to what they answer (G1, docs/pilot-dashboard.md).
+  await track("entry_created", userId, { projectId, entryId, kind, source: "app" });
+  if (original)
+    await track("reply_created", userId, { projectId, entryId, replyToId: original.id, kind, toKind: original.kind, own: original.authorId === userId });
   return ok((await withDetails(db, [(await rowById(db, entryId))!], userId))[0]!);
 }
 
@@ -486,14 +493,17 @@ function isUniqueViolation(error: unknown): boolean {
 }
 
 /** Opening the feed marks everything read (D-147); never moves backwards. */
-export async function markRead(db: Database, userId: string, projectId: string): Promise<Result<{ ok: true }>> {
+export async function markRead(db: Database, userId: string, projectId: string, opened = false): Promise<Result<{ ok: true }>> {
   if (!isUuid(projectId)) return fail(404, "Project not found");
   const rows = await db
     .update(schema.memberships)
     .set({ lastReadAt: sql`greatest(coalesce(${schema.memberships.lastReadAt}, 'epoch'::timestamptz), now())` })
     .where(and(eq(schema.memberships.projectId, projectId), eq(schema.memberships.userId, userId)))
     .returning({ projectId: schema.memberships.projectId });
-  return rows.length ? ok({ ok: true }) : fail(404, "Project not found");
+  if (!rows.length) return fail(404, "Project not found");
+  // Counted from the browser opening the feed, not the server render, which prefetching can trigger.
+  if (opened) await track("feed_opened", userId, { projectId });
+  return ok({ ok: true });
 }
 
 /** The uploader's view of an upload's progress, for the composer to wait on. */

@@ -1,12 +1,13 @@
 "use client";
 
 import { Fragment, useState, useSyncExternalStore, type ReactNode } from "react";
-import { Avatar, BotCard, DeletedOutline, IndexCard, Note, Polaroid, Print, Reply, tiltFor } from "@kasa/ui";
+import { Avatar, BotButton, BotCard, DeletedOutline, IndexCard, Note, Polaroid, Print, Reply, tiltFor } from "@kasa/ui";
 import type { FeedEntry } from "@/lib/entries";
 import { hostOf, previewLine } from "@/lib/preview";
 import { deletedText, EntryActions, nounFor, objectLabel } from "./entry-actions";
 import styles from "./feed.module.css";
 import { PhotoViewer } from "./photo-viewer";
+import { NewProject } from "../../new-project";
 
 const noop = () => () => {};
 /** Dates render in the viewer's time zone, so they wait for the client. */
@@ -110,7 +111,11 @@ export function FeedEntryView({ entry, viewerId, canAdd, isOwner, archived, onCh
     );
   } else if (isBot) {
     object = (
-      <BotCard rotate={rotate} header={false}>
+      <BotCard
+        rotate={rotate}
+        header={false}
+        actions={entry.botCard === "welcome" ? <NewProject trigger={(open) => <BotButton onClick={open}>Start a pile</BotButton>} /> : undefined}
+      >
         {entry.body}
       </BotCard>
     );

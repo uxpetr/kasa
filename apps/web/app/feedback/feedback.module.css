@@ -1,0 +1,41 @@
+/* The pilot feedback list (D-181): plain and readable, for Petr only. */
+.page {
+  box-sizing: border-box;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+.title {
+  margin: 0 0 24px;
+  font: 500 clamp(32px, 6vw, 40px) / 1.15 var(--kasa-font-display);
+  letter-spacing: -0.5px;
+}
+.empty {
+  color: var(--kasa-color-ink-body);
+}
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.item {
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--kasa-color-line);
+  background: var(--kasa-color-paper);
+}
+.meta {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--kasa-color-ink-muted);
+  overflow-wrap: anywhere;
+}
+.body {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}

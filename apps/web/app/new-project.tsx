@@ -1,11 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent, type ReactNode } from "react";
 import styles from "./controls.module.css";
 
-/** "+ New project": a small dialog for the name, then opens the new project (D-143). */
-export function NewProject() {
+/**
+ * "+ New project": a small dialog for the name, then opens the new project (D-143).
+ * `trigger` swaps the button, e.g. for the welcome card's "Start a pile" (D-180).
+ */
+export function NewProject({ trigger }: { trigger?: (open: () => void) => ReactNode } = {}) {
   const dialog = useRef<HTMLDialogElement>(null);
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -30,18 +33,20 @@ export function NewProject() {
     setError(res ? ((await res.json().catch(() => null)) as { error?: string } | null)?.error ?? "Something went wrong" : "Something went wrong");
   }
 
+  function open() {
+    setError(null);
+    dialog.current?.showModal();
+  }
+
   return (
     <>
-      <button
-        type="button"
-        className={styles.primary}
-        onClick={() => {
-          setError(null);
-          dialog.current?.showModal();
-        }}
-      >
-        + New project
-      </button>
+      {trigger ? (
+        trigger(open)
+      ) : (
+        <button type="button" className={styles.primary} onClick={open}>
+          + New project
+        </button>
+      )}
       <dialog ref={dialog} className={styles.dialog} aria-labelledby="new-project-title">
         <form onSubmit={create}>
           <h2 id="new-project-title">New project</h2>

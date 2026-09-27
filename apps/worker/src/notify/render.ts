@@ -65,7 +65,7 @@ export function subjectFor(projectName: string, items: EmailItem[]): string {
   return `${items.length} replies and mentions in ${projectName}`;
 }
 
-const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+export const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 const INK = "#1F1D1A";
 const MUTED = "#6B665C";

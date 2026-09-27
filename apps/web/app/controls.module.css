@@ -112,3 +112,18 @@
   gap: 12px;
   margin-top: 24px;
 }
+.textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 140px;
+  padding: 10px 12px;
+  border: 1px solid var(--kasa-color-line-strong);
+  border-radius: 8px;
+  font: var(--kasa-font-size-body) / 1.45 var(--kasa-font-body);
+  color: var(--kasa-color-ink);
+  resize: vertical;
+}
+.textarea:focus-visible {
+  outline: 2px solid var(--kasa-color-ink);
+  outline-offset: 1px;
+}

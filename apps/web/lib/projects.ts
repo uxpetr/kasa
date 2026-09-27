@@ -52,10 +52,14 @@ export async function createProject(
   return ok({ id: project.id, name: project.name, role: "owner", archivedAt: null, createdAt: project.createdAt, memberCount: 1 });
 }
 
-/** Every user starts with a personal "My pile" (D-144). */
+export const WELCOME_TEXT =
+  "Welcome to Kasa. Paste a link, drop a photo, or write a note. Everything you add lands here, and people you invite can reply to it.";
+
+/** Every user starts with a personal "My pile" (D-144), holding Kasa Bot's welcome card (D-180). */
 export async function createPersonalProject(db: Database, userId: string): Promise<void> {
   const res = await createProject(db, userId, { name: PERSONAL_PROJECT_NAME }, { personal: true });
   if (!res.ok) throw new Error(res.error);
+  await db.insert(schema.entries).values({ projectId: res.value.id, authorId: null, kind: "bot", body: WELCOME_TEXT, botCard: "welcome" });
 }
 
 /** The user's live projects, newest first; archived ones are included and flagged (D-140). */

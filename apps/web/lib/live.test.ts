@@ -6,6 +6,7 @@ const entry = (id: string, minute: number, body = id): FeedEntry => ({
   id,
   kind: "note",
   body,
+  botCard: null,
   createdAt: new Date(Date.UTC(2026, 8, 27, 9, minute)).toISOString(),
   author: null,
   deleted: false,
