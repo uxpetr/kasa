@@ -54,8 +54,8 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Chrome extension (D-158), pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** P-12 (minimal notifications). P-14, P-15, F-09, F-10, F-11, and P-05 are also unblocked.
-**Blocked:** nothing.
+**Next up:** P-05 (link unfurling), in progress. P-14, P-15, F-09, F-10, and F-11 are also unblocked.
+**Blocked:** P-12, on OD-13 (email wording from Petr).
 
 ---
 
@@ -159,6 +159,9 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-160** · 2026-09-27 · Pin threads on captures (tap a pin, comment per pin, `pin_comment_created`) move from P-07 to L-06 with the extension. P-07 is now replies only. · Petr
 - **D-161** · 2026-09-27 · `docs/PRD.md` was rewritten for the web-first plan (TL;DR, goals, use cases, concepts, extension section marked v2, metrics, risks, roadmap). It's now ahead of the Claude Doc it was exported from; update the Doc from the repo before exporting again. · Petr
 - **D-162** · 2026-09-27 · Replies (P-07): `POST /api/projects/:id/entries` takes `replyToId`, which must be a live entry in the same project (404 otherwise). Every `FeedEntry` carries `replyTo`: the original as a `FeedEntry`, one level deep, as an outline if deleted, and only from the same project, even for rows written directly to the database. `@kasa/ui` `Reply` draws the small print (the original's image or first words, on sticky, bot, or white paper), the paper clip, and the answer; on screens under 560px the print sits above. Tapping the print scrolls to the original, loading up to 20 older pages if needed, then focuses and briefly tints it. The composer shows "Replying to Mika's note" with a × (Escape also cancels), after the prototype's "replying to Aiko". Any kind can be a reply (note, link, photos). `reply_created` carries kind, the original's kind, and whether it's your own; `entry_created` still fires too. · P-07
+- **D-163** · 2026-09-27 · Transactional email goes through **Resend** (resolves the provider in D-109). It needs a Resend account and a sender domain Petr controls. · Petr, P-12
+- **D-164** · 2026-09-27 · **@mentions**: typing `@` in the composer shows the project's members (plus Kasa Bot), and picking one inserts `@Name`. Only picked mentions notify; typed text that merely looks like a name doesn't. · Petr, P-12
+- **D-165** · 2026-09-27 · **Muting**: a "Mute emails" / "Unmute emails" toggle in the feed's project menu, per project. The unsubscribe link in every email mutes that project in one click. · Petr, P-12
 
 ---
 
@@ -177,6 +180,7 @@ Questions only Petr can answer. Agents add to this list and don't guess. When on
 - [x] **OD-10** → D-118. Protecting `main` on a private repo needs GitHub Pro (about $4/month) on the `uxpetr` account. Options: upgrade to Pro; move the repo to a GitHub organization on a paid plan; or drop the criterion and rely on convention (merge only green PRs). Blocks the last F-02 criterion.
 - [ ] **OD-11** Analytics provider. Options: PostHog EU Cloud (product analytics, EU hosting), Plausible (simple, EU, less product depth), self-hosted PostHog, or events in our own Postgres. Needs a privacy/cookie decision too. Events are already tracked (D-129). Blocks P-13's pilot dashboard.
 - [x] **OD-12** → D-136. Where do traces, logs, and error alerts go? F-07 exports OpenTelemetry over OTLP, so any OTLP backend works. Options: a personal Dash0 account (you know it; keep it separate from work), Grafana Cloud free tier (EU region), Honeycomb, or Sentry for errors plus a separate trace backend. Blocks F-07's export and alerting criteria.
+- [ ] **OD-13** Email wording for P-12, provided by Petr: subject and body for the reply and `@mention` emails (including the batched form, several in one email), the unsubscribe confirmation page, and the "Mute emails" state in the app if it needs more than the toggle label. Blocks P-12.
 - [ ] **OD-09** Exact prices for the owner plan and project pass, and project pass duration. Blocks V-10.
 
 ---
@@ -328,7 +332,7 @@ Depends on: P-03, F-06
 - [x] Delete: authors delete their own entries and owners anyone's (D-015), after a confirmation; the entry leaves a dashed outline (D-155).
 - [x] Same rendering regardless of source (D-016).
 
-### P-05 · Link unfurling · `todo`
+### P-05 · Link unfurling · `in-progress` · branch `p-05-unfurl`
 Depends on: F-06
 - [ ] Worker fetches Open Graph and oEmbed data server-side with timeouts and size limits.
 - [ ] SSRF protection: block private IP ranges and non-HTTP schemes.
@@ -373,10 +377,11 @@ Depends on: P-09, P-10
 - [ ] Upload continues in the background if the popup closes; capture to saved in under 5 seconds on a normal connection.
 - [ ] Analytics: `capture_created` with mode.
 
-### P-12 · Minimal notifications · `todo`
+### P-12 · Minimal notifications · `blocked` (OD-13)
 Depends on: P-07
 - [ ] Email for replies and `@mentions`, batched to at most one email per 15 minutes per project.
-- [ ] Unsubscribe link and per-project mute.
+- [ ] Unsubscribe link and per-project mute (D-165).
+- [ ] `@mention` autocomplete in the composer (D-164); email via Resend (D-163).
 
 ### P-13 · Pilot readiness · `todo`
 Depends on: P-02 to P-07, P-12, P-14, P-15, OD-03 (P-08 to P-11 dropped, D-158)
