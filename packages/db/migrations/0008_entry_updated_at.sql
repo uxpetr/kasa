@@ -1,0 +1,2 @@
+ALTER TABLE "entries" ADD COLUMN "updated_at" timestamp with time zone DEFAULT now() NOT NULL;--> statement-breakpoint
+CREATE INDEX "entries_changes_idx" ON "entries" USING btree ("project_id","updated_at");

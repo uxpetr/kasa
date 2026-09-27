@@ -1,4 +1,5 @@
 import { and, asc, desc, eq, isNull, lt, or } from "drizzle-orm";
+import postgres from "postgres";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Database } from "./client";
 import * as s from "./schema";
@@ -129,6 +130,34 @@ describe.skipIf(!baseUrl)("database", () => {
     const text = plan.map((r) => r["QUERY PLAN"]).join("\n");
     expect(text).toMatch(/Index (Only )?Scan Backward using entries_feed_idx/);
     expect(text).not.toContain("Sort");
+  });
+
+  it("notifies kasa_changes with ids only when entries, reactions, or comments change, and bumps updated_at", async () => {
+    const listener = postgres(testDb.url, { max: 1, onnotice: () => {} });
+    const got: { projectId: string; entryId: string }[] = [];
+    await listener.listen("kasa_changes", (payload) => got.push(JSON.parse(payload)));
+    try {
+      const [entry] = await db.insert(s.entries).values({ projectId: SEED.projectId, authorId: SEED.users.aiko, kind: "note", body: "secret words" }).returning();
+      const ids = { projectId: SEED.projectId, entryId: entry!.id };
+      await expect.poll(() => got).toEqual([ids]);
+
+      const before = entry!.updatedAt;
+      await db.insert(s.reactions).values({ entryId: entry!.id, userId: SEED.users.mika, emoji: "👍" });
+      await expect.poll(() => got.length).toBe(2);
+      await db.delete(s.reactions).where(eq(s.reactions.entryId, entry!.id));
+      await expect.poll(() => got.length).toBe(3);
+      await db.insert(s.comments).values({ entryId: entry!.id, authorId: SEED.users.mika, body: "a comment" });
+      await expect.poll(() => got.length).toBe(4);
+      await db.update(s.entries).set({ deletedAt: new Date() }).where(eq(s.entries.id, entry!.id));
+      await expect.poll(() => got.length).toBe(5);
+      expect(got.every((n) => n.entryId === ids.entryId && n.projectId === ids.projectId)).toBe(true);
+      expect(JSON.stringify(got)).not.toContain("secret");
+
+      const [after] = await db.select({ updatedAt: s.entries.updatedAt }).from(s.entries).where(eq(s.entries.id, entry!.id));
+      expect(after!.updatedAt.getTime()).toBeGreaterThan(before.getTime());
+    } finally {
+      await listener.end();
+    }
   });
 
   it("deleting a project removes its entries", async () => {

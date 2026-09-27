@@ -10,12 +10,18 @@
     "start": "tsx --import ./src/telemetry.ts src/index.ts"
   },
   "devDependencies": {
+    "@kasa/db": "workspace:*",
     "@types/node": "^26.6.2",
+    "@types/ws": "^8.18.1",
     "tsx": "^4.23.15",
     "typescript": "catalog:",
+    "vite": "^8.3.1",
     "vitest": "^5.0.2"
   },
   "dependencies": {
-    "@kasa/observability": "workspace:*"
+    "@kasa/observability": "workspace:*",
+    "@kasa/shared": "workspace:*",
+    "postgres": "^3.4.9",
+    "ws": "^8.21.3"
   }
 }

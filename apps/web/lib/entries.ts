@@ -1,6 +1,6 @@
 // The zen chat feed (P-03, P-04): reading pages, posting, reacting, deleting, and marking read.
 // Access: members read (viewers included); owners and editors post and react unless archived (lib/access).
-import { and, asc, count, desc, eq, inArray, isNull, lt, or, schema, sql, type Database } from "@kasa/db";
+import { and, asc, count, desc, eq, gt, inArray, isNull, lt, or, schema, sql, type Database } from "@kasa/db";
 import { track } from "@kasa/shared";
 import { canAdd, canDeleteEntry, canReact, canRead, projectAccess } from "./access";
 import { isReaction, REACTIONS, type Reaction } from "./reactions";
@@ -45,6 +45,28 @@ export interface FeedPage {
   entries: FeedEntry[];
   /** Pass as `before` to load the next older page; null at the start of the project. */
   nextCursor: string | null;
+  /** Database time before the read; pass as `since` to fetch what changed afterwards (P-06). */
+  syncedAt: string;
+}
+
+export interface FeedChanges {
+  /** Entries created or changed since `since`, oldest first; deleted ones as outlines. */
+  entries: FeedEntry[];
+  syncedAt: string;
+  /** Too much changed to list; reload the newest page instead. */
+  truncated: boolean;
+}
+
+export const MAX_CHANGES = 100;
+/**
+ * `since` is moved back this much, so a change committed a moment after its
+ * `updated_at` is never missed. Changes may repeat; clients replace entries by id.
+ */
+const CHANGES_OVERLAP_MS = 5_000;
+
+async function dbNow(db: Database): Promise<string> {
+  const [row] = await db.execute<{ now: Date | string }>(sql`select now() as now`);
+  return new Date(row!.now).toISOString();
 }
 
 // Cursor = "<ISO time>_<entry id>" of the oldest entry on the page; the id breaks ties (D-005).
@@ -70,6 +92,7 @@ export async function listEntries(
   const cursor = parseCursor(options.before);
   if (cursor === "invalid") return fail(400, "Invalid cursor");
   const limit = Math.min(Math.max(options.limit ?? PAGE_SIZE, 1), 100);
+  const syncedAt = await dbNow(db);
 
   const rows = await db
     .select(rowColumns)
@@ -95,7 +118,29 @@ export async function listEntries(
   return ok({
     entries: entries.reverse(),
     nextCursor: rows.length > limit ? toCursor(page[page.length - 1]!) : null,
+    syncedAt,
   });
+}
+
+/** What changed in the project since `since` (P-06): new entries, reactions, comments, deletions. */
+export async function listChanges(db: Database, userId: string, projectId: string, since: unknown): Promise<Result<FeedChanges>> {
+  const access = isUuid(projectId) ? await projectAccess(db, userId, projectId) : null;
+  if (!canRead(access)) return fail(404, "Project not found");
+  const at = typeof since === "string" ? new Date(since) : new Date(NaN);
+  if (Number.isNaN(at.getTime())) return fail(400, "since must be a time");
+  const syncedAt = await dbNow(db);
+
+  const rows = await db
+    .select(rowColumns)
+    .from(schema.entries)
+    .leftJoin(schema.users, eq(schema.users.id, schema.entries.authorId))
+    .where(and(eq(schema.entries.projectId, projectId), gt(schema.entries.updatedAt, new Date(at.getTime() - CHANGES_OVERLAP_MS))))
+    .orderBy(asc(schema.entries.updatedAt))
+    .limit(MAX_CHANGES + 1);
+  if (rows.length > MAX_CHANGES) return ok({ entries: [], syncedAt, truncated: true });
+  const entries = await withDetails(db, rows, userId);
+  entries.sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id));
+  return ok({ entries, syncedAt, truncated: false });
 }
 
 const rowColumns = {

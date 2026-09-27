@@ -185,10 +185,14 @@ export const entries = pgTable(
     // Who deleted it, for the outline's wording (D-155); the author or the owner.
     deletedBy: uuid("deleted_by").references(() => users.id, { onDelete: "set null" }),
     createdAt: createdAt(),
+    // Bumped by triggers whenever the entry, its reactions, or its comments change (P-06).
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     // Feed paging per project; scanned backwards for newest first, id breaks ties (D-005).
     index("entries_feed_idx").on(t.projectId, t.createdAt, t.id),
+    // Realtime back-fill: what changed in a project since a moment (P-06).
+    index("entries_changes_idx").on(t.projectId, t.updatedAt),
     index("entries_reply_to_idx").on(t.replyToId),
   ],
 );

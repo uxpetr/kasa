@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./realtime": "./src/realtime.ts"
   },
   "scripts": {
     "typecheck": "tsc",
@@ -12,6 +13,7 @@
   },
   "devDependencies": {
     "typescript": "catalog:",
-    "vitest": "^5.0.2"
+    "vitest": "^5.0.2",
+    "@types/node": "^26.6.2"
   }
 }

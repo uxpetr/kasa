@@ -47,6 +47,8 @@
         "BETTER_AUTH_URL",
         "GOOGLE_CLIENT_ID",
         "GOOGLE_CLIENT_SECRET",
+        "REALTIME_SECRET",
+        "REALTIME_PUBLIC_URL",
         "S3_ENDPOINT",
         "S3_REGION",
         "S3_BUCKET",
