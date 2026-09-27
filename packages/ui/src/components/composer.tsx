@@ -12,15 +12,17 @@ interface ComposerProps {
   onAttach?: () => void;
   sendLabel?: string;
   disabled?: boolean;
+  /** Allow sending with no text, e.g. when photos are attached. */
+  canSubmitEmpty?: boolean;
 }
 
 /** The input at the bottom of the zen chat. Enter sends. */
-export function Composer({ label, placeholder, value, onChange, onSubmit, onAttach, sendLabel = "Send", disabled }: ComposerProps) {
+export function Composer({ label, placeholder, value, onChange, onSubmit, onAttach, sendLabel = "Send", disabled, canSubmitEmpty }: ComposerProps) {
   const inputId = useId();
   const submit = (event: FormEvent) => {
     event.preventDefault();
     const text = value.trim();
-    if (text && !disabled) onSubmit(text);
+    if ((text || canSubmitEmpty) && !disabled) onSubmit(text);
   };
   return (
     <form className="kasa-composer" onSubmit={submit}>
@@ -44,7 +46,7 @@ export function Composer({ label, placeholder, value, onChange, onSubmit, onAtta
         disabled={disabled}
         autoComplete="off"
       />
-      <button type="submit" className="kasa-composer-send" disabled={disabled || !value.trim()}>
+      <button type="submit" className="kasa-composer-send" disabled={disabled || (!value.trim() && !canSubmitEmpty)}>
         {sendLabel}
       </button>
     </form>

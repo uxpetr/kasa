@@ -90,7 +90,7 @@ test.describe("projects screen", () => {
     await expect(page).toHaveURL(/\/projects\/[0-9a-f-]{36}$/);
     await expect(page.getByRole("heading", { level: 1, name: "Wedding planning" })).toBeVisible();
 
-    await page.getByRole("link", { name: "← Your piles" }).click();
+    await page.getByRole("link", { name: "Back to your piles" }).click();
     await expect(page.getByRole("link", { name: /Wedding planning/ })).toBeVisible();
   });
 

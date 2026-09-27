@@ -184,3 +184,10 @@ describe("Pile", () => {
     }
   });
 });
+
+describe("BotCard in the feed", () => {
+  it("drops its own header when the feed already shows the k mark and name", () => {
+    expect(renderToStaticMarkup(<BotCard>Hi</BotCard>)).toContain("kasa-bot-header");
+    expect(renderToStaticMarkup(<BotCard header={false}>Hi</BotCard>)).not.toContain("kasa-bot-header");
+  });
+});

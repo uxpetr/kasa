@@ -8,6 +8,7 @@ export const ANALYTICS_EVENTS = [
   "project_created",
   "invite_sent",
   "invite_accepted",
+  "entry_created",
 ] as const;
 export type AnalyticsEvent = (typeof ANALYTICS_EVENTS)[number];
 
