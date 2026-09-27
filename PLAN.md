@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Chrome extension (D-158), pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** P-14 (invite page) is the last task before P-13 (pilot readiness). F-09, F-10, F-11, and F-13 are also unblocked.
+**Next up:** P-14 (invite page), in progress; it's the last task before P-13 (pilot readiness). F-09, F-10, F-11, and F-13 are also unblocked.
 **Blocked:** nothing. Real emails need F-13 (a Resend account and a sender domain from Petr).
 
 ---
@@ -169,6 +169,10 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-170** · 2026-09-27 · **Remove and leave wording**: removing asks "Remove Mika from Japan 2027?" with "Their entries stay in the pile." and Remove / Cancel. Leaving asks "Leave Japan 2027?" with "Your entries stay in the pile. You'll need a new invite to come back." and Leave / Cancel. · Petr, P-15
 - **D-171** · 2026-09-27 · **After leaving or removal**: leaving opens Your piles. A removed member with the feed open is sent to Your piles right away (their live connection closes), with no message. · Petr, P-15
 - **D-172** · 2026-09-27 · Members internals (P-15): `PATCH /api/projects/:id/members/:userId` `{ role }` (editor or viewer) and `DELETE /api/projects/:id/members/:userId`, where deleting yourself means leaving. New rules in `access.ts`: `canManageMembers` (owner, not while archived, matching D-140's read-only archive) and `canLeave` (anyone but the owner, archived or not). The owner's own role can't change and the owner can't be removed. Migration 0011 adds an `AFTER DELETE` trigger on `memberships` that sends `NOTIFY kasa_changes` with `{ projectId, removedUserId }`. The realtime service then sends that user's sockets for the project `{ type: "removed" }` and closes them with code 4403, and the client goes to Your piles without reconnecting. The service now also checks membership on connect (after joining the hub, so a removal can't slip in between), because a ticket stays valid for 60s. A 404 from the ticket endpoint on reconnect also counts as removed. No new analytics events, since the task names none. · P-15
+- **D-173** · 2026-09-27 · **Invite page** (`/invite/<token>`): the logo, avatars of the members (initials only), heading "Join Japan 2027", the line "Petr invited you. 4 people are in this pile.", a "Join pile" button (signed out: "Sign in with Google to join"), and the small print "You'll join as an editor." Someone already in the pile goes straight to it. · Petr, P-14
+- **D-174** · 2026-09-27 · Signed-out visitors with a working link see the pile's name, member count, and inviter before signing in; nothing else about the pile. · Petr, P-14
+- **D-175** · 2026-09-27 · **Dead invite links**: expired or turned off (410) shows "This invite has expired" / "Ask the person who sent it for a new link."; unknown (404) shows "This invite link doesn't work" / "Check that you copied the whole link."; both with a "Go to Kasa" button. · Petr, P-14
+- **D-176** · 2026-09-27 · **Invite people dialog**: an "Invite people" item in the project menu (owner only) opens a dialog with "Anyone with this link can join as an editor. It works for 7 days.", the link in a read-only field, and "Copy link" (which then reads "Copied"), "New link", and "Turn off link". With no live link it offers "Create link". · Petr, P-14
 
 ---
 
@@ -402,7 +406,7 @@ Depends on: P-02 to P-07, P-12, P-14, P-15, OD-03 (P-08 to P-11 dropped, D-158)
 - [ ] Onboarding for the pilot group. The extension offer (D-018) comes with L-06.
 - [ ] A way for pilot users to send feedback from inside the app.
 
-### P-14 · Invite page · `todo`
+### P-14 · Invite page · `in-progress` · branch `p-14-invite-page`
 Depends on: P-01, F-08
 - [ ] `/invite/<token>` shows the project name and member count (`GET /api/invites/:token`), asks the person to sign in first if needed, then joins (`POST /api/invites/:token/accept`) and opens the project.
 - [ ] Clear states for an expired or revoked link (410) and an unknown one (404).
