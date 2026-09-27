@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** P-06 (realtime updates), then P-07 (replies, which now include the Reply action, D-153). P-14, P-15, F-09, F-10, F-11, P-05, and P-08 are also unblocked.
+**Next up:** P-06 (realtime updates), in progress; then P-07 (replies, which now include the Reply action, D-153). P-14, P-15, F-09, F-10, F-11, P-05, and P-08 are also unblocked.
 **Blocked:** nothing.
 
 ---
@@ -327,7 +327,7 @@ Depends on: F-06
 - [ ] SSRF protection: block private IP ranges and non-HTTP schemes.
 - [ ] The preview image is re-hosted in our storage; the client never loads the original page.
 
-### P-06 · Realtime updates · `todo`
+### P-06 · Realtime updates · `in-progress` · branch `p-06-realtime`
 Depends on: P-03
 - [ ] New entries, replies, comments, and reactions appear for other members within 2 seconds.
 - [ ] Reconnects cleanly and back-fills missed events.
