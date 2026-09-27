@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useRef, useState, type FormEvent } from "react";
-import styles from "./piles.module.css";
+import styles from "./controls.module.css";
 
 /** "+ New project": a small dialog for the name, then opens the new project (D-143). */
 export function NewProject() {

@@ -119,6 +119,23 @@ export async function updateProject(
   return ok(row!);
 }
 
+/** Everyone in the project with their role, owner first. Members only. */
+export async function listMembers(
+  db: Database,
+  userId: string,
+  projectId: string,
+): Promise<Result<{ members: { id: string; name: string; role: Role }[] }>> {
+  const access = isUuid(projectId) ? await projectAccess(db, userId, projectId) : null;
+  if (!access) return fail(404, "Project not found");
+  const members = await db
+    .select({ id: schema.users.id, name: schema.users.name, role: schema.memberships.role })
+    .from(schema.memberships)
+    .innerJoin(schema.users, eq(schema.users.id, schema.memberships.userId))
+    .where(eq(schema.memberships.projectId, projectId))
+    .orderBy(sql`case ${schema.memberships.role} when 'owner' then 0 when 'editor' then 1 else 2 end`, schema.memberships.joinedAt);
+  return ok({ members });
+}
+
 const liveInvite = (now: Date) => and(isNull(schema.invites.revokedAt), gt(schema.invites.expiresAt, now));
 
 /** The project's current invite link, or null. Owner only. */

@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** P-03 (zen chat feed). P-14, P-15, F-09, F-10, F-11, P-05, and P-08 are also unblocked.
+**Next up:** P-04 (core content types). P-14, P-15, F-09, F-10, F-11, P-05, and P-08 are also unblocked.
 **Blocked:** nothing.
 
 ---
@@ -148,6 +148,7 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-149** · 2026-09-27 · Composer links: a message that is exactly one URL becomes a Link entry (unfurled in P-05); text with URLs inside stays a Note with the URLs clickable. · Petr, P-03
 - **D-150** · 2026-09-27 · Composer images: all images from one send become one Photo entry (a stack when there are several), and any text is its caption. · Petr, P-03
 - **D-151** · 2026-09-27 · Feed notices: viewers see "You can view this pile but not add to it." in place of the composer; archived projects show "This pile is archived." with an Unarchive button for the owner; an empty feed says "Nothing here yet. Paste a link, drop a photo, or write a note." · Petr, P-03
+- **D-152** · 2026-09-27 · Feed internals: `GET /api/projects/:id/entries?before=<cursor>` returns 30 entries per page, oldest first within the page; the cursor is `<createdAt ISO>_<id>` of the oldest entry, using the D-005 index. `POST /api/projects/:id/entries` takes `{ text, uploadIds }` (text up to 4,000 characters, up to 10 photos); photos must be the poster's own `ready` uploads from the same project, and `entry_media.upload_id` (unique) ties each upload to at most one entry. The composer uploads through F-06, polls `GET /api/uploads/:id` until the worker finishes, then posts; images are shown through `/api/media/<uploadId>/thumb`. `POST /api/projects/:id/read` marks the feed read from the browser, so link prefetching never counts as reading. `GET /api/projects/:id/members` backs the Members dialog. Times and day dividers render in the viewer's time zone on the client. Playwright now also starts the worker, so the photo flow is tested end to end. The shared button, dialog, and menu styles live in `app/controls.module.css`; menus sit under their button using CSS anchor positioning. `BotCard` takes `header={false}` in the feed. · P-03
 
 ---
 
@@ -300,17 +301,17 @@ Depends on: P-01, F-08
 - [x] "New project" flow.
 - [x] Matches `design/prototype/Projects.dc.html`. Checked with screenshots at 1280px and 390px; project cards link to a placeholder page until P-03.
 
-### P-03 · Zen chat feed · `in-progress` · branch `p-03-zen-feed`
+### P-03 · Zen chat feed · `done` · branch `p-03-zen-feed`
 Depends on: P-01, F-08
-- [ ] Opens at the newest entry; scroll up loads older entries in pages.
-- [ ] Header has only back, project name, and a menu (members, settings, search placeholder).
-- [ ] Composer: text, paste a link, drop or attach images. Enter sends.
-- [ ] Analytics: `entry_created` with kind and source.
-- [ ] Opening the feed sets `memberships.last_read_at`, which clears the unread count on the projects screen (added by P-02, D-147).
+- [x] Opens at the newest entry; scroll up loads older entries in pages.
+- [x] Header has only back, project name, and a menu (members, settings, search placeholder).
+- [x] Composer: text, paste a link, drop or attach images. Enter sends. (Images can also be pasted.)
+- [x] Analytics: `entry_created` with kind and source.
+- [x] Opening the feed sets `memberships.last_read_at`, which clears the unread count on the projects screen (added by P-02, D-147).
 
 ### P-04 · Core content types · `todo`
 Depends on: P-03, F-06
-- [ ] Note (sticky; lined sheet when long), Photo (polaroid), generic Link (index card), Capture (taped print with pins).
+- [ ] Note (sticky; lined sheet when long), Photo (polaroid), generic Link (index card), Capture (taped print with pins). P-03 already renders notes, single polaroids, a plain link card, and a one-line fallback for other kinds (`app/projects/[id]/feed-entry.tsx`); P-04 replaces the link card and fallback and adds photo stacks.
 - [ ] Shared actions menu on every object: Reply, React, Delete (Move to category and Star come in phase 2).
 - [ ] Same rendering regardless of source (D-016).
 
@@ -510,3 +511,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-26 · F-07 · OpenTelemetry traces and redacted JSON logs for web, worker, and realtime, sent to Petr's personal Dash0; request ids; trace context through the job queue; error alert rule verified. · [#8](https://github.com/uxpetr/kasa/pull/8)
 - 2026-09-26 · P-01 · Project API: create, list, rename, archive; reusable 7-day invite links; owner/editor/viewer rules in one place and tested per role; `project_created`, `invite_sent`, `invite_accepted`. · [#9](https://github.com/uxpetr/kasa/pull/9)
 - 2026-09-26 · P-02 · "Your piles" projects screen: paper-stack cards with last message, unread count, members, and photo peek; New project dialog; automatic "My pile"; collapsed Archived section; `Pile` and avatar components. · [#10](https://github.com/uxpetr/kasa/pull/10)
+- 2026-09-27 · P-03 · Zen chat feed: opens at the newest entry with paging back, header menu (members, rename, archive, search placeholder), composer for notes, links, and photos (attach, drop, paste; Enter sends), read tracking, viewer and archived notices, `entry_created`. · [#11](https://github.com/uxpetr/kasa/pull/11)

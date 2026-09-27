@@ -2,7 +2,8 @@ import { randomUUID } from "node:crypto";
 import { eq, schema } from "@kasa/db";
 import { createTestDatabase, type TestDatabase } from "@kasa/db/testing";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { listPiles, previewLine, type LastEntry } from "./piles";
+import { listPiles } from "./piles";
+import { previewLine, type LastEntry } from "./preview";
 
 describe("previewLine (D-145)", () => {
   const me = "me";

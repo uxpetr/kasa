@@ -29,7 +29,11 @@ export function LinedSheet({ children, rotate = 1 }: PaperProps) {
   );
 }
 
-/** A note entry: picks the paper by length. The author goes in the meta line, never the paper colour. */
-export function Note({ text, rotate }: { text: string; rotate?: number }) {
-  return noteVariant(text) === "sticky" ? <Sticky rotate={rotate}>{text}</Sticky> : <LinedSheet rotate={rotate}>{text}</LinedSheet>;
+/**
+ * A note entry: picks the paper by length. The author goes in the meta line, never the paper colour.
+ * `children` renders the text differently (e.g. with links); `text` still decides the paper.
+ */
+export function Note({ text, rotate, children }: { text: string; rotate?: number; children?: ReactNode }) {
+  const body = children ?? text;
+  return noteVariant(text) === "sticky" ? <Sticky rotate={rotate}>{body}</Sticky> : <LinedSheet rotate={rotate}>{body}</LinedSheet>;
 }

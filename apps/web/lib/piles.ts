@@ -2,9 +2,8 @@
 // unread count, and latest image. Only projects the user belongs to are read.
 import { and, asc, count, desc, eq, inArray, isNull, ne, or, schema, sql, type Database } from "@kasa/db";
 import type { Storage } from "@kasa/media";
+import { previewLine } from "./preview";
 import { listProjects, type ProjectSummary } from "./projects";
-
-type EntryKind = (typeof schema.entryKind.enumValues)[number];
 
 export interface PileMember {
   id: string;
@@ -21,44 +20,6 @@ export interface Pile extends ProjectSummary {
   entryCount: number;
   /** The last entry's time, or when the project was created. */
   activeAt: Date;
-}
-
-export interface LastEntry {
-  kind: EntryKind;
-  body: string | null;
-  authorId: string | null;
-  authorName: string | null;
-  linkTitle: string | null;
-  pageUrl: string | null;
-}
-
-const firstName = (name: string) => name.trim().split(/\s+/)[0] || name;
-
-function hostOf(url: string): string | null {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return null;
-  }
-}
-
-/** "Name: text" for notes and bot messages, "Name: what it is" otherwise (D-145). */
-export function previewLine(entry: LastEntry, viewerId: string): string {
-  const who =
-    entry.kind === "bot" ? "Kasa Bot" : entry.authorId === viewerId ? "You" : entry.authorName ? firstName(entry.authorName) : null;
-  const text = entry.body?.replace(/\s+/g, " ").trim() || null;
-  const host = entry.pageUrl ? hostOf(entry.pageUrl) : null;
-  const what: Record<EntryKind, string> = {
-    note: text ?? "Note",
-    bot: text ?? "Note",
-    decision: text ?? "Decision",
-    photo: "Photo",
-    link: entry.linkTitle ? `Link · ${entry.linkTitle}` : "Link",
-    capture: host ? `Capture from ${host}` : "Capture",
-    drawing: host ? `Drawing on ${host}` : "Drawing",
-    file: "File",
-  };
-  return who ? `${who}: ${what[entry.kind]}` : what[entry.kind];
 }
 
 export async function listPiles(deps: { db: Database; storage: Pick<Storage, "presignDownload"> }, userId: string): Promise<Pile[]> {

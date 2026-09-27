@@ -199,12 +199,15 @@ export const entryMedia = pgTable(
       .notNull()
       .references(() => entries.id, { onDelete: "cascade" }),
     storageKey: text("storage_key").notNull(),
+    // The processed upload this came from; images are served through /api/media/<uploadId>.
+    uploadId: uuid("upload_id").references(() => uploads.id, { onDelete: "set null" }),
     width: integer("width"),
     height: integer("height"),
     role: mediaRole("role").notNull(),
     position: integer("position").notNull().default(0),
   },
-  (t) => [index("entry_media_entry_idx").on(t.entryId)],
+  // An upload becomes part of at most one entry.
+  (t) => [index("entry_media_entry_idx").on(t.entryId), uniqueIndex("entry_media_upload_idx").on(t.uploadId)],
 );
 
 // A file on its way into the pile: presigned, uploaded, processed (F-06, D-132).

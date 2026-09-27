@@ -17,10 +17,19 @@ export default defineConfig({
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   // Runs against a production build; `pnpm build` must run first.
-  webServer: {
-    command: `pnpm start --port ${port}`,
-    env: { BETTER_AUTH_URL: `http://localhost:${port}` },
-    url: `http://localhost:${port}`,
-    reuseExistingServer: !process.env.CI,
-  },
+  webServer: [
+    {
+      command: `pnpm start --port ${port}`,
+      env: { BETTER_AUTH_URL: `http://localhost:${port}` },
+      url: `http://localhost:${port}`,
+      reuseExistingServer: !process.env.CI,
+    },
+    // The worker processes photo uploads for the feed tests.
+    {
+      command: "pnpm --filter @kasa/worker start",
+      wait: { stdout: /worker started/ },
+      reuseExistingServer: !process.env.CI,
+      gracefulShutdown: { signal: "SIGTERM", timeout: 5000 },
+    },
+  ],
 });

@@ -25,17 +25,20 @@
   font-size: var(--kasa-font-size-body);
   line-height: 1.45;
   overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 .kasa-lined {
   width: 320px;
   max-width: 100%;
   padding: 14px 16px 18px;
-  background: var(--kasa-color-paper) repeating-linear-gradient(var(--kasa-color-paper) 0 21px, #e7e2d8 21px 22px);
+  /* Rules sit under each 22px text line: the pattern starts at the top padding. */
+  background: var(--kasa-color-paper) repeating-linear-gradient(var(--kasa-color-paper) 0 21px, #e7e2d8 21px 22px) 0 14px;
   border-radius: var(--kasa-radius-sticky);
   font-size: var(--kasa-font-size-body);
   line-height: 22px;
   overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 /* Photo */

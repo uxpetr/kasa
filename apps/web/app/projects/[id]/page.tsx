@@ -1,28 +1,45 @@
 import { headers } from "next/headers";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { eq, schema } from "@kasa/db";
-import { projectAccess } from "@/lib/access";
+import { canAdd, canArchive, canRename, projectAccess } from "@/lib/access";
 import { getAuth, isAuthConfigured } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { listEntries } from "@/lib/entries";
 import { isUuid } from "@/lib/result";
-import styles from "../../piles.module.css";
+import { ProjectFeed } from "./project-feed";
 
-// Placeholder so project links work; the zen chat feed replaces it in P-03.
+export async function generateMetadata(props: PageProps<"/projects/[id]">) {
+  const { id } = await props.params;
+  if (!isUuid(id)) return { title: "Kasa" };
+  const [project] = await getDb().select({ name: schema.projects.name }).from(schema.projects).where(eq(schema.projects.id, id));
+  // The name is only shown to members; everyone else sees the plain title.
+  const session = isAuthConfigured() ? await getAuth().api.getSession({ headers: await headers() }) : null;
+  const member = session && project ? await projectAccess(getDb(), session.user.id, id) : null;
+  return { title: member ? `${project!.name} · Kasa` : "Kasa" };
+}
+
+/** Zen mode (D-008): only the feed and the composer, with back, the name, and a menu. */
 export default async function ProjectPage(props: PageProps<"/projects/[id]">) {
   const { id } = await props.params;
   const session = isAuthConfigured() ? await getAuth().api.getSession({ headers: await headers() }) : null;
   if (!session) redirect("/");
+  const userId = session.user.id;
   // Members only; everyone else gets the same 404 as a missing project.
-  if (!isUuid(id) || !(await projectAccess(getDb(), session.user.id, id))) notFound();
-  const [project] = await getDb().select({ name: schema.projects.name }).from(schema.projects).where(eq(schema.projects.id, id));
+  const access = isUuid(id) ? await projectAccess(getDb(), userId, id) : null;
+  if (!access) notFound();
+
+  const [[project], page] = await Promise.all([
+    getDb().select({ name: schema.projects.name }).from(schema.projects).where(eq(schema.projects.id, id)),
+    listEntries(getDb(), userId, id),
+  ]);
+  if (!page.ok) notFound();
 
   return (
-    <main className={styles.page}>
-      <Link href="/" className={styles.back}>
-        ← Your piles
-      </Link>
-      <h1 className={styles.title}>{project!.name}</h1>
-    </main>
+    <ProjectFeed
+      project={{ id, name: project!.name, archived: access.archived }}
+      viewer={{ id: userId, name: session.user.name, role: access.role }}
+      can={{ post: canAdd(access), rename: canRename(access), archive: canArchive(access) }}
+      initialPage={page.value}
+    />
   );
 }

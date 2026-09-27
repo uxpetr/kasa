@@ -43,6 +43,13 @@
       "when": 1790454772656,
       "tag": "0005_membership_last_read",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790490827092,
+      "tag": "0006_entry_media_upload",
+      "breakpoints": true
     }
   ]
 }
