@@ -35,6 +35,7 @@ for (const [net, prefix] of [
   ["2001:db8::", 32], // documentation
   ["2002::", 16], // 6to4, can embed a private IPv4 address
   ["fc00::", 7], // unique local
+  ["fec0::", 10], // deprecated site-local
   ["fe80::", 10], // link-local
   ["ff00::", 8], // multicast
 ] as const) {

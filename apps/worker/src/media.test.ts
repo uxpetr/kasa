@@ -73,6 +73,18 @@ describe.skipIf(!ready)("media.process", () => {
     expect(await storage.head(keys.raw(projectId, upload.id))).not.toBeNull();
   });
 
+  it("deletes leftover raw files when the row is already ready or failed", async () => {
+    const ready = await stagedUpload(await geotaggedJpeg(), "image/jpeg");
+    await testDb.db.update(schema.uploads).set({ status: "ready" }).where(eq(schema.uploads.id, ready.id));
+    await processUpload({ db: testDb.db, storage }, ready.id);
+    expect(await storage.head(keys.raw(projectId, ready.id))).toBeNull();
+
+    const failed = await stagedUpload(await geotaggedJpeg(), "image/jpeg");
+    await testDb.db.update(schema.uploads).set({ status: "failed", failureReason: "not_an_image" }).where(eq(schema.uploads.id, failed.id));
+    await processUpload({ db: testDb.db, storage }, failed.id);
+    expect(await storage.head(keys.raw(projectId, failed.id))).toBeNull();
+  });
+
   it("runs through the real queue", async () => {
     const { boss, queue } = await startQueue(testDb.url, "worker");
     try {

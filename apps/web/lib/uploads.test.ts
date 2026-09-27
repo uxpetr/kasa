@@ -118,6 +118,23 @@ describe.skipIf(!ready)("uploads", () => {
       expect(sent).toEqual([{ name: "media.process", payload: { uploadId } }]);
     });
 
+    it("puts the upload back to pending if the job cannot be queued", async () => {
+      const uploadId = await uploadAs(u.owner);
+      const broken: JobQueue = {
+        async send() {
+          throw new Error("queue down");
+        },
+      };
+      expect(await completeUpload({ db: testDb.db, storage, queue: broken }, u.owner, uploadId)).toMatchObject({
+        ok: false,
+        status: 503,
+      });
+      const [row] = await testDb.db.select({ status: schema.uploads.status }).from(schema.uploads).where(eq(schema.uploads.id, uploadId));
+      expect(row?.status).toBe("pending");
+      expect(await completeUpload(deps(), u.owner, uploadId)).toEqual({ ok: true, value: { status: "processing" } });
+      expect(sent).toEqual([{ name: "media.process", payload: { uploadId } }]);
+    });
+
     it("only lets the uploader complete it", async () => {
       const uploadId = await uploadAs(u.editor);
       expect(await completeUpload(deps(), u.owner, uploadId)).toMatchObject({ ok: false, status: 404 });

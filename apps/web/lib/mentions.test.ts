@@ -32,5 +32,9 @@ describe("mentions", () => {
     expect(mentionIds("@Mika Tanaka", [mika, aiko])).toEqual(["u-mika"]);
     expect(mentionIds("@kasa help", [KASA_BOT])).toEqual([]);
     expect(mentionIds("I typed @Aiko myself", [])).toEqual([]);
+    const jo = { id: "u-jo", name: "Jo" };
+    expect(mentionIds("@John Smith", [jo, { id: "u-john", name: "John Smith" }])).toEqual(["u-john"]);
+    expect(mentionIds("email me@Aiko.com", [aiko])).toEqual([]);
+    expect(mentionIds("@Mika Tanaka's idea (@Aiko)", [mika, aiko])).toEqual(["u-mika", "u-aiko"]);
   });
 });

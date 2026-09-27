@@ -34,7 +34,24 @@ export function insertMention(text: string, at: { start: number; query: string }
   return { text: `${before}${inserted}${after.replace(/^ /, "")}`, caret: before.length + inserted.length };
 }
 
+/** True when `@Name` is still a whole mention, not a prefix of a longer one (`@Jo` vs `@John`). */
+function mentionPresent(text: string, picked: Mentionable): boolean {
+  const token = mentionText(picked);
+  let from = 0;
+  while (from <= text.length) {
+    const i = text.indexOf(token, from);
+    if (i === -1) return false;
+    // Not glued to a letter or digit on either side: "me@Aiko.com" and "@John" don't count for "@Jo",
+    // but "(@Mika)" and "@Mika's" do.
+    const before = i === 0 || !/[\p{L}\p{N}_]/u.test(text[i - 1]!);
+    const after = i + token.length === text.length || !/[\p{L}\p{N}_]/u.test(text[i + token.length]!);
+    if (before && after) return true;
+    from = i + 1;
+  }
+  return false;
+}
+
 /** Ids of picked people whose "@Name" is still in the text; only these get an email (D-164). */
 export function mentionIds(text: string, picked: Mentionable[]): string[] {
-  return [...new Set(picked.filter((p) => !p.bot && text.includes(mentionText(p))).map((p) => p.id))];
+  return [...new Set(picked.filter((p) => !p.bot && mentionPresent(text, p)).map((p) => p.id))];
 }

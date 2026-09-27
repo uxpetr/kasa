@@ -39,6 +39,19 @@ export async function startRealtime({ secret, databaseUrl, allowedOrigins, port 
     client.close(REMOVED_CLOSE_CODE, "removed");
   };
   let listening = false;
+  const reconcile = async () => {
+    hub.notifyAll();
+    for (const { projectId, userId } of hub.members()) {
+      // A failed check proves nothing; only a confirmed missing membership evicts.
+      const member = await sql`select 1 from memberships where project_id = ${projectId} and user_id = ${userId}`.catch((error: unknown) => {
+        log.warn("membership recheck failed", { "project.id": projectId, "user.id": userId, message: String(error) });
+        return null;
+      });
+      if (member === null || member.length > 0) continue;
+      const clients = hub.takeUser(projectId, userId);
+      for (const client of clients) evict(client, projectId);
+    }
+  };
   await sql.listen(
     CHANNEL,
     (payload) => {
@@ -65,11 +78,12 @@ export async function startRealtime({ secret, databaseUrl, allowedOrigins, port 
         }, COALESCE_MS),
       );
     },
-    // Called on every (re)connection; after a reconnect, clients back-fill.
+    // Called on every (re)connection; after a reconnect, clients back-fill and we drop anyone
+    // whose removal NOTIFY was lost while LISTEN was down.
     () => {
       if (listening) {
         log.warn("database listener reconnected");
-        hub.notifyAll();
+        void reconcile();
       }
       listening = true;
     },
@@ -95,17 +109,19 @@ export async function startRealtime({ secret, databaseUrl, allowedOrigins, port 
     if (!claims) return refuse(401);
     wss.handleUpgrade(req, socket, head, async (ws) => {
       alive.add(ws);
-      hub.add(claims.projectId, ws, claims.userId);
+      // Join pending so a removal NOTIFY can't slip between the membership check and add,
+      // but don't deliver `changed` until membership is confirmed.
+      hub.add(claims.projectId, ws, claims.userId, true);
       ws.on("pong", () => alive.add(ws));
       // Clients only listen; anything they send is ignored.
       ws.on("close", () => hub.remove(claims.projectId, ws));
-      // A ticket lives 60s, so someone removed meanwhile could still hold one. Checked after
-      // joining the hub, so a removal notice can't slip between the check and the join.
+      // A ticket lives 60s, so someone removed meanwhile could still hold one.
       const member = await sql`select 1 from memberships where project_id = ${claims.projectId} and user_id = ${claims.userId}`.catch(() => null);
       if (!member?.length) {
         hub.remove(claims.projectId, ws);
         return evict(ws, claims.projectId);
       }
+      hub.confirm(ws);
       log.info("client connected", { "project.id": claims.projectId, "user.id": claims.userId, clients: hub.size });
       ws.send(JSON.stringify({ type: "ready", projectId: claims.projectId }));
     });
