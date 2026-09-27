@@ -50,3 +50,26 @@ export async function processImage(input: Buffer, declared: ImageType): Promise<
     thumb: { body: thumb.data, contentType: "image/webp", width: thumb.info.width, height: thumb.info.pageHeight ?? thumb.info.height },
   };
 }
+
+export const PREVIEW_WIDTH = 1200;
+const PREVIEW_FORMATS = new Set(["jpeg", "png", "webp", "gif", "avif"]);
+
+/**
+ * Re-encodes a link preview image fetched from another site (P-05) as a metadata-free
+ * WebP of at most PREVIEW_WIDTH. Only raster formats; SVG and anything else is refused.
+ */
+export async function processPreview(input: Buffer): Promise<{ body: Buffer; contentType: "image/webp"; width: number; height: number }> {
+  let meta: Metadata;
+  try {
+    meta = await sharp(input, { limitInputPixels: 50_000_000 }).metadata();
+  } catch {
+    throw new UnsupportedImageError("Not a readable image");
+  }
+  if (!meta.format || !PREVIEW_FORMATS.has(meta.format)) throw new UnsupportedImageError(`Unsupported format ${meta.format ?? "unknown"}`);
+  const out = await sharp(input, { limitInputPixels: 50_000_000 })
+    .rotate()
+    .resize({ width: PREVIEW_WIDTH, withoutEnlargement: true })
+    .webp({ quality: 80 })
+    .toBuffer({ resolveWithObject: true });
+  return { body: out.data, contentType: "image/webp", width: out.info.width, height: out.info.height };
+}

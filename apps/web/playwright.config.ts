@@ -35,9 +35,11 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       gracefulShutdown: { signal: "SIGTERM", timeout: 5000 },
     },
-    // The worker processes photo uploads for the feed tests.
+    // The worker processes photo uploads and unfurls links for the feed tests;
+    // links unfurl only from local test servers, never the internet.
     {
       command: "pnpm --filter @kasa/worker start",
+      env: { UNFURL_LOOPBACK_ONLY: "1" },
       wait: { stdout: /worker started/ },
       reuseExistingServer: !process.env.CI,
       gracefulShutdown: { signal: "SIGTERM", timeout: 5000 },
