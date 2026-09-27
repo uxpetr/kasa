@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Chrome extension (D-158), pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** P-07 (replies, including the Reply action, D-153; pin threads moved to v2, D-160). P-14, P-15, F-09, F-10, F-11, and P-05 are also unblocked.
+**Next up:** P-07 (in progress; replies, including the Reply action, D-153; pin threads moved to v2, D-160). P-14, P-15, F-09, F-10, F-11, and P-05 are also unblocked.
 **Blocked:** nothing.
 
 ---
@@ -338,7 +338,7 @@ Depends on: P-03
 - [x] New entries, replies, comments, and reactions appear for other members within 2 seconds. (Replies and comments go through the same change triggers; their UI comes with P-07.)
 - [x] Reconnects cleanly and back-fills missed events.
 
-### P-07 · Replies · `todo`
+### P-07 · Replies · `in-progress` · branch `p-07-replies`
 Depends on: P-04, P-06
 - [ ] Reply in the actions menu (D-153); the reply posts at the bottom with the quoted original (paper-clip style); tapping the clip scrolls to the original.
 - [ ] ~~Tapping a pin on a capture opens its thread; comments can be added per pin.~~ Moved to L-06 (D-160).
