@@ -6,12 +6,13 @@ import { PgBoss } from "pg-boss";
 /** Every job the worker runs, with its payload. Add new jobs here. */
 export interface JobPayloads {
   "media.process": { uploadId: string };
+  "link.unfurl": { entryId: string };
 }
 export type JobName = keyof JobPayloads;
 
 /** What's stored: the payload plus the sender's trace context, so the job continues its trace (D-137). */
 export type JobData<N extends JobName> = JobPayloads[N] & { _trace?: TraceCarrier };
-export const JOB_NAMES = ["media.process"] as const satisfies readonly JobName[];
+export const JOB_NAMES = ["media.process", "link.unfurl"] as const satisfies readonly JobName[];
 
 /** What the web app needs from the queue: enqueue only. */
 export interface JobQueue {

@@ -11,7 +11,7 @@ const ready = Boolean(process.env.DATABASE_URL && process.env.S3_BUCKET);
 describe.skipIf(!ready)("uploads", () => {
   let testDb: TestDatabase;
   let storage: Storage;
-  const sent: { name: string; payload: JobPayloads["media.process"] }[] = [];
+  const sent: { name: string; payload: JobPayloads[keyof JobPayloads] }[] = [];
   const queue: JobQueue = {
     async send(name, payload) {
       sent.push({ name, payload });

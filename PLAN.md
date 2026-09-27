@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Chrome extension (D-158), pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** P-05 (link unfurling), in progress. P-14, P-15, F-09, F-10, and F-11 are also unblocked.
+**Next up:** P-14, P-15, F-09, F-10, and F-11 are unblocked. P-05 (link unfurling) is done.
 **Blocked:** P-12, on OD-13 (email wording from Petr).
 
 ---
@@ -162,6 +162,7 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-163** · 2026-09-27 · Transactional email goes through **Resend** (resolves the provider in D-109). It needs a Resend account and a sender domain Petr controls. · Petr, P-12
 - **D-164** · 2026-09-27 · **@mentions**: typing `@` in the composer shows the project's members (plus Kasa Bot), and picking one inserts `@Name`. Only picked mentions notify; typed text that merely looks like a name doesn't. · Petr, P-12
 - **D-165** · 2026-09-27 · **Muting**: a "Mute emails" / "Unmute emails" toggle in the feed's project menu, per project. The unsubscribe link in every email mutes that project in one click. · Petr, P-12
+- **D-166** · 2026-09-27 · Link unfurling internals (P-05): posting a Link entry queues `link.unfurl { entryId }`; if queueing fails the entry stays a plain link. Other writers of Link entries (Telegram, P-14) must queue the same job. The worker fetches with `node:http`/`https` through `safeFetch`: http(s) only, no credentials in the URL, at most 5 redirects with each hop re-checked, one 5s deadline for the whole fetch, and the connected address checked in the DNS lookup itself, so DNS rebinding can't slip a private address past the check. Refused: private, loopback, link-local (including 169.254.169.254), CGNAT, documentation, multicast, and reserved IPv4; on IPv6, loopback, unique-local, link-local, multicast, and every range that can embed an IPv4 address (IPv4-mapped, NAT64, 6to4, Teredo); and `localhost`. Size caps apply after decompression: HTML is cut at 1 MB (only the head is parsed), oEmbed JSON is capped at 256 KB, images at 10 MB. The title comes from Open Graph, then Twitter tags, then oEmbed, then `<title>`; the site name from `og:site_name`, then oEmbed `provider_name`; the image from `og:image`, then Twitter tags, then the oEmbed thumbnail. oEmbed `html` is never used. The image is re-encoded with sharp as a metadata-free WebP at most 1200px wide and stored at `projects/<id>/previews/<entryId>.webp`, served through the existing members-only `/api/entries/:id/preview-image`. SVGs and images under 64px are skipped. Refused pages and 4xx responses leave a plain link; 5xx and network errors throw so pg-boss retries. Unfurling touches `entries.updated_at`, so open feeds pick up the card through live updates. Tests set `UNFURL_LOOPBACK_ONLY=1`, so the worker unfurls only from local test servers and never reaches the internet; the worker refuses to start with it under `NODE_ENV=production`. `.env.example` now also documents the `REALTIME_*` variables, which were missing since P-06. · P-05
 
 ---
 
@@ -332,11 +333,11 @@ Depends on: P-03, F-06
 - [x] Delete: authors delete their own entries and owners anyone's (D-015), after a confirmation; the entry leaves a dashed outline (D-155).
 - [x] Same rendering regardless of source (D-016).
 
-### P-05 · Link unfurling · `in-progress` · branch `p-05-unfurl`
+### P-05 · Link unfurling · `done` · branch `p-05-unfurl`
 Depends on: F-06
-- [ ] Worker fetches Open Graph and oEmbed data server-side with timeouts and size limits.
-- [ ] SSRF protection: block private IP ranges and non-HTTP schemes.
-- [ ] The preview image is re-hosted in our storage; the client never loads the original page.
+- [x] Worker fetches Open Graph and oEmbed data server-side with timeouts and size limits.
+- [x] SSRF protection: block private IP ranges and non-HTTP schemes.
+- [x] The preview image is re-hosted in our storage; the client never loads the original page.
 
 ### P-06 · Realtime updates · `done` · branch `p-06-realtime`
 Depends on: P-03
