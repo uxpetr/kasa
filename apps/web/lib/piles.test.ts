@@ -96,7 +96,8 @@ describe.skipIf(!process.env.DATABASE_URL)("listPiles", () => {
 
   it("counts unread entries by others since the last read, ignoring deleted ones", async () => {
     const [trip] = await listPiles({ db: testDb.db, storage }, u.me);
-    expect(trip).toMatchObject({ unread: 3, entryCount: 5 });
+    // The bot tip is unread but not a thing saved.
+    expect(trip).toMatchObject({ unread: 3, entryCount: 4 });
   });
 
   it("counts from joining when the member has never opened the feed", async () => {

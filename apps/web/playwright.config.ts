@@ -1,5 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 import { loadEnv } from "vite";
+import { PILOT_ADMIN_EMAIL } from "./e2e/support/pilot";
 
 // Same env as the app: repo-root .env locally, job env in CI.
 Object.assign(process.env, { ...loadEnv("test", "../..", ""), ...process.env });
@@ -24,7 +25,13 @@ export default defineConfig({
   webServer: [
     {
       command: `pnpm start --port ${port}`,
-      env: { BETTER_AUTH_URL: `http://localhost:${port}`, REALTIME_PUBLIC_URL: `ws://localhost:${realtimePort}` },
+      env: {
+        BETTER_AUTH_URL: `http://localhost:${port}`,
+        REALTIME_PUBLIC_URL: `ws://localhost:${realtimePort}`,
+        // Never send test events to PostHog, even if the local .env has a key.
+        POSTHOG_API_KEY: "",
+        PILOT_ADMIN_EMAILS: PILOT_ADMIN_EMAIL,
+      },
       url: `http://localhost:${port}`,
       reuseExistingServer: !process.env.CI,
     },
@@ -41,7 +48,7 @@ export default defineConfig({
     {
       command: "pnpm --filter @kasa/worker start",
       // Never real emails from tests, even if the local .env has a Resend key.
-      env: { UNFURL_LOOPBACK_ONLY: "1", RESEND_API_KEY: "" },
+      env: { UNFURL_LOOPBACK_ONLY: "1", RESEND_API_KEY: "", FEEDBACK_EMAIL: "" },
       wait: { stdout: /worker started/ },
       reuseExistingServer: !process.env.CI,
       gracefulShutdown: { signal: "SIGTERM", timeout: 5000 },

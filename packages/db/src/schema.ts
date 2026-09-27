@@ -179,6 +179,21 @@ export const notifications = pgTable(
   ],
 );
 
+// Pilot feedback from the account menu (D-181); emailed to Petr, listed at /feedback.
+export const feedback = pgTable(
+  "feedback",
+  {
+    id: id(),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    body: text("body").notNull(),
+    // The path the dialog was opened on, e.g. "/".
+    page: text("page"),
+    createdAt: createdAt(),
+    emailedAt: timestamp("emailed_at", { withTimezone: true }),
+  },
+  (t) => [index("feedback_created_idx").on(t.createdAt)],
+);
+
 export const invites = pgTable(
   "invites",
   {
@@ -213,6 +228,8 @@ export const entries = pgTable(
     replyToId: uuid("reply_to_id").references((): AnyPgColumn => entries.id, { onDelete: "set null" }),
     // Smart grouping (D-007): entries sharing a key render as one spread.
     groupKey: text("group_key"),
+    // Kasa Bot cards with an action: "welcome" is the first card in My pile (D-180).
+    botCard: text("bot_card"),
     editedAt: timestamp("edited_at", { withTimezone: true }),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
     // Who deleted it, for the outline's wording (D-155); the author or the owner.

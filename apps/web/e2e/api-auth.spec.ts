@@ -26,4 +26,5 @@ test("project and invite routes reject anonymous requests", async ({ request }) 
   expect((await request.patch(`/api/projects/${id}/members/${id}`, { data: { role: "viewer" } })).status()).toBe(401);
   expect((await request.delete(`/api/projects/${id}/members/${id}`)).status()).toBe(401);
   expect((await request.put(`/api/projects/${id}/email-mute`, { data: { muted: true } })).status()).toBe(401);
+  expect((await request.post("/api/feedback", { data: { text: "x" } })).status()).toBe(401);
 });

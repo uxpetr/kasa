@@ -4,6 +4,7 @@ import { createDb, requireDatabaseUrl } from "@kasa/db";
 import { startQueue, type JobData } from "@kasa/jobs";
 import { createStorage, storageConfigFromEnv } from "@kasa/media";
 import { telemetry } from "./telemetry";
+import { emailFeedback } from "./feedback";
 import { log, runJob } from "./jobs";
 import { processUpload } from "./media";
 import { sendNotifications } from "./notify";
@@ -25,6 +26,7 @@ const notifyDeps = {
   unsubscribeSecret: process.env.UNSUBSCRIBE_SECRET,
   log,
 };
+const feedbackDeps = { db, mailer, to: process.env.FEEDBACK_EMAIL || undefined, appUrl: notifyDeps.appUrl, log };
 
 await boss.work<JobData<"media.process">>("media.process", { localConcurrency: 2 }, async ([job]) => {
   if (job) await runJob("media.process", job.id, job.data, () => processUpload({ db, storage, log }, job.data.uploadId));
@@ -38,7 +40,11 @@ await boss.work<JobData<"notify.send">>("notify.send", { localConcurrency: 2 }, 
   if (job) await runJob("notify.send", job.id, job.data, () => sendNotifications(notifyDeps, job.data.userId, job.data.projectId));
 });
 
-log.info("worker started", { jobs: "media.process,link.unfurl,notify.send", unfurl_policy: policy, mailer: mailer.kind });
+await boss.work<JobData<"feedback.send">>("feedback.send", async ([job]) => {
+  if (job) await runJob("feedback.send", job.id, job.data, () => emailFeedback(feedbackDeps, job.data.feedbackId));
+});
+
+log.info("worker started", { jobs: "media.process,link.unfurl,notify.send,feedback.send", unfurl_policy: policy, mailer: mailer.kind });
 
 async function shutdown() {
   await boss.stop({ graceful: true, timeout: 20_000 });

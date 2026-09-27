@@ -3,7 +3,7 @@ import { createTestDatabase, type TestDatabase } from "@kasa/db/testing";
 import { setAnalyticsSink, type TrackedEvent } from "@kasa/shared";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { createAuth } from "./create-auth";
-import { listProjects } from "./projects";
+import { listProjects, WELCOME_TEXT } from "./projects";
 
 const baseUrl = process.env.DATABASE_URL;
 
@@ -51,6 +51,10 @@ describe.skipIf(!baseUrl)("auth", () => {
     expect(events).toContainEqual(
       expect.objectContaining({ event: "project_created", userId: user.id, properties: { projectId: projects[0]!.id, personal: true } }),
     );
+    // It holds Kasa Bot's welcome card (D-180), which isn't tracked as anyone's entry.
+    const entries = await testDb.db.select().from(schema.entries).where(eq(schema.entries.projectId, projects[0]!.id));
+    expect(entries).toEqual([expect.objectContaining({ kind: "bot", authorId: null, botCard: "welcome", body: WELCOME_TEXT })]);
+    expect(events.map((e) => e.event)).not.toContain("entry_created");
   });
 
   it("creates a user row on first sign-in and emits signed_up, project_created (My pile), and signed_in", async () => {
