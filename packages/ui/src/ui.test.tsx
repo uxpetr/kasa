@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { render } from "../scripts/generate-tokens";
-import { avatarColor, AvatarStack, BotButton, BotCard, CategoryChip, CategoryStamp, clampRotation, Composer, DeletedOutline, IndexCard, initialOf, Note, noteVariant, Pile, Polaroid, Print, tiltFor, tokens } from "./index";
+import { avatarColor, AvatarStack, BotButton, BotCard, CategoryChip, CategoryStamp, clampRotation, Composer, DeletedOutline, IndexCard, initialOf, Note, Reply, noteVariant, Pile, Polaroid, Print, tiltFor, tokens } from "./index";
 
 describe("tokens", () => {
   it("match design/tokens.json (run `pnpm --filter @kasa/ui tokens` if this fails)", () => {
@@ -213,5 +213,19 @@ describe("P-04 objects", () => {
 
   it("leaves a dashed outline for deleted objects", () => {
     expect(renderToStaticMarkup(<DeletedOutline text="Mika deleted a note" />)).toContain('class="kasa-deleted"');
+  });
+});
+
+describe("Reply", () => {
+  it("clips the answer to a labelled print of the original", () => {
+    const html = renderToStaticMarkup(
+      <Reply quote={<span>Ryokan</span>} quoteLabel="Go to Mika's note" paper="note">
+        <p>Yes!</p>
+      </Reply>,
+    );
+    expect(html).toContain('aria-label="Go to Mika&#x27;s note"');
+    expect(html).toContain("kasa-quote-note");
+    expect(html).toContain('class="kasa-clip"');
+    expect(html.indexOf("Ryokan")).toBeLessThan(html.indexOf("Yes!"));
   });
 });

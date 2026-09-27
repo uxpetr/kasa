@@ -11,6 +11,7 @@ export const ANALYTICS_EVENTS = [
   "entry_created",
   "entry_deleted",
   "reaction_added",
+  "reply_created",
 ] as const;
 export type AnalyticsEvent = (typeof ANALYTICS_EVENTS)[number];
 

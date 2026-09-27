@@ -187,6 +187,61 @@ describe.skipIf(!process.env.DATABASE_URL)("entries", () => {
     });
   });
 
+  describe("replies (D-006)", () => {
+    it("posts a reply with the original attached, and emits reply_created", async () => {
+      const original = await createEntry(db(), u.owner, projectId, { text: "Ryokan with a private onsen" });
+      if (!original.ok) throw new Error(original.error);
+      events.length = 0;
+      const reply = await createEntry(db(), u.editor, projectId, { text: "Yes, book it!", replyToId: original.value.id });
+      expect(reply).toMatchObject({
+        ok: true,
+        value: { kind: "note", body: "Yes, book it!", replyTo: { id: original.value.id, kind: "note", body: "Ryokan with a private onsen", author: { id: u.owner }, replyTo: null } },
+      });
+      expect(events.map((e) => e.event)).toEqual(["entry_created", "reply_created"]);
+      expect(events[1]!.properties).toEqual({ projectId, kind: "note", toKind: "note", own: false });
+
+      // Replies to replies quote one level only, and the page carries the quote too.
+      if (!reply.ok) throw new Error(reply.error);
+      const nested = await createEntry(db(), u.owner, projectId, { text: "Done", replyToId: reply.value.id });
+      expect(nested).toMatchObject({ value: { replyTo: { id: reply.value.id, replyTo: null } } });
+      const page = await listEntries(db(), u.viewer, projectId);
+      if (!page.ok) throw new Error(page.error);
+      expect(page.value.entries.find((e) => e.id === reply.value.id)!.replyTo).toMatchObject({ id: original.value.id });
+    });
+
+    it("shows a deleted original as an outline without its text", async () => {
+      const original = await createEntry(db(), u.editor, projectId, { text: "soon gone" });
+      if (!original.ok) throw new Error(original.error);
+      const reply = await createEntry(db(), u.owner, projectId, { text: "hmm", replyToId: original.value.id });
+      if (!reply.ok) throw new Error(reply.error);
+      await deleteEntry(db(), u.editor, original.value.id);
+      const page = await listEntries(db(), u.owner, projectId);
+      if (!page.ok) throw new Error(page.error);
+      const quoted = page.value.entries.find((e) => e.id === reply.value.id)!.replyTo!;
+      expect(quoted).toMatchObject({ id: original.value.id, deleted: true, body: null });
+      expect(JSON.stringify(quoted)).not.toContain("soon gone");
+      // And a deleted entry can't be replied to.
+      expect(await createEntry(db(), u.owner, projectId, { text: "late", replyToId: original.value.id })).toMatchObject({ ok: false, status: 404 });
+    });
+
+    it("never replies across projects or quotes another project's entry", async () => {
+      const other = randomUUID();
+      await db().insert(schema.projects).values({ id: other, name: "Secret", ownerId: u.outsider });
+      await db().insert(schema.memberships).values({ projectId: other, userId: u.outsider, role: "owner" });
+      const secret = await createEntry(db(), u.outsider, other, { text: "secret plans" });
+      if (!secret.ok) throw new Error(secret.error);
+      expect(await createEntry(db(), u.owner, projectId, { text: "peek", replyToId: secret.value.id })).toMatchObject({ ok: false, status: 404 });
+      expect(await createEntry(db(), u.owner, projectId, { text: "bad", replyToId: "nope" })).toMatchObject({ ok: false, status: 400 });
+
+      // Even a row written straight to the database doesn't leak the other project's entry.
+      const [forged] = await db().insert(schema.entries).values({ projectId, authorId: u.owner, kind: "note", body: "forged", replyToId: secret.value.id }).returning();
+      const page = await listEntries(db(), u.owner, projectId);
+      if (!page.ok) throw new Error(page.error);
+      expect(page.value.entries.find((e) => e.id === forged!.id)!.replyTo).toBeNull();
+      expect(JSON.stringify(page.value)).not.toContain("secret plans");
+    });
+  });
+
   describe("details", () => {
     it("returns capture pins, the first pin comment, the screenshot, and link images, whatever the source (D-016)", async () => {
       const pid = randomUUID();

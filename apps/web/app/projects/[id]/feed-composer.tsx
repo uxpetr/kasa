@@ -45,13 +45,28 @@ async function uploadImage(projectId: string, file: File): Promise<string> {
   throw new Error("Upload is taking too long");
 }
 
-export function FeedComposer({ projectId, projectName, onSent }: { projectId: string; projectName: string; onSent: (entry: FeedEntry) => void }) {
+interface ComposerProps {
+  projectId: string;
+  projectName: string;
+  onSent: (entry: FeedEntry) => void;
+  /** The entry being replied to (D-006), e.g. { label: "Mika's note" }. */
+  replyTo?: { id: string; label: string } | null;
+  onCancelReply?: () => void;
+}
+
+export function FeedComposer({ projectId, projectName, onSent, replyTo = null, onCancelReply }: ComposerProps) {
   const [text, setText] = useState("");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
+  const root = useRef<HTMLDivElement>(null);
+
+  // Starting a reply puts the cursor in the composer.
+  useEffect(() => {
+    if (replyTo) root.current?.querySelector<HTMLInputElement>("input[type=text]")?.focus();
+  }, [replyTo]);
 
   // Drop images anywhere on the page.
   useEffect(() => {
@@ -112,7 +127,7 @@ export function FeedComposer({ projectId, projectName, onSent }: { projectId: st
       const res = await fetch(`/api/projects/${projectId}/entries`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ text: value, uploadIds }),
+        body: JSON.stringify({ text: value, uploadIds, ...(replyTo ? { replyToId: replyTo.id } : {}) }),
       });
       const body = (await res.json().catch(() => ({}))) as FeedEntry & { error?: string };
       if (!res.ok) throw new Error(body.error ?? "Couldn't send");
@@ -135,7 +150,24 @@ export function FeedComposer({ projectId, projectName, onSent }: { projectId: st
   };
 
   return (
-    <div className={styles.composer} onPaste={onPaste} onDrop={(e: DragEvent) => e.preventDefault()} data-dragging={dragging || undefined}>
+    <div
+      ref={root}
+      className={styles.composer}
+      onPaste={onPaste}
+      onDrop={(e: DragEvent) => e.preventDefault()}
+      onKeyDown={(e) => {
+        if (e.key === "Escape" && replyTo) onCancelReply?.();
+      }}
+      data-dragging={dragging || undefined}
+    >
+      {replyTo ? (
+        <div className={styles.replyBar}>
+          <span>Replying to {replyTo.label}</span>
+          <button type="button" aria-label="Cancel reply" onClick={onCancelReply} disabled={sending}>
+            ×
+          </button>
+        </div>
+      ) : null}
       {attachments.length ? (
         <ul className={styles.attachments}>
           {attachments.map((a) => (
@@ -154,7 +186,7 @@ export function FeedComposer({ projectId, projectName, onSent }: { projectId: st
         </ul>
       ) : null}
       <Composer
-        label={`Add to ${projectName}`}
+        label={replyTo ? `Reply to ${replyTo.label}` : `Add to ${projectName}`}
         placeholder="Paste a link, drop a photo, write a note, or ask @kasa"
         value={text}
         onChange={setText}
