@@ -54,8 +54,8 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Chrome extension (D-158), pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** P-13 (pilot readiness) once OD-03 (pilot length and pass bar) is decided. F-09, F-10, F-11, and F-13 are also unblocked.
-**Blocked:** P-13, on OD-03 (pilot length and pass bar from Petr). Real emails need F-13 (a Resend account and a sender domain from Petr).
+**Next up:** P-13 (pilot readiness), in progress. F-09, F-10, F-11, and F-13 are also unblocked.
+**Blocked:** P-16, on OD-14 (privacy note). Real emails need F-13 (a Resend account and a sender domain from Petr).
 
 ---
 
@@ -174,6 +174,10 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-175** · 2026-09-27 · **Dead invite links**: expired or turned off (410) shows "This invite has expired" / "Ask the person who sent it for a new link."; unknown (404) shows "This invite link doesn't work" / "Check that you copied the whole link."; both with a "Go to Kasa" button. · Petr, P-14
 - **D-176** · 2026-09-27 · **Invite people dialog**: an "Invite people" item in the project menu (owner only) opens a dialog with "Anyone with this link can join as an editor. It works for 7 days.", the link in a read-only field, and "Copy link" (which then reads "Copied"), "New link", and "Turn off link". With no live link it offers "Create link". · Petr, P-14
 - **D-177** · 2026-09-27 · Invite page internals (P-14): `GET /api/invites/:token` now works signed out (D-174). Signed out, it returns only `projectName`, `memberCount`, `inviterName` (the first name of whoever made the link), `avatars` (up to five, as id and initial only), and `alreadyMember: false`. Signed in, it also returns `projectId`. The page renders on the server from the same `previewInvite`, sends existing members straight to the pile, and uses the title "Join Japan 2027 · Kasa" with `noindex`. "Sign in with Google to join" returns to `/invite/<token>?join=1`, which joins without a second click, since the person already chose to join. If the link stops working while the page is open, joining re-renders it as expired. The Invite people dialog uses the existing owner-only `GET`/`POST`/`DELETE /api/projects/:id/invites`; "Copy link" uses the Clipboard API and says so if copying fails. · P-14
+- **D-178** · 2026-09-27 · **Pilot bar** (resolves OD-03): the pilot runs **4 weeks**, and G1 passes if at least **40%** of the links and photos shared in it get one or more replies. · Petr, P-13
+- **D-179** · 2026-09-27 · **Analytics: PostHog EU Cloud** from the pilot on (resolves OD-11). Events go server-side to PostHog's EU host, keyed by user id, with ids and enums only as before (D-129); no browser script and no cookies. The pilot dashboard is built in PostHog. · Petr, P-13
+- **D-180** · 2026-09-27 · **Onboarding**: on first sign-in My pile holds a Kasa Bot card: "Welcome to Kasa. Paste a link, drop a photo, or write a note. Everything you add lands here, and people you invite can reply to it." with a "Start a pile" button. People who sign up through an invite land in that pile instead. No tour; the full first-run flow stays in V-11. · Petr, P-13
+- **D-181** · 2026-09-27 · **Feedback**: "Send feedback" in the account menu opens a dialog titled "What's working, what isn't?" with a text box and "Send", then "Thanks! Petr reads every one." Messages are stored with the page they came from, listed for Petr, and emailed to him through Resend (once F-13 is set up). · Petr, P-13
 
 ---
 
@@ -183,16 +187,17 @@ Questions only Petr can answer. Agents add to this list and don't guess. When on
 
 - [x] **OD-01** → D-110. Confirm or change the proposed stack (D-100 to D-109). Blocks F-01.
 - [x] **OD-02** → D-111. Hosting and region. Suggested: EU hosting, since users and the company are in Finland, for GDPR. Blocks F-03.
-- [ ] **OD-03** Pilot length and the numeric pass bar for gate G1 (the share of links and photos with at least one reply, D-159). Blocks P-13.
+- [x] **OD-03** (resolved by D-178) Pilot length and the numeric pass bar for gate G1 (the share of links and photos with at least one reply, D-159). Blocks P-13.
 - [ ] **OD-04** Positioning line for the product (PRD open question).
 - [ ] **OD-05** Kasa Bot: free or paid, given model costs, and which phase it first ships in. The PRD has it in v1; confirm. Blocks V-04.
 - [ ] **OD-06** Kasa Bot: what triggers an unprompted post, and the maximum frequency. Blocks V-06.
 - [ ] **OD-07** Decisions (voting) and the Keep strip: v1 or after pilot feedback? Blocks V-02c.
 - [ ] **OD-08** Mascot direction (Heap, Pebble, Drop, or Stack; art in `design/mascot/`). Blocks F-08 icon work, not the rest of F-08.
 - [x] **OD-10** → D-118. Protecting `main` on a private repo needs GitHub Pro (about $4/month) on the `uxpetr` account. Options: upgrade to Pro; move the repo to a GitHub organization on a paid plan; or drop the criterion and rely on convention (merge only green PRs). Blocks the last F-02 criterion.
-- [ ] **OD-11** Analytics provider. Options: PostHog EU Cloud (product analytics, EU hosting), Plausible (simple, EU, less product depth), self-hosted PostHog, or events in our own Postgres. Needs a privacy/cookie decision too. Events are already tracked (D-129). Blocks P-13's pilot dashboard.
+- [x] **OD-11** (resolved by D-179) Analytics provider. Options: PostHog EU Cloud (product analytics, EU hosting), Plausible (simple, EU, less product depth), self-hosted PostHog, or events in our own Postgres. Needs a privacy/cookie decision too. Events are already tracked (D-129). Blocks P-13's pilot dashboard.
 - [x] **OD-12** → D-136. Where do traces, logs, and error alerts go? F-07 exports OpenTelemetry over OTLP, so any OTLP backend works. Options: a personal Dash0 account (you know it; keep it separate from work), Grafana Cloud free tier (EU region), Honeycomb, or Sentry for errors plus a separate trace backend. Blocks F-07's export and alerting criteria.
 - [x] **OD-13** (resolved by D-167) Email wording for P-12, provided by Petr: subject and body for the reply and `@mention` emails (including the batched form, several in one email), the unsubscribe confirmation page, and the "Mute emails" state in the app if it needs more than the toggle label. Blocks P-12.
+- [ ] **OD-14** Privacy note for the pilot: what Kasa tells pilot users about the data it keeps and the analytics it sends to PostHog (D-179), and where it shows. Blocks P-16, not the P-13 build.
 - [ ] **OD-09** Exact prices for the owner plan and project pass, and project pass duration. Blocks V-10.
 
 ---
@@ -290,6 +295,11 @@ Depends on: P-12, F-10
 - [ ] Petr creates a Resend account and verifies a sender domain he controls (D-163).
 - [ ] `RESEND_API_KEY`, `EMAIL_FROM`, and `UNSUBSCRIBE_SECRET` set for the worker, and `UNSUBSCRIBE_SECRET` for the web app, in each environment (not in the repo).
 - [ ] A reply on staging sends a real email whose unsubscribe link and one-click header both mute the project.
+
+### F-14 · PostHog project · `todo`
+Depends on: P-13
+- [ ] Petr creates a PostHog EU Cloud project for Kasa (personal, not a work account) and sets `POSTHOG_API_KEY` for the web app and worker in each environment (not in the repo).
+- [ ] The pilot dashboard from `docs/pilot-dashboard.md` is built in that project and shows real events from staging.
 
 ### F-05 · Google sign-in and sessions · `done` · branch `f-05-auth`
 Depends on: F-04
@@ -401,11 +411,15 @@ Depends on: P-07
 - [x] Unsubscribe link and per-project mute (D-165).
 - [x] `@mention` autocomplete in the composer (D-164); email via Resend (D-163). (Real sending needs `RESEND_API_KEY`, `EMAIL_FROM`, and `UNSUBSCRIBE_SECRET` in each environment, see F-13.)
 
-### P-13 · Pilot readiness · `todo`
+### P-13 · Pilot readiness · `in-progress` · branch `p-13-pilot`
 Depends on: P-02 to P-07, P-12, P-14, P-15, OD-03 (P-08 to P-11 dropped, D-158)
 - [ ] Dashboard for the pilot metrics: items added per active user per week, and the share of links and photos with a reply (G1, D-159). Week-4 extension retention moves to L-06.
 - [ ] Onboarding for the pilot group. The extension offer (D-018) comes with L-06.
 - [ ] A way for pilot users to send feedback from inside the app.
+
+### P-16 · Privacy note for the pilot · `blocked` (OD-14)
+Depends on: P-13, OD-14
+- [ ] Pilot users can read what Kasa keeps and what it sends to PostHog, worded as decided in OD-14.
 
 ### P-14 · Invite page · `done` · branch `p-14-invite-page`
 Depends on: P-01, F-08
