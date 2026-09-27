@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Chrome extension (D-158), pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** staging (F-09, F-10, F-12), F-13 (Resend), and F-14 (Petr: a personal PostHog EU project and key, D-183) before the pilot starts. F-11 is unblocked.
+**Next up:** staging (F-09, F-10, F-12), F-13 (Resend), and F-14's dashboard (once staging sends events) before the pilot starts. F-11 is unblocked.
 **Blocked:** P-16, on OD-14 (privacy note). Real emails, including feedback emails, need F-13 (a Resend account and a sender domain from Petr).
 
 ---
@@ -301,7 +301,7 @@ Depends on: P-12, F-10
 
 ### F-14 · PostHog project · `todo` (waiting on Petr)
 Depends on: P-13; the dashboard also needs staging sign-in (F-09, F-12)
-- [ ] Petr creates a PostHog EU Cloud project for Kasa (personal, not a work account) and sets `POSTHOG_API_KEY` for the web app and worker in each environment (not in the repo). (Web app, Production only; the worker sends no events, D-183.)
+- [x] Petr creates a PostHog EU Cloud project for Kasa (personal, not a work account) and sets `POSTHOG_API_KEY` for the web app and worker in each environment (not in the repo). (Web app, Production only; the worker sends no events, D-183. Set 2026-09-27; the key is accepted by the EU host and refused by the US one.)
 - [ ] The pilot dashboard from `docs/pilot-dashboard.md` is built in that project and shows real events from staging.
 - [ ] `FEEDBACK_EMAIL` (where feedback is emailed) and `PILOT_ADMIN_EMAILS` (who can open `/feedback`) are set for production (D-182). (`PILOT_ADMIN_EMAILS` is set in Vercel for Production and Preview. `FEEDBACK_EMAIL` is a worker setting, so it moves to F-10.)
 
@@ -582,4 +582,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-27 · P-14 · Invite page: `/invite/<token>` shows who invited you and how many are in the pile (also signed out), joins in one click (straight after Google sign-in too), explains expired and broken links, and the owner's Invite people dialog creates, copies, renews, and turns off the link. · [#20](https://github.com/uxpetr/kasa/pull/20)
 - 2026-09-27 · P-13 · Pilot readiness: events go server-side to PostHog EU when `POSTHOG_API_KEY` is set, with entry ids for G1 and a new `feed_opened`, and the dashboard SQL is in `docs/pilot-dashboard.md`. My pile starts with a Kasa Bot welcome card and "Start a pile". "Send feedback" in the account menu stores each message, emails it to `FEEDBACK_EMAIL`, and lists it at `/feedback` for pilot admins. · [#22](https://github.com/uxpetr/kasa/pull/22)
 - 2026-09-27 · Fixes from review: invite accept re-checks the link under row locks, a failed upload enqueue rolls back to pending, retried media jobs still delete geotagged raw files, realtime holds `changed` until membership is confirmed and re-checks members after a LISTEN reconnect, viewers can delete their own entries in the UI, `@Jo` no longer matches `@John`, and unfurl blocks `fec0::/10`. · [#21](https://github.com/uxpetr/kasa/pull/21)
-- 2026-09-27 · F-14 (partial) · `PILOT_ADMIN_EMAILS` set in Vercel. The PostHog connection turned out to be Dash0's work org, so it isn't used (D-183), and Petr creates Kasa's own PostHog project. `FEEDBACK_EMAIL` moves to the worker setup in F-10. · [#23](https://github.com/uxpetr/kasa/pull/23)
+- 2026-09-27 · F-14 (partial) · `PILOT_ADMIN_EMAILS` set in Vercel. The PostHog connection turned out to be Dash0's work org, so it isn't used (D-183), and Petr created Kasa's own PostHog EU project, whose key is now in Vercel Production. `FEEDBACK_EMAIL` moves to the worker setup in F-10. · [#23](https://github.com/uxpetr/kasa/pull/23)
