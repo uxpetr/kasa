@@ -54,8 +54,8 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Chrome extension (D-158), pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** staging (F-09, F-10, F-12), F-13 (Resend), and F-14's dashboard (once staging sends events) before the pilot starts. F-11 is unblocked.
-**Blocked:** P-16, on OD-14 (privacy note). In phase 2: V-12 until Petr finishes the scroll story (D-189), V-12 and V-14 on OD-18 (clear or change the name). Real emails, including feedback emails, need F-13 (a Resend account and a sender domain from Petr).
+**Next up:** staging (F-10, F-12), F-13 (Resend), and F-14's dashboard (once staging sends events) before the pilot starts. F-11 is unblocked.
+**Blocked:** P-16, on OD-14 (privacy note). In phase 2: V-12 until Petr finishes the scroll story (D-189), V-12, V-14 and F-15 (media CDN) on OD-18 (clear or change the name). Real emails, including feedback emails, need F-13 (a Resend account and a sender domain from Petr).
 
 ---
 
@@ -188,6 +188,7 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-189** · 2026-09-28 · **The scroll story ships as the landing page** (resolves OD-16): V-12 builds `design/prototype/Promo2.dc.html`, not `Promo.dc.html`. Petr is still refining it, so V-12 waits until a design log entry marks it final. · Petr, OD-16
 - **D-190** · 2026-09-28 · **Search placeholder** (resolves OD-17): "Search this pile" in every pile without AI search (free piles, and every pile until V-03b ships). Paid piles with AI search use D-187's "Search or ask: hotels, who booked the train, Kyoto food…", with the "✦ Kasa" tag. · Petr, OD-17
 - **D-191** · 2026-09-28 · Staging Postgres (F-09): Neon through the Vercel Marketplace, on the **Free** plan for now. The web app alone lets the database sleep, so it stays under 100 CU-hours. Switch to **Launch** (about $19/month) when F-10 starts the realtime service and worker: LISTEN and the job queue's polling keep it awake all month, about 183 CU-hours. Vercel gets the pooled `DATABASE_URL` and the direct `DATABASE_URL_UNPOOLED`. The postgres.js client turns prepared statements off on pooled (`-pooler.`) hosts. Migrations run in the Vercel build (`db:migrate:deploy`, over the direct URL), but only where `MIGRATE_ON_BUILD=1` is set, so previews sharing the staging database never apply unmerged migrations. · Petr, F-09
+- **D-192** · 2026-09-28 · Staging media storage (F-09): Cloudflare R2, bucket `kasa-staging-media`, in the **EU jurisdiction** (`<account>.eu.r2.cloudflarestorage.com`). A location hint isn't enough: D-111 needs the legal EU guarantee, and the first bucket had to be recreated. The web app uses an Account API token with Object Read & Write on that bucket only. Previews share the bucket, as they share the staging database. `S3_REGION=auto`, `S3_FORCE_PATH_STYLE=true`. The bucket's CORS policy allows only `PUT` with `content-type` from the two production origins (`kasa-zeta-rouge.vercel.app` and `kasa-petrandrianov-9913s-projects.vercel.app`), so uploads from preview URLs are refused. `pnpm --filter @kasa/media storage:check <origin>` checks a real bucket: signed PUT limits, stored type and size, and CORS. Its output never includes credentials. The CDN moves to F-15, because Cloudflare needs a custom domain for it, and the domain waits on the name (OD-18). Until then, members get 5-minute signed URLs straight from R2. · Petr, F-09
   - Search matches by meaning as well as by words. "hotel", "airbnb", "where to stay", or "sleep" find every place to stay, and the same goes for food, getting around, sights, and so on. People can also ask questions ("who booked the train?").
   - Exact matches come first, then related ones, each with "✦ Related: {concept}" under it.
   - When Kasa recognises the intent, a Kasa Bot card above the results says how it read the search ("Kasa understood 'Hotel' as places to stay") and gives a one- or two-sentence answer drawn only from this pile.
@@ -219,7 +220,7 @@ Questions only Petr can answer. Agents add to this list and don't guess. When on
 - [x] **OD-15** (resolved by D-188) Is the search answer card (D-187) part of the free plan, or only for paid owners? It extends OD-05, since it uses the same model costs as Kasa Bot. Blocks V-03b. (From design log DL-003.)
 - [x] **OD-16** (resolved by D-189) Which promo page ships in V-12: the original (`design/prototype/Promo.dc.html`) or the scroll story (`Promo2.dc.html`)? Blocks V-12. (From design log DL-000.)
 - [x] **OD-17** (resolved by D-190) The search field's placeholder before AI search exists. D-187's "Search or ask: hotels, who booked the train, Kyoto food…" promises questions and meaning, which V-03a can't answer yet. Options: use D-187's text from the start; a plain one such as "Search this pile"; or something else. Blocks V-03a's search field only.
-- [ ] **OD-18** Clear or change the name before launch. A trademark search on 2026-09-28 found no "Kasa" mark for planning or collaboration software, but TP-Link holds "Kasa" for smart-home software in the US (reg. 4992874) and the EU (018015313, plus "Kasa Smart"), and its "Kasa Smart" app is in both app stores. Kasa, Inc. holds "Kasa" for hotels and short-term rentals in the US (classes 36 and 43). Finland has no "Kasa" mark. Options: keep "Kasa" after a trademark attorney's clearance opinion (a few hundred euros), a distinctive variant (for example "Kasa Pile"), or a new name. The private pilot can run as "Kasa". Blocks V-12 and V-14.
+- [ ] **OD-18** Clear or change the name before launch. A trademark search on 2026-09-28 found no "Kasa" mark for planning or collaboration software, but TP-Link holds "Kasa" for smart-home software in the US (reg. 4992874) and the EU (018015313, plus "Kasa Smart"), and its "Kasa Smart" app is in both app stores. Kasa, Inc. holds "Kasa" for hotels and short-term rentals in the US (classes 36 and 43). Finland has no "Kasa" mark. Options: keep "Kasa" after a trademark attorney's clearance opinion (a few hundred euros), a distinctive variant (for example "Kasa Pile"), or a new name. The private pilot can run as "Kasa". Blocks V-12, V-14 and F-15.
 
 ---
 
@@ -285,16 +286,17 @@ Depends on: F-01, OD-02
 - [x] `.env.example` with every variable documented; secrets never committed.
 - [x] Staging environment deploys automatically from main (Vercel project `kasa`, D-121).
 
-### F-09 · Staging data services · `in-progress` · branch `f-09-neon`
+### F-09 · Staging data services · `done` · branches `f-09-neon`, `f-09-bucket`
 Depends on: F-03, F-04
 - [x] Neon Postgres in an EU region attached to the Vercel project; migrations run on deploy. (PR #28, D-191. The first production build on 2026-09-28 applied all migrations. A signed-out invite lookup reads through the pooled connection. Sign-in waits on the auth env in F-12.)
-- [ ] EU S3-compatible bucket for staging media (pick R2 EU or AWS `eu-central-1`, D-111); credentials only in Vercel env settings.
-- [ ] CDN in front of the bucket for media downloads (signed URLs, D-132); confirm the bucket enforces the signed Content-Type and Content-Length on presigned PUTs, as the local store does.
+- [x] EU S3-compatible bucket for staging media (pick R2 EU or AWS `eu-central-1`, D-111); credentials only in Vercel env settings. (Cloudflare R2 `kasa-staging-media` in the EU jurisdiction, D-192. The `S3_*` variables are set for Production and Preview.)
+- [x] CDN in front of the bucket for media downloads (signed URLs, D-132); confirm the bucket enforces the signed Content-Type and Content-Length on presigned PUTs, as the local store does. (Enforcement confirmed: on 2026-09-28 `storage:check` got 403 for a changed type and a changed size, and 200 for the signed upload with the right stored type and size. The CDN needs a custom domain, so it moves to F-15, D-192.)
 
 ### F-10 · Host realtime and worker · `todo`
 Depends on: F-03; needed by F-06 and P-06
 - [ ] Deploy `apps/realtime` and `apps/worker` to Fly.io or Railway in an EU region (D-111), deploying from main.
 - [ ] Realtime env: `REALTIME_SECRET` (shared with the web app), `REALTIME_ALLOWED_ORIGINS` (the web origin), `DATABASE_URL` on a direct, non-pooled connection (LISTEN needs one); web gets `REALTIME_SECRET` and `REALTIME_PUBLIC_URL` (`wss://…`), added by P-06.
+- [ ] Worker env also has the `S3_*` variables for the staging bucket (D-192), with the same values as the web app.
 - [ ] Switch the Neon plan from Free to Launch before the worker and realtime service run all the time (D-191).
 - [ ] Worker env also includes `FEEDBACK_EMAIL` (`petr.andrianov@gmail.com`), so pilot feedback is emailed (D-182, from F-14).
 
@@ -324,6 +326,11 @@ Depends on: P-13; the dashboard also needs staging sign-in (F-09, F-12)
 - [x] Petr creates a PostHog EU Cloud project for Kasa (personal, not a work account) and sets `POSTHOG_API_KEY` for the web app and worker in each environment (not in the repo). (Web app, Production only; the worker sends no events, D-183. Set 2026-09-27; the key is accepted by the EU host and refused by the US one.)
 - [ ] The pilot dashboard from `docs/pilot-dashboard.md` is built in that project and shows real events from staging.
 - [ ] `FEEDBACK_EMAIL` (where feedback is emailed) and `PILOT_ADMIN_EMAILS` (who can open `/feedback`) are set for production (D-182). (`PILOT_ADMIN_EMAILS` is set in Vercel for Production and Preview. `FEEDBACK_EMAIL` is a worker setting, so it moves to F-10.)
+
+### F-15 · Media CDN on a custom domain · `blocked` (OD-18)
+Depends on: F-09; OD-18 (the product name, so there is a domain to use)
+- [ ] Put the R2 media bucket behind a Cloudflare custom domain, keeping downloads private and member-scoped (D-132). Signed URLs on the R2 S3 endpoint don't pass through Cloudflare's cache, so this needs a signing scheme the CDN can check.
+- [ ] Add the app's final web origin to the bucket's CORS policy.
 
 ### F-05 · Google sign-in and sessions · `done` · branch `f-05-auth`
 Depends on: F-04
@@ -634,3 +641,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-28 · Trademark search for "Kasa" in the USPTO, EUIPO, WIPO, and PRH registers: no conflict for collaboration software, but TP-Link's smart-home "Kasa" is close. Added OD-18, blocking V-12 and V-14. · [#26](https://github.com/uxpetr/kasa/pull/26)
 - 2026-09-28 · OD-17 answered (D-190): "Search this pile" until a pile has AI search, then D-187's "Search or ask…"; V-03a is unblocked. · [#27](https://github.com/uxpetr/kasa/pull/27)
 - 2026-09-28 · F-09, database: Neon (Free plan, EU) attached through Vercel. The production build migrates over the direct URL, and the app reads through the pooled connection (D-191). The bucket and CDN are still to do. · [#28](https://github.com/uxpetr/kasa/pull/28)
+- 2026-09-28 · F-09 done: the R2 staging bucket is in the EU jurisdiction and its keys are in Vercel. `storage:check` confirmed on Vercel that R2 enforces the signed type and size, and that CORS allows the staging origin. The media CDN moves to F-15, which waits on OD-18 (D-192). · PR_LINK
