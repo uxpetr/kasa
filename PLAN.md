@@ -55,7 +55,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
 **Next up:** staging (F-09, F-10, F-12), F-13 (Resend), and F-14's dashboard (once staging sends events) before the pilot starts. F-11 is unblocked.
-**Blocked:** P-16, on OD-14 (privacy note). In phase 2: V-12 until Petr finishes the scroll story (D-189), and V-03a's search placeholder on OD-17. Real emails, including feedback emails, need F-13 (a Resend account and a sender domain from Petr).
+**Blocked:** P-16, on OD-14 (privacy note). In phase 2: V-12 until Petr finishes the scroll story (D-189), V-12 and V-14 on OD-18 (clear or change the name), and V-03a's search placeholder on OD-17. Real emails, including feedback emails, need F-13 (a Resend account and a sender domain from Petr).
 
 ---
 
@@ -217,6 +217,7 @@ Questions only Petr can answer. Agents add to this list and don't guess. When on
 - [x] **OD-15** (resolved by D-188) Is the search answer card (D-187) part of the free plan, or only for paid owners? It extends OD-05, since it uses the same model costs as Kasa Bot. Blocks V-03b. (From design log DL-003.)
 - [x] **OD-16** (resolved by D-189) Which promo page ships in V-12: the original (`design/prototype/Promo.dc.html`) or the scroll story (`Promo2.dc.html`)? Blocks V-12. (From design log DL-000.)
 - [ ] **OD-17** The search field's placeholder before AI search exists. D-187's "Search or ask: hotels, who booked the train, Kyoto food…" promises questions and meaning, which V-03a can't answer yet. Options: use D-187's text from the start; a plain one such as "Search this pile"; or something else. Blocks V-03a's search field only.
+- [ ] **OD-18** Clear or change the name before launch. A trademark search on 2026-09-28 found no "Kasa" mark for planning or collaboration software, but TP-Link holds "Kasa" for smart-home software in the US (reg. 4992874) and the EU (018015313, plus "Kasa Smart"), and its "Kasa Smart" app is in both app stores. Kasa, Inc. holds "Kasa" for hotels and short-term rentals in the US (classes 36 and 43). Finland has no "Kasa" mark. Options: keep "Kasa" after a trademark attorney's clearance opinion (a few hundred euros), a distinctive variant (for example "Kasa Pile"), or a new name. The private pilot can run as "Kasa". Blocks V-12 and V-14.
 
 ---
 
@@ -545,8 +546,8 @@ Depends on: OD-09
 - [ ] First-run flow: create a pile, invite people. Offering the extension (D-018) comes with L-06.
 - [ ] Empty states use the mascot (after OD-08).
 
-### V-12 · Landing page · `blocked` (waiting for Petr's final scroll story, D-189)
-Depends on: a design log entry marking `Promo2.dc.html` final
+### V-12 · Landing page · `blocked` (waiting for Petr's final scroll story, D-189, and OD-18)
+Depends on: a design log entry marking `Promo2.dc.html` final; OD-18 (the product name)
 - [ ] Build the scroll story from `design/prototype/Promo2.dc.html` (D-189), in its final version.
 - [ ] Only "Start a pile" calls to action; no Chrome button (D-018).
 
@@ -555,7 +556,9 @@ Depends on: a design log entry marking `Promo2.dc.html` final
 - [ ] Permission checks tested for every API route; the bot can't read other projects.
 - [ ] Privacy policy and terms published.
 
-### V-14 · Launch checklist · `todo`
+### V-14 · Launch checklist · `blocked` (OD-18)
+Depends on: OD-18
+- [ ] The product name is cleared or changed (OD-18) before any public listing, domain, or trademark filing.
 - [ ] ~~Chrome Web Store listing and review.~~ Moved to L-06 (D-158).
 - [ ] Load test of the feed and realtime service at 10× pilot usage.
 - [ ] Backups and restore tested.
@@ -625,3 +628,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-28 · Design log DL-000 to DL-003 folded: prototype synced into `design/` (search mode, feed states, dialogs, pages, emails, tokens, promo v2, directions); D-184 to D-187; V-03 split into V-03a and V-03b; V-12 blocked on OD-16; OD-15 to OD-17 added. · [#24](https://github.com/uxpetr/kasa/pull/24)
 - 2026-09-28 · OD-15 answered (D-188): free piles get fuzzy word search (V-03a), and paid piles get AI search for every member (V-03b, now after V-10). · [#25](https://github.com/uxpetr/kasa/pull/25)
 - 2026-09-28 · OD-16 answered (D-189): the scroll story ships as the landing page; V-12 waits for its final version. · [#25](https://github.com/uxpetr/kasa/pull/25)
+- 2026-09-28 · Trademark search for "Kasa" in the USPTO, EUIPO, WIPO, and PRH registers: no conflict for collaboration software, but TP-Link's smart-home "Kasa" is close. Added OD-18, blocking V-12 and V-14. · PR_LINK
