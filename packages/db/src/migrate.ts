@@ -32,6 +32,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       process.exit(0);
     }
     await runMigrations(decision.url);
+    // The host only (it names the Neon endpoint and region), never the credentials.
+    console.log(`migrated ${new URL(decision.url).hostname}`);
   } else {
     const url = directDatabaseUrl();
     if (!url) throw new Error("DATABASE_URL is not set. Copy .env.example to .env.");
