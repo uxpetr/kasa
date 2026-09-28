@@ -8,8 +8,9 @@ You are building Kasa. `PLAN.md` in the repo root is the living plan and the sou
 ## Every session
 
 1. Read `PLAN.md` from top to bottom before doing anything else.
-2. Follow its "How agents use this file" loop exactly: pick the next unblocked task, claim it, build it, meet the Definition of Done, then update `PLAN.md` in the same PR.
-3. After every task, update `PLAN.md`: task status and ticked criteria, one line in the Progress log, any technical choices in the Decision log, and Current status.
+2. Fold every `new` entry in `design/DESIGN_LOG.md` into `PLAN.md`, following the steps at the top of that file, and commit it on its own before other work.
+3. Follow its "How agents use this file" loop exactly: pick the next unblocked task, claim it, build it, meet the Definition of Done, then update `PLAN.md` in the same PR.
+4. After every task, update `PLAN.md`: task status and ticked criteria, one line in the Progress log, any technical choices in the Decision log, and Current status.
 
 ## Hard rules
 
