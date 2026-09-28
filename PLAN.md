@@ -55,7 +55,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
 **Next up:** staging (F-09, F-10, F-12), F-13 (Resend), and F-14's dashboard (once staging sends events) before the pilot starts. F-11 is unblocked.
-**Blocked:** P-16, on OD-14 (privacy note). In phase 2: V-12 on OD-16 (which promo page), and V-03a's search placeholder on OD-17. Real emails, including feedback emails, need F-13 (a Resend account and a sender domain from Petr).
+**Blocked:** P-16, on OD-14 (privacy note). In phase 2: V-12 until Petr finishes the scroll story (D-189), and V-03a's search placeholder on OD-17. Real emails, including feedback emails, need F-13 (a Resend account and a sender domain from Petr).
 
 ---
 
@@ -185,6 +185,7 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-186** · 2026-09-28 · **Search calendar.** Results switch between Grid (the default) and Calendar. The calendar shows month grids starting on Monday, in date order, and follows the current search: only days with matches light up. A matching day is a round disc showing a photo from that day, darkened slightly so the number stays readable, or, with no photo, the paper colour of its first entry (yellow for notes, pine tint for Kasa Bot, white for links). Today's number is in the accent colour, and future days are muted. Tapping a day opens the grid filtered to it, with a removable chip such as "12 Sep ×" next to the count. · Petr, design log DL-002
 - **D-187** · 2026-09-28 · **AI-powered search.**
 - **D-188** · 2026-09-28 · **Search by plan** (resolves OD-15). Free piles get basic search: words, tolerant of typos and partial words (fuzzy), with the grid and calendar (V-03a). AI search, meaning-based results and the answer card (D-187, V-03b), comes with the paid plan. Following D-009, it's the pile that's paid, not the person: if the pile's owner has the owner plan or a project pass for it, every member gets AI search there, free members included. A paying owner's personal piles get it too. · Petr, OD-15
+- **D-189** · 2026-09-28 · **The scroll story ships as the landing page** (resolves OD-16): V-12 builds `design/prototype/Promo2.dc.html`, not `Promo.dc.html`. Petr is still refining it, so V-12 waits until a design log entry marks it final. · Petr, OD-16
   - Search matches by meaning as well as by words. "hotel", "airbnb", "where to stay", or "sleep" find every place to stay, and the same goes for food, getting around, sights, and so on. People can also ask questions ("who booked the train?").
   - Exact matches come first, then related ones, each with "✦ Related: {concept}" under it.
   - When Kasa recognises the intent, a Kasa Bot card above the results says how it read the search ("Kasa understood 'Hotel' as places to stay") and gives a one- or two-sentence answer drawn only from this pile.
@@ -214,7 +215,7 @@ Questions only Petr can answer. Agents add to this list and don't guess. When on
 - [ ] **OD-14** Privacy note for the pilot: what Kasa tells pilot users about the data it keeps and the analytics it sends to PostHog (D-179), and where it shows. Blocks P-16, not the P-13 build.
 - [ ] **OD-09** Exact prices for the owner plan and project pass, and project pass duration. Blocks V-10.
 - [x] **OD-15** (resolved by D-188) Is the search answer card (D-187) part of the free plan, or only for paid owners? It extends OD-05, since it uses the same model costs as Kasa Bot. Blocks V-03b. (From design log DL-003.)
-- [ ] **OD-16** Which promo page ships in V-12: the original (`design/prototype/Promo.dc.html`) or the scroll story (`Promo2.dc.html`)? Blocks V-12. (From design log DL-000.)
+- [x] **OD-16** (resolved by D-189) Which promo page ships in V-12: the original (`design/prototype/Promo.dc.html`) or the scroll story (`Promo2.dc.html`)? Blocks V-12. (From design log DL-000.)
 - [ ] **OD-17** The search field's placeholder before AI search exists. D-187's "Search or ask: hotels, who booked the train, Kyoto food…" promises questions and meaning, which V-03a can't answer yet. Options: use D-187's text from the start; a plain one such as "Search this pile"; or something else. Blocks V-03a's search field only.
 
 ---
@@ -544,9 +545,9 @@ Depends on: OD-09
 - [ ] First-run flow: create a pile, invite people. Offering the extension (D-018) comes with L-06.
 - [ ] Empty states use the mascot (after OD-08).
 
-### V-12 · Landing page · `blocked` (OD-16)
-Depends on: OD-16
-- [ ] Build the promo page chosen in OD-16: `design/prototype/Promo.dc.html` (with the use-case pills in the hero) or `Promo2.dc.html` (the scroll story, D-184).
+### V-12 · Landing page · `blocked` (waiting for Petr's final scroll story, D-189)
+Depends on: a design log entry marking `Promo2.dc.html` final
+- [ ] Build the scroll story from `design/prototype/Promo2.dc.html` (D-189), in its final version.
 - [ ] Only "Start a pile" calls to action; no Chrome button (D-018).
 
 ### V-13 · Security and privacy review · `todo`
@@ -623,3 +624,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-27 · F-14 (partial) · `PILOT_ADMIN_EMAILS` set in Vercel. The PostHog connection turned out to be Dash0's work org, so it isn't used (D-183), and Petr created Kasa's own PostHog EU project, whose key is now in Vercel Production. `FEEDBACK_EMAIL` moves to the worker setup in F-10. · [#23](https://github.com/uxpetr/kasa/pull/23)
 - 2026-09-28 · Design log DL-000 to DL-003 folded: prototype synced into `design/` (search mode, feed states, dialogs, pages, emails, tokens, promo v2, directions); D-184 to D-187; V-03 split into V-03a and V-03b; V-12 blocked on OD-16; OD-15 to OD-17 added. · [#24](https://github.com/uxpetr/kasa/pull/24)
 - 2026-09-28 · OD-15 answered (D-188): free piles get fuzzy word search (V-03a), and paid piles get AI search for every member (V-03b, now after V-10). · [#25](https://github.com/uxpetr/kasa/pull/25)
+- 2026-09-28 · OD-16 answered (D-189): the scroll story ships as the landing page; V-12 waits for its final version. · [#25](https://github.com/uxpetr/kasa/pull/25)
