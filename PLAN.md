@@ -630,4 +630,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-28 · OD-15 answered (D-188): free piles get fuzzy word search (V-03a), and paid piles get AI search for every member (V-03b, now after V-10). · [#25](https://github.com/uxpetr/kasa/pull/25)
 - 2026-09-28 · OD-16 answered (D-189): the scroll story ships as the landing page; V-12 waits for its final version. · [#25](https://github.com/uxpetr/kasa/pull/25)
 - 2026-09-28 · Trademark search for "Kasa" in the USPTO, EUIPO, WIPO, and PRH registers: no conflict for collaboration software, but TP-Link's smart-home "Kasa" is close. Added OD-18, blocking V-12 and V-14. · [#26](https://github.com/uxpetr/kasa/pull/26)
-- 2026-09-28 · OD-17 answered (D-190): "Search this pile" until a pile has AI search, then D-187's "Search or ask…"; V-03a is unblocked. · PR_LINK
+- 2026-09-28 · OD-17 answered (D-190): "Search this pile" until a pile has AI search, then D-187's "Search or ask…"; V-03a is unblocked. · [#27](https://github.com/uxpetr/kasa/pull/27)
