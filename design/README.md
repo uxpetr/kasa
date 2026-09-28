@@ -8,18 +8,28 @@ Each `.dc.html` file is one screen. They're written for the design canvas runtim
 
 | File | What it is |
 | --- | --- |
-| `Projects.dc.html` | "Your piles": project selection as stacks of paper |
-| `Main.dc.html` | Zen-mode project chat: category filters, sticky notes, polaroid group, taped capture with pins, Telegram reply, Kasa Bot cards, composer. Interactive: filters, dismiss, "Add to pile", sending notes, `@kasa` reply |
-| `Comment.dc.html` | Extension comment mode: element highlight, pin, comment box with project picker, floating toolbar |
-| `Draw.dc.html` | Extension draw mode: freehand ink, arrow, highlight, tool palette |
-| `Send.dc.html` | Extension check-and-send: preview with crop and blur, note, project picker |
-| `ContentTypes.dc.html` | Every chat content type with how it looks and behaves (same as the PRD section) |
+| `Projects.dc.html` | "Your piles": project selection as stacks of paper, with the collapsed Archived section |
+| `Main.dc.html` | Zen-mode project chat: project menu, sticky notes, photo stacks, paper-clip replies, reactions and the actions menu, Kasa Bot cards, and the composer with @mentions. **Search mode** (magnifier next to +): grid and calendar results, meaning-based matches and the Kasa answer card (DL-001 to DL-003). Interactive: press Play |
+| `States.dc.html` | Feed states: first-run My pile, empty, viewer, archived, replying, @mentions, adding photos, errors, deleted outlines, touch actions, photo viewer, and six search states |
+| `Dialogs.dc.html` | The project and account menus and every dialog: New project, Rename, Members, Remove and Leave, Invite people, Delete, Send feedback |
+| `Pages.dc.html` | The invite page, unsubscribe page, interim signed-out home, and pilot feedback list |
+| `Emails.dc.html` | Reply, mention, and batched notification emails (D-167) |
+| `ContentTypes.dc.html` | Every chat content type with how it looks and behaves (same as the PRD section); Capture and Drawing are v2 |
+| `Tokens.dc.html` | Every token and the key `@kasa/ui` components, drawn from `tokens.json` |
 | `Promo.dc.html` | One-page marketing site; hero switches between trip, wedding, talk, and redesign |
+| `Promo2.dc.html` | Promo page v2, a scroll story: scattered group input, pulled in by Kasa, sorted into piles. Which one ships is open (OD-16) |
+| `Directions.dc.html` | One chat moment in four visual directions (Paper table, the current one, plus Hairline, Soft glass, Night bento). Exploration only, nothing decided |
 | `Mascot.dc.html`, `Mascot2.dc.html` | Mascot explorations, rounds 1 and 2 |
+| `Comment.dc.html`, `Draw.dc.html`, `Send.dc.html` | v2 Chrome extension (D-158): comment, draw, and check-and-send |
 | `canvas.json` | Layout of the screens on the canvas |
+| `CHANGELOG.md` | Every visual change since the locked v0, newest first |
 | `img/` | Photos used in the screens (Japan trip). Some look like stock photos: check licences before public use |
 
-Flow in the prototype: Projects → Main → "Capture from a site" → Comment → Draw → Send → back to Main.
+Flow in the prototype: Projects → Main (project menu, search, dialogs) → the v2 extension screens at the end.
+
+## Design log (`DESIGN_LOG.md`)
+
+Petr's design decisions from the prototype. Each `new` entry gets folded into `PLAN.md` at the start of a session, following the steps at the top of the log, and then marked `folded` with what it became.
 
 ## Tokens (`tokens.json`)
 

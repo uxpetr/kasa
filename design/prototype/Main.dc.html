@@ -15,20 +15,44 @@ a{color:#B3372A}a:hover{color:#8E2A20}
 button,input{font-family:inherit}
 </style>
 </helmet>
-<div style="width: 1280px; height: 1400px; display: flex; background: #FBFAF7; overflow: hidden">
-<main style="width: 800px; margin: 0 auto; display: flex; flex-direction: column">
-<header style="height: 72px; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between">
-<a href="Projects.dc.html" aria-label="Back to projects" style="width: 44px; height: 44px; border-radius: 22px; display: flex; align-items: center; justify-content: center; text-decoration: none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1F1D1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></a>
+<div style="position: relative; width: 1280px; height: 1400px; display: flex; background: #FBFAF7; overflow: hidden">
+<main style="width: 800px; height: 1400px; margin: 0 auto; display: flex; flex-direction: column">
+<header style="position: relative; height: 72px; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between">
+<a href="Projects.dc.html" aria-label="Back to your piles" style="width: 44px; height: 44px; border-radius: 22px; display: flex; align-items: center; justify-content: center; text-decoration: none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1F1D1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></a>
 <h1 style="margin: 0; font-family: Fraunces, Georgia, serif; font-size: 20px; font-weight: 600">Japan 2027</h1>
-<a href="Comment.dc.html" aria-label="Try the Kasa extension" style="height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid #E2DDD2; background: #FFFFFF; color: #1F1D1A; font-size: 13px; font-weight: 500; text-decoration: none; display: flex; align-items: center; gap: 6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1F1D1A" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Capture from a site</a>
+<button type="button" aria-label="Project menu" aria-expanded="{{ menuExpanded }}" onClick="{{ toggleMenu }}" style="{{ menuBtnStyle }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="#1F1D1A"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></button>
+<sc-if value="{{menuOpen}}" hint-placeholder-val="{{ true }}">
+<div role="menu" aria-label="Project menu" style="position: absolute; right: 0; top: 52px; z-index: 30; width: 230px; box-sizing: border-box; padding: 6px; background: #FFFFFF; border: 1px solid #ECE8E0; border-radius: 14px; display: flex; flex-direction: column; gap: 2px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)">
+<a href="Dialogs.dc.html" role="menuitem" style="display: flex; align-items: center; height: 40px; padding: 0 12px; border-radius: 8px; font-size: 15px; color: #1F1D1A; text-decoration: none; background: transparent; border: 0; text-align: left; cursor: pointer; width: 100%; box-sizing: border-box">Members</a>
+<a href="Dialogs.dc.html" role="menuitem" style="display: flex; align-items: center; height: 40px; padding: 0 12px; border-radius: 8px; font-size: 15px; color: #1F1D1A; text-decoration: none; background: transparent; border: 0; text-align: left; cursor: pointer; width: 100%; box-sizing: border-box">Invite people</a>
+<a href="Dialogs.dc.html" role="menuitem" style="display: flex; align-items: center; height: 40px; padding: 0 12px; border-radius: 8px; font-size: 15px; color: #1F1D1A; text-decoration: none; background: transparent; border: 0; text-align: left; cursor: pointer; width: 100%; box-sizing: border-box">Rename</a>
+<a href="States.dc.html" role="menuitem" style="display: flex; align-items: center; height: 40px; padding: 0 12px; border-radius: 8px; font-size: 15px; color: #1F1D1A; text-decoration: none; background: transparent; border: 0; text-align: left; cursor: pointer; width: 100%; box-sizing: border-box">Archive</a>
+<button type="button" role="menuitem" onClick="{{ toggleMute }}" style="display: flex; align-items: center; height: 40px; padding: 0 12px; border-radius: 8px; font-size: 15px; color: #1F1D1A; text-decoration: none; background: transparent; border: 0; text-align: left; cursor: pointer; width: 100%; box-sizing: border-box">{{ muteLabel }}</button>
+<button type="button" role="menuitem" onClick="{{ enterSearch }}" style="display: flex; align-items: center; height: 40px; padding: 0 12px; border-radius: 8px; font-size: 15px; color: #1F1D1A; text-decoration: none; background: transparent; border: 0; text-align: left; cursor: pointer; width: 100%; box-sizing: border-box">Search</button>
+</div>
+</sc-if>
 </header>
+<sc-if value="{{ notSearch }}" hint-placeholder-val="{{ true }}">
 <div aria-label="Categories" style="display: flex; align-items: center; gap: 8px; padding: 4px 0 12px; border-bottom: 1px solid #ECE8E0">
 <sc-for list="{{ chips }}" as="c" hint-placeholder-count="4">
 <button type="button" aria-pressed="{{ c.pressed }}" onClick="{{ c.pick }}" style="{{ c.style }}">{{ c.label }} <span style="opacity: 0.7">{{ c.count }}</span></button>
 </sc-for>
 <div style="margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6B665C"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2E5B4F" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"></path></svg>Sorted by Kasa Bot<a href="#" style="font-weight: 600; color: #2E5B4F">Edit</a></div>
 </div>
-<section aria-label="Feed" style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; gap: 22px; padding: 12px 0 20px; height: -24px">
+</sc-if>
+<sc-if value="{{ inSearch }}" hint-placeholder-val="{{ false }}">
+<div aria-label="Search" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 0 12px; border-bottom: 1px solid #ECE8E0; min-height: 40px">
+<div style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #3E3A34"><span role="status" style="font-weight: 600">{{ resultLabel }}</span>
+<sc-if value="{{ hasDay }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ clearDay }}" aria-label="{{ dayClearLabel }}" style="height: 30px; padding: 0 6px 0 12px; border-radius: 15px; border: 1px solid #E2DDD2; background: #FFFFFF; font-size: 13px; color: #1F1D1A; cursor: pointer; display: inline-flex; align-items: center; gap: 6px">{{ dayLabel }}<span aria-hidden="true" style="font-size: 16px">×</span></button></sc-if>
+</div>
+<div role="group" aria-label="View" style="display: flex; gap: 4px; padding: 3px; border-radius: 21px; background: #F4F2EC">
+<button type="button" aria-pressed="{{ gridPressed }}" onClick="{{ showGrid }}" style="{{ gridBtnStyle }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5"></rect><rect x="13" y="3" width="8" height="8" rx="1.5"></rect><rect x="3" y="13" width="8" height="8" rx="1.5"></rect><rect x="13" y="13" width="8" height="8" rx="1.5"></rect></svg>Grid</button>
+<button type="button" aria-pressed="{{ calPressed }}" onClick="{{ showCal }}" style="{{ calBtnStyle }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>Calendar</button>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ notSearch }}" hint-placeholder-val="{{ true }}">
+<section aria-label="Feed" style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; gap: 22px; padding: 12px 0 20px">
 <sc-if value="{{isAll}}" hint-placeholder-val="{{ true }}">
 <div style="display: flex; align-items: center; gap: 12px; color: #6B665C; font-size: 12px; font-weight: 600"><div style="flex-grow: 1; height: 1px; background: #ECE8E0"></div>Yesterday<div style="flex-grow: 1; height: 1px; background: #ECE8E0"></div></div>
 </sc-if>
@@ -49,15 +73,15 @@ button,input{font-family:inherit}
 <div style="display: flex; align-items: flex-start; padding: 4px 0 6px 4px">
 <a href="#" style="display: flex; flex-direction: column; gap: 8px; width: 196px; box-sizing: border-box; padding: 8px 8px 12px; background: #FFFFFF; text-decoration: none; color: #1F1D1A; transform: rotate(-2deg); margin-left: 0px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)">
 <img src="img/kinkakuji.jpg" alt="Kinkaku-ji, the golden pavilion, reflected in its pond" style="display: block; width: 100%; height: 132px; object-fit: cover">
-<div style="display: flex; flex-direction: column; gap: 1px; padding: 0 2px"><div style="font-size: 14px; font-weight: 600">Kinkaku-ji</div><div style="font-size: 12px; color: #6B665C">Kyoto · go early</div></div>
+<div style="display: flex; flex-direction: column; gap: 1px; padding: 0 2px"><div style="font-size: 14px; font-weight: 600">Kinkaku-ji</div><div style="font-size: 12px; color: #6B665C">Link · kyoto guide</div></div>
 </a>
 <a href="#" style="display: flex; flex-direction: column; gap: 8px; width: 196px; box-sizing: border-box; padding: 8px 8px 12px; background: #FFFFFF; text-decoration: none; color: #1F1D1A; transform: rotate(1.6deg); margin-left: -14px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)">
 <img src="img/kiyomizu.jpg" alt="Kiyomizu-dera pagoda at dusk" style="display: block; width: 100%; height: 132px; object-fit: cover">
-<div style="display: flex; flex-direction: column; gap: 1px; padding: 0 2px"><div style="font-size: 14px; font-weight: 600">Kiyomizu-dera</div><div style="font-size: 12px; color: #6B665C">Kyoto · at sunset</div></div>
+<div style="display: flex; flex-direction: column; gap: 1px; padding: 0 2px"><div style="font-size: 14px; font-weight: 600">Kiyomizu-dera</div><div style="font-size: 12px; color: #6B665C">Link · kyoto guide</div></div>
 </a>
 <a href="#" style="display: flex; flex-direction: column; gap: 8px; width: 196px; box-sizing: border-box; padding: 8px 8px 12px; background: #FFFFFF; text-decoration: none; color: #1F1D1A; transform: rotate(-0.6deg); margin-left: -14px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)">
 <img src="img/osaka-castle.jpg" alt="Osaka Castle" style="display: block; width: 100%; height: 132px; object-fit: cover">
-<div style="display: flex; flex-direction: column; gap: 1px; padding: 0 2px"><div style="font-size: 14px; font-weight: 600">Osaka Castle</div><div style="font-size: 12px; color: #6B665C">Day trip from Kyoto</div></div>
+<div style="display: flex; flex-direction: column; gap: 1px; padding: 0 2px"><div style="font-size: 14px; font-weight: 600">Osaka Castle</div><div style="font-size: 12px; color: #6B665C">Link · osaka guide</div></div>
 </a>
 </div>
 </div>
@@ -74,11 +98,7 @@ button,input{font-family:inherit}
 <div style="display: flex; gap: 8px"><button type="button" onClick="{{ suggest }}" style="height: 36px; padding: 0 14px; border-radius: 18px; border: 0; background: #2E5B4F; color: #FFFFFF; font-size: 14px; font-weight: 600; cursor: pointer">Yes, suggest</button><button type="button" onClick="{{ dismiss }}" style="height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid #C9D8CF; background: transparent; color: #24483E; font-size: 14px; cursor: pointer">Not now</button></div>
 </sc-if>
 <sc-if value="{{suggested}}" hint-placeholder-val="{{ true }}">
-<div style="display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px dashed #C9D8CF; font-size: 14px">
-<div><span style="font-weight: 600">Day 1</span> · Kinkaku-ji in the morning, then northwest Kyoto</div>
-<div><span style="font-weight: 600">Day 2</span> · Kiyomizu-dera at sunset, then down through Higashiyama</div>
-<div><span style="font-weight: 600">Day 3</span> · Osaka Castle as a day trip</div>
-</div>
+<div style="display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px dashed #C9D8CF; font-size: 14px"><div><span style="font-weight: 600">Day 1</span> · Kinkaku-ji in the morning, then northwest Kyoto</div><div><span style="font-weight: 600">Day 2</span> · Kiyomizu-dera at sunset, then down through Higashiyama</div><div><span style="font-weight: 600">Day 3</span> · Osaka Castle as a day trip</div></div>
 </sc-if>
 </div>
 </div>
@@ -91,19 +111,21 @@ button,input{font-family:inherit}
 <div style="display: flex; gap: 12px; align-items: flex-start">
 <div style="width: 32px; height: 32px; flex-shrink: 0; border-radius: 16px; background: #6B5B3E; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center">J</div>
 <div style="display: flex; flex-direction: column; gap: 8px">
-<div style="font-size: 13px; color: #6B665C"><span style="font-weight: 600; color: #1F1D1A">Jonas</span> · 09:12 · from a Tokyo Tower guide <span style="display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 10px; background: #E6EEEA; color: #24483E; font-size: 11px; font-weight: 600">Tokyo</span></div>
-<div style="position: relative; width: 500px; box-sizing: border-box; padding: 10px 10px 14px; background: #FFFFFF; transform: rotate(0.6deg); box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)">
-<div style="position: absolute; left: 200px; top: -10px; width: 96px; height: 22px; background: rgba(230,222,205,0.75); transform: rotate(-2deg)"></div>
-<div style="position: relative; height: 200px; background: #DCD5C8; overflow: hidden">
-<img src="img/tokyo-fuji.jpg" alt="Tokyo Tower in front of Mount Fuji at sunset" style="display: block; width: 100%; height: 200px; object-fit: cover">
-<div style="position: absolute; left: 110px; top: 53px; width: 28px; height: 28px; border-radius: 14px 14px 14px 2px; background: #B3372A; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center">1</div>
-<div style="position: absolute; left: 240px; top: 4px; width: 28px; height: 28px; border-radius: 14px 14px 14px 2px; background: #B3372A; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center">2</div>
+<div style="font-size: 13px; color: #6B665C"><span style="font-weight: 600; color: #1F1D1A">Jonas</span> · 09:12 · 3 photos <span style="display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 10px; background: #E6EEEA; color: #24483E; font-size: 11px; font-weight: 600">Tokyo</span></div>
+<div style="position: relative; display: flex; gap: 10px; align-items: flex-start"><button type="button" aria-label="Open 3 photos" onClick="{{ openViewer }}" style="position: relative; width: 300px; height: 262px; border: 0; padding: 0; background: transparent; cursor: pointer; text-align: left">
+<div style="position: absolute; left: 14px; top: 8px; width: 276px; height: 236px; background: #FFFFFF; transform: rotate(2.4deg); box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)"></div>
+<div style="position: absolute; left: 6px; top: 4px; width: 276px; height: 236px; background: #FFFFFF; transform: rotate(-2deg); box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)"></div>
+<div style="position: absolute; left: 0; top: 0; width: 280px; box-sizing: border-box; padding: 8px 8px 12px; background: #FFFFFF; transform: rotate(0.6deg); display: flex; flex-direction: column; gap: 8px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)"><img src="img/tokyo-fuji.jpg" alt="Tokyo Tower in front of Mount Fuji at sunset" style="display: block; width: 100%; height: 180px; object-fit: cover"><div style="font-size: 14px; font-weight: 600; padding: 0 2px; color: #1F1D1A">Tower view, Fuji on a clear day</div></div>
+<div style="position: absolute; right: -2px; top: -8px; height: 26px; min-width: 26px; padding: 0 8px; box-sizing: border-box; border-radius: 13px; background: #1F1D1A; color: #FFFFFF; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center">3</div>
+</button><button type="button" aria-label="Actions for Jonas's photos" aria-haspopup="menu" onClick="{{ act_photos }}" style="width: 32px; height: 32px; margin-top: 6px; border-radius: 16px; border: 1px solid #ECE8E0; background: #FFFFFF; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0"><svg width="16" height="16" viewBox="0 0 24 24" fill="#6B665C"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></button><sc-if value="{{menu_photos}}" hint-placeholder-val="{{ true }}">
+<div role="menu" style="position: absolute; left: 100%; top: 0; margin-left: 8px; z-index: 20; width: 248px; box-sizing: border-box; padding: 6px; background: #FFFFFF; border: 1px solid #ECE8E0; border-radius: 14px; display: flex; flex-direction: column; gap: 2px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)">
+<div role="group" aria-label="React" style="display: flex; justify-content: space-between; padding: 2px 2px 6px; border-bottom: 1px solid #ECE8E0"><button type="button" aria-label="React heart" onClick="{{ react_photos_0 }}" style="width: 36px; height: 36px; border-radius: 18px; border: 0; background: transparent; font-size: 18px; cursor: pointer">❤️</button><button type="button" aria-label="React thumbs up" onClick="{{ react_photos_1 }}" style="width: 36px; height: 36px; border-radius: 18px; border: 0; background: transparent; font-size: 18px; cursor: pointer">👍</button><button type="button" aria-label="React laughing" onClick="{{ react_photos_2 }}" style="width: 36px; height: 36px; border-radius: 18px; border: 0; background: transparent; font-size: 18px; cursor: pointer">😂</button><button type="button" aria-label="React surprised" onClick="{{ react_photos_3 }}" style="width: 36px; height: 36px; border-radius: 18px; border: 0; background: transparent; font-size: 18px; cursor: pointer">😮</button><button type="button" aria-label="React party" onClick="{{ react_photos_4 }}" style="width: 36px; height: 36px; border-radius: 18px; border: 0; background: transparent; font-size: 18px; cursor: pointer">🎉</button><button type="button" aria-label="React eyes" onClick="{{ react_photos_5 }}" style="width: 36px; height: 36px; border-radius: 18px; border: 0; background: transparent; font-size: 18px; cursor: pointer">👀</button></div>
+<button type="button" role="menuitem" onClick="{{ reply_photos }}" style="height: 40px; padding: 0 12px; border: 0; background: transparent; text-align: left; font-size: 15px; color: #1F1D1A; cursor: pointer; border-radius: 8px">Reply</button>
+
 </div>
-<div style="padding: 10px 4px 0; display: flex; flex-direction: column; gap: 4px; font-size: 14px; line-height: 1.45">
-<div><span style="font-weight: 600; color: #B3372A">1</span> The tower view with Fuji behind it. Go at sunset?</div>
-<div><span style="font-weight: 600; color: #B3372A">2</span> Fuji only shows on clear days, so keep this flexible.</div>
-</div>
-</div>
+</sc-if></div>
+<div style="display: flex; gap: 6px; padding-left: 2px"><sc-for list="{{ reacts_photos }}" as="r" hint-placeholder-count="2"><span style="{{ r.style }}">{{ r.emoji }} {{ r.count }}</span></sc-for></div>
+
 </div>
 </div>
 </sc-if>
@@ -112,18 +134,50 @@ button,input{font-family:inherit}
 <div style="width: 32px; height: 32px; flex-shrink: 0; border-radius: 16px; background: #B3372A; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center">M</div>
 <div style="display: flex; flex-direction: column; gap: 8px">
 <div style="font-size: 13px; color: #6B665C"><span style="font-weight: 600; color: #1F1D1A">Mika</span> · 09:30 · via Telegram <span style="display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 10px; background: #E6EEEA; color: #24483E; font-size: 11px; font-weight: 600">Tokyo</span></div>
-<div style="width: 260px; box-sizing: border-box; padding: 14px 18px 18px; background: #FFF1A8; border-radius: 2px; font-size: 15px; line-height: 1.45; transform: rotate(1deg); display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)"><div style="font-size: 12px; color: #6B5F2A">Re: Jonas's capture, pin 1</div><div>Yes! Let's make it our first evening in Tokyo.</div></div>
+<div style="display: flex; align-items: flex-start; gap: 0">
+<div style="position: relative; z-index: 1; width: 96px; box-sizing: border-box; padding: 5px 5px 14px; background: #FFFFFF; transform: rotate(-4deg); margin-top: 6px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)"><img src="img/tokyo-fuji.jpg" alt="Jonas's photos" style="display: block; width: 100%; height: 62px; object-fit: cover"></div>
+<div style="position: relative; z-index: 3; width: 14px; height: 38px; margin: 0 -8px 0 -6px; box-sizing: border-box; border: 3px solid #8F8B83; border-radius: 7px; transform: rotate(-10deg)"></div>
+<div style="position: relative; z-index: 2; margin-left: 4px"><div style="width: 270px; box-sizing: border-box; padding: 14px 18px 18px; background: #FFF1A8; border-radius: 2px; font-size: 15px; line-height: 1.45; transform: rotate(1deg); display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)"><div style="font-size: 12px; color: #6B5F2A">Re: Jonas's photos</div><div>Yes! Let's make it our first evening in Tokyo.</div></div></div>
+</div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{isAll}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; gap: 12px; align-items: flex-start">
+<div style="width: 32px; height: 32px; flex-shrink: 0; border-radius: 16px; background: #6B5B3E; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center">J</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 13px; color: #6B665C"><span style="font-weight: 600; color: #1F1D1A">Jonas</span> · 09:40</div>
+<div style="width: 300px; box-sizing: border-box; padding: 14px 16px; border: 2px dashed #CFC9BD; border-radius: 3px; font-size: 14px; color: #6B665C">Jonas deleted a photo</div>
 </div>
 </div>
 </sc-if>
 <sc-if value="{{showSights}}" hint-placeholder-val="{{ true }}">
+<sc-if value="{{askAlive}}" hint-placeholder-val="{{ true }}">
 <div style="display: flex; gap: 12px; align-items: flex-start">
 <div style="width: 32px; height: 32px; flex-shrink: 0; border-radius: 16px; background: #2E5B4F; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center">A</div>
 <div style="display: flex; flex-direction: column; gap: 8px">
 <div style="font-size: 13px; color: #6B665C"><span style="font-weight: 600; color: #1F1D1A">Aiko</span> · 10:05 <span style="display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 10px; background: #E6EEEA; color: #24483E; font-size: 11px; font-weight: 600">Sights</span></div>
-<div style="width: 280px; box-sizing: border-box; padding: 14px 18px 18px; background: #FFF1A8; border-radius: 2px; font-size: 15px; line-height: 1.45; transform: rotate(-0.8deg); display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)"><div><span style="font-weight: 600; color: #2E5B4F">@kasa</span> what else is near Kiyomizu-dera for the same evening?</div></div>
+<div style="position: relative; display: flex; gap: 10px; align-items: flex-start"><div style="width: 280px; box-sizing: border-box; padding: 14px 18px 18px; background: #FFF1A8; border-radius: 2px; font-size: 15px; line-height: 1.45; transform: rotate(-0.8deg); display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)"><div><span style="font-weight: 600; color: #2E5B4F">@kasa</span> what else is near Kiyomizu-dera for the same evening?</div></div><button type="button" aria-label="Actions for Aiko's note" aria-haspopup="menu" onClick="{{ act_ask }}" style="width: 32px; height: 32px; margin-top: 6px; border-radius: 16px; border: 1px solid #ECE8E0; background: #FFFFFF; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0"><svg width="16" height="16" viewBox="0 0 24 24" fill="#6B665C"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></button><sc-if value="{{menu_ask}}" hint-placeholder-val="{{ true }}">
+<div role="menu" style="position: absolute; left: 100%; top: 0; margin-left: 8px; z-index: 20; width: 248px; box-sizing: border-box; padding: 6px; background: #FFFFFF; border: 1px solid #ECE8E0; border-radius: 14px; display: flex; flex-direction: column; gap: 2px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)">
+<div role="group" aria-label="React" style="display: flex; justify-content: space-between; padding: 2px 2px 6px; border-bottom: 1px solid #ECE8E0"><button type="button" aria-label="React heart" onClick="{{ react_ask_0 }}" style="width: 36px; height: 36px; border-radius: 18px; border: 0; background: transparent; font-size: 18px; cursor: pointer">❤️</button><button type="button" aria-label="React thumbs up" onClick="{{ react_ask_1 }}" style="width: 36px; height: 36px; border-radius: 18px; border: 0; background: transparent; font-size: 18px; cursor: pointer">👍</button><button type="button" aria-label="React laughing" onClick="{{ react_ask_2 }}" style="width: 36px; height: 36px; border-radius: 18px; border: 0; background: transparent; font-size: 18px; cursor: pointer">😂</button><button type="button" aria-label="React surprised" onClick="{{ react_ask_3 }}" style="width: 36px; height: 36px; border-radius: 18px; border: 0; background: transparent; font-size: 18px; cursor: pointer">😮</button><button type="button" aria-label="React party" onClick="{{ react_ask_4 }}" style="width: 36px; height: 36px; border-radius: 18px; border: 0; background: transparent; font-size: 18px; cursor: pointer">🎉</button><button type="button" aria-label="React eyes" onClick="{{ react_ask_5 }}" style="width: 36px; height: 36px; border-radius: 18px; border: 0; background: transparent; font-size: 18px; cursor: pointer">👀</button></div>
+<button type="button" role="menuitem" onClick="{{ reply_ask }}" style="height: 40px; padding: 0 12px; border: 0; background: transparent; text-align: left; font-size: 15px; color: #1F1D1A; cursor: pointer; border-radius: 8px">Reply</button>
+<button type="button" role="menuitem" onClick="{{ askDelete_ask }}" style="height: 40px; padding: 0 12px; border: 0; background: transparent; text-align: left; font-size: 15px; color: #B3372A; cursor: pointer; border-radius: 8px">Delete</button>
+</div>
+</sc-if></div>
+<div style="display: flex; gap: 6px; padding-left: 2px"><sc-for list="{{ reacts_ask }}" as="r" hint-placeholder-count="2"><span style="{{ r.style }}">{{ r.emoji }} {{ r.count }}</span></sc-for></div>
+
 </div>
 </div>
+</sc-if>
+<sc-if value="{{askDeleted}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; gap: 12px; align-items: flex-start">
+<div style="width: 32px; height: 32px; flex-shrink: 0; border-radius: 16px; background: #2E5B4F; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center">A</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 13px; color: #6B665C"><span style="font-weight: 600; color: #1F1D1A">Aiko</span> · 10:05</div>
+<div style="width: 300px; box-sizing: border-box; padding: 14px 16px; border: 2px dashed #CFC9BD; border-radius: 3px; font-size: 14px; color: #6B665C">You deleted Aiko's note</div>
+</div>
+</div>
+</sc-if>
 </sc-if>
 <sc-if value="{{showSights}}" hint-placeholder-val="{{ true }}">
 <div style="display: flex; gap: 12px; align-items: flex-start">
@@ -149,15 +203,25 @@ button,input{font-family:inherit}
 <sc-if value="{{isAll}}" hint-placeholder-val="{{ true }}">
 <sc-for list="{{ sent }}" as="n" hint-placeholder-count="0">
 <div style="display: flex; flex-direction: column; gap: 18px">
-<div style="display: flex; gap: 12px; align-items: flex-start">
+<sc-if value="{{ n.plain }}" hint-placeholder-val="{{ true }}"><div style="display: flex; gap: 12px; align-items: flex-start">
 <div style="width: 32px; height: 32px; flex-shrink: 0; border-radius: 16px; background: #3F4A6B; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center">P</div>
 <div style="display: flex; flex-direction: column; gap: 8px">
 <div style="font-size: 13px; color: #6B665C"><span style="font-weight: 600; color: #1F1D1A">You</span> · just now</div>
 <div style="width: 300px; box-sizing: border-box; padding: 14px 18px 18px; background: #FFF1A8; border-radius: 2px; font-size: 15px; line-height: 1.45; transform: rotate(0.8deg); display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)">{{ n.text }}</div>
 </div>
+</div></sc-if>
+<sc-if value="{{ n.isReply }}" hint-placeholder-val="{{ false }}"><div style="display: flex; gap: 12px; align-items: flex-start">
+<div style="width: 32px; height: 32px; flex-shrink: 0; border-radius: 16px; background: #3F4A6B; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center">P</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 13px; color: #6B665C"><span style="font-weight: 600; color: #1F1D1A">You</span> · just now</div>
+<div style="display: flex; align-items: flex-start; gap: 0">
+<div style="position: relative; z-index: 1; width: 96px; box-sizing: border-box; padding: 5px 5px 14px; background: #FFFFFF; transform: rotate(-4deg); margin-top: 6px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)"><img src="img/tokyo-fuji.jpg" alt="The entry you replied to" style="display: block; width: 100%; height: 62px; object-fit: cover"></div>
+<div style="position: relative; z-index: 3; width: 14px; height: 38px; margin: 0 -8px 0 -6px; box-sizing: border-box; border: 3px solid #8F8B83; border-radius: 7px; transform: rotate(-10deg)"></div>
+<div style="position: relative; z-index: 2; margin-left: 4px"><div style="width: 270px; box-sizing: border-box; padding: 14px 18px 18px; background: #FFF1A8; border-radius: 2px; font-size: 15px; line-height: 1.45; transform: rotate(0.8deg); display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)"><div style="font-size: 12px; color: #6B5F2A">{{ n.label }}</div><div>{{ n.text }}</div></div></div>
 </div>
-<sc-if value="{{ n.bot }}" hint-placeholder-val="{{ false }}">
-<div style="display: flex; gap: 12px; align-items: flex-start">
+</div>
+</div></sc-if>
+<sc-if value="{{ n.bot }}" hint-placeholder-val="{{ false }}"><div style="display: flex; gap: 12px; align-items: flex-start">
 <div style="width: 32px; height: 32px; flex-shrink: 0; border-radius: 8px; background: #2E5B4F; color: #FFFFFF; font-family: Fraunces, Georgia, serif; font-size: 17px; font-weight: 600; display: flex; align-items: center; justify-content: center">k</div>
 <div style="display: flex; flex-direction: column; gap: 8px">
 <div style="font-size: 13px; color: #6B665C"><span style="font-weight: 600; color: #1F1D1A">Kasa Bot</span> · just now</div>
@@ -165,72 +229,319 @@ button,input{font-family:inherit}
 <div>On it. I'll look through this pile and the web, and post ideas here in a moment.</div>
 </div>
 </div>
-</div>
-</sc-if>
+</div></sc-if>
 </div>
 </sc-for>
 </sc-if>
 </section>
-<footer style="padding: 12px 0 28px; background: #FBFAF7">
+</sc-if>
+<sc-if value="{{ inSearch }}" hint-placeholder-val="{{ false }}">
+<section aria-label="Search results" style="flex-grow: 1; overflow-y: auto; min-height: 0">
+<sc-if value="{{ hasAnswer }}" hint-placeholder-val="{{ false }}">
+<div role="status" style="margin: 18px 0 2px; box-sizing: border-box; padding: 14px 16px; background: #F1F5F2; border: 1px solid #D5E2DB; border-radius: 4px; display: flex; gap: 12px; align-items: flex-start; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)">
+<span style="width: 30px; height: 30px; flex-shrink: 0; border-radius: 8px; background: #2E5B4F; color: #FFFFFF; font-family: Fraunces, Georgia, serif; font-size: 16px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center">k</span>
+<div style="display: flex; flex-direction: column; gap: 4px"><div style="font-size: 12px; color: #24483E; font-weight: 600">{{ answerLabel }}</div><div style="font-size: 15px; line-height: 1.45; color: #1F1D1A">{{ answer }}</div></div>
+</div>
+</sc-if>
+<sc-if value="{{ showGridView }}" hint-placeholder-val="{{ true }}">
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px 18px; align-items: start; padding: 18px 2px 20px"><sc-for list="{{ results }}" as="r" hint-placeholder-count="8">
+<button type="button" onClick="{{ r.open }}" aria-label="{{ r.aria }}" style="display: flex; flex-direction: column; gap: 8px; width: 100%; box-sizing: border-box; border: 0; padding: 0; background: transparent; text-align: left; cursor: pointer; font-family: inherit; color: #1F1D1A">
+<sc-if value="{{ r.isPhoto }}" hint-placeholder-val="{{ true }}"><div style="box-sizing: border-box; padding: 7px 7px 12px; background: #FFFFFF; display: flex; flex-direction: column; gap: 7px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)"><img src="{{ r.img }}" alt="" style="display: block; width: 100%; height: 124px; object-fit: cover"><div style="font-size: 13px; font-weight: 600; line-height: 1.35"><span>{{ r.t1 }}</span><mark style="background: #FFE58A; color: inherit; border-radius: 2px; padding: 0 1px">{{ r.t2 }}</mark><span>{{ r.t3 }}</span></div></div></sc-if>
+<sc-if value="{{ r.isLinkImg }}" hint-placeholder-val="{{ false }}"><div style="box-sizing: border-box; padding: 7px 7px 12px; background: #FFFFFF; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)"><img src="{{ r.img }}" alt="" style="display: block; width: 100%; height: 110px; object-fit: cover"><div style="padding: 0 3px; font-size: 14px; font-weight: 600; line-height: 1.3"><span>{{ r.t1 }}</span><mark style="background: #FFE58A; color: inherit; border-radius: 2px; padding: 0 1px">{{ r.t2 }}</mark><span>{{ r.t3 }}</span></div><div style="padding: 0 3px; font-size: 11px; color: #6B665C">{{ r.sub }}</div></div></sc-if>
+<sc-if value="{{ r.isLink }}" hint-placeholder-val="{{ false }}"><div style="box-sizing: border-box; padding: 14px 14px 16px; background: #FFFFFF; border-radius: 3px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)"><div style="font-size: 11px; color: #6B665C">{{ r.sub }}</div><div style="font-family: Fraunces, Georgia, serif; font-size: 17px; font-weight: 600; line-height: 1.25"><span>{{ r.t1 }}</span><mark style="background: #FFE58A; color: inherit; border-radius: 2px; padding: 0 1px">{{ r.t2 }}</mark><span>{{ r.t3 }}</span></div></div></sc-if>
+<sc-if value="{{ r.isNote }}" hint-placeholder-val="{{ false }}"><div style="box-sizing: border-box; padding: 12px 14px 16px; background: #FFF1A8; border-radius: 2px; font-size: 14px; line-height: 1.45; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)"><span>{{ r.t1 }}</span><mark style="background: #FFE58A; color: inherit; border-radius: 2px; padding: 0 1px">{{ r.t2 }}</mark><span>{{ r.t3 }}</span></div></sc-if>
+<sc-if value="{{ r.isBot }}" hint-placeholder-val="{{ false }}"><div style="box-sizing: border-box; padding: 12px 14px 14px; background: #F1F5F2; border: 1px solid #D5E2DB; border-radius: 4px; font-size: 13px; line-height: 1.45; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)"><div style="display: flex; align-items: center; gap: 6px"><span style="width: 22px; height: 22px; border-radius: 6px; background: #2E5B4F; color: #FFFFFF; font-family: Fraunces, Georgia, serif; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center">k</span><span style="font-weight: 600">Kasa Bot</span></div><div><span>{{ r.t1 }}</span><mark style="background: #FFE58A; color: inherit; border-radius: 2px; padding: 0 1px">{{ r.t2 }}</mark><span>{{ r.t3 }}</span></div></div></sc-if>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 12px; color: #6B665C; padding: 0 2px"><span><span style="font-weight: 600; color: #1F1D1A">{{ r.author }}</span> · {{ r.when }}</span><span style="height: 18px; padding: 0 7px; border-radius: 9px; background: #E6EEEA; color: #24483E; font-size: 10px; font-weight: 600; display: inline-flex; align-items: center">{{ r.cat }}</span></div>
+<sc-if value="{{ r.why }}" hint-placeholder-val="{{ false }}"><div style="font-size: 11px; color: #24483E; padding: 0 2px; display: flex; align-items: center; gap: 4px"><svg width="11" height="11" viewBox="0 0 24 24" fill="#2E5B4F" aria-hidden="true"><path d="M12 2l2.2 6.6L21 11l-6.8 2.4L12 20l-2.2-6.6L3 11l6.8-2.4z"></path></svg>{{ r.why }}</div></sc-if>
+</button>
+</sc-for></div>
+</sc-if>
+<sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}"><div style="padding: 80px 0; text-align: center; display: flex; flex-direction: column; gap: 8px; align-items: center"><div style="font-family: Fraunces, Georgia, serif; font-size: 24px; font-weight: 600">Nothing matches “{{ query }}”</div><div style="font-size: 15px; color: #6B665C">Try another word, or search by a person's name or a category.</div></div></sc-if>
+<sc-if value="{{ showCalView }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 34px; padding: 18px 0 24px">
+<sc-for list="{{ months }}" as="mo" hint-placeholder-count="2">
+<section style="display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; text-align: center; font-family: Fraunces, Georgia, serif; font-size: 24px; font-weight: 600">{{ mo.name }}</h2>
+<div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); row-gap: 8px"><div style="height: 28px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #6B665C">M</div><div style="height: 28px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #6B665C">T</div><div style="height: 28px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #6B665C">W</div><div style="height: 28px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #6B665C">T</div><div style="height: 28px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #6B665C">F</div><div style="height: 28px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #6B665C">S</div><div style="height: 28px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #6B665C">S</div>
+<sc-for list="{{ mo.days }}" as="d" hint-placeholder-count="30"><div style="height: 84px; display: flex; align-items: center; justify-content: center">
+<sc-if value="{{ d.has }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ d.pick }}" aria-label="{{ d.aria }}" style="{{ d.disc }}"><span style="{{ d.numStyle }}">{{ d.num }}</span></button></sc-if>
+<sc-if value="{{ d.plain }}" hint-placeholder-val="{{ true }}"><span style="{{ d.numStyle }}">{{ d.num }}</span></sc-if>
+</div></sc-for>
+</div>
+</section>
+</sc-for>
+</div>
+</sc-if>
+</section>
+</sc-if>
+<footer style="position: relative; padding: 12px 0 28px; background: #FBFAF7">
+<sc-if value="{{ notSearch }}" hint-placeholder-val="{{ true }}">
+<sc-if value="{{replying}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 8px; padding: 6px 8px 6px 14px; background: #F4F2EC; border-radius: 14px; font-size: 14px; color: #3E3A34"><span>Replying to <span style="font-weight: 600">{{ replyLabel }}</span></span><button type="button" aria-label="Cancel reply" onClick="{{ cancelReply }}" style="width: 32px; height: 32px; border-radius: 16px; border: 0; background: transparent; font-size: 18px; cursor: pointer; color: #1F1D1A">×</button></div>
+</sc-if>
+<sc-if value="{{mentionOpen}}" hint-placeholder-val="{{ true }}">
+<ul role="listbox" aria-label="Mention someone" style="position: absolute; left: 56px; bottom: 64px; z-index: 30; margin: 0; padding: 6px; list-style: none; width: 260px; background: #FFFFFF; border: 1px solid #ECE8E0; border-radius: 14px; display: flex; flex-direction: column; gap: 2px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)">
+<sc-for list="{{ mentions }}" as="m" hint-placeholder-count="4"><li role="option" aria-selected="{{ m.sel }}"><button type="button" onClick="{{ m.pick }}" style="{{ m.style }}"><span style="{{ m.avStyle }}">{{ m.initial }}</span>{{ m.name }}</button></li></sc-for>
+</ul>
+</sc-if>
 <div style="display: flex; align-items: center; gap: 10px; background: #FFFFFF; border: 1px solid #ECE8E0; border-radius: 26px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07); padding: 6px 6px 6px 8px">
-<button type="button" aria-label="Attach an image or file" style="width: 44px; height: 44px; border-radius: 22px; border: 0; background: #FBFAF7; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1F1D1A" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></button>
-<input type="text" aria-label="Add to Japan 2027" placeholder="Paste a link, drop a photo, write a note, or ask @kasa" value="{{ draft }}" onChange="{{ onDraft }}" onKeyDown="{{ onKey }}" style="flex-grow: 1; border: 0; outline: none; font-size: 15px; color: #1F1D1A; background: transparent; height: 44px">
+<button type="button" aria-label="Attach photos" style="width: 44px; height: 44px; border-radius: 22px; border: 0; background: #FBFAF7; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1F1D1A" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></button>
+<button type="button" aria-label="Search this pile" onClick="{{ enterSearch }}" style="width: 44px; height: 44px; border-radius: 22px; border: 0; background: #FBFAF7; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1F1D1A" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg></button>
+<input type="text" role="combobox" aria-expanded="{{ mentionExpanded }}" aria-label="{{ composerLabel }}" placeholder="Paste a link, drop a photo, write a note, or ask @kasa" value="{{ draft }}" onChange="{{ onDraft }}" onKeyDown="{{ onKey }}" style="flex-grow: 1; border: 0; outline: none; font-size: 15px; color: #1F1D1A; background: transparent; height: 44px">
 <button type="button" onClick="{{ send }}" style="height: 44px; padding: 0 20px; border-radius: 22px; border: 0; background: #B3372A; color: #FFFFFF; font-size: 15px; font-weight: 600; cursor: pointer">Send</button>
 </div>
+</sc-if>
+<sc-if value="{{ inSearch }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; gap: 10px; background: #FFFFFF; border: 1px solid #ECE8E0; border-radius: 26px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07); padding: 6px 6px 6px 16px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1F1D1A" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+<span style="height: 24px; padding: 0 8px; border-radius: 12px; background: #E6EEEA; color: #24483E; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0"><svg width="10" height="10" viewBox="0 0 24 24" fill="#2E5B4F" aria-hidden="true"><path d="M12 2l2.2 6.6L21 11l-6.8 2.4L12 20l-2.2-6.6L3 11l6.8-2.4z"></path></svg>Kasa</span>
+<input type="search" aria-label="Search Japan 2027" placeholder="Search or ask: hotels, who booked the train, Kyoto food…" value="{{ query }}" onChange="{{ onQuery }}" onKeyDown="{{ onQueryKey }}" style="flex-grow: 1; border: 0; outline: none; font-size: 15px; color: #1F1D1A; background: transparent; height: 44px">
+<button type="button" onClick="{{ exitSearch }}" style="height: 44px; padding: 0 20px; border-radius: 22px; border: 1px solid #D6D0C3; background: #FFFFFF; color: #1F1D1A; font-size: 15px; font-weight: 600; cursor: pointer">Done</button>
+</div>
+</sc-if>
 </footer>
 </main>
+<sc-if value="{{confirming}}" hint-placeholder-val="{{ true }}">
+<div style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 50; background: rgba(31,29,26,0.35); display: flex; align-items: center; justify-content: center">
+<div role="dialog" aria-modal="true" aria-labelledby="del-title" style="width: 380px; box-sizing: border-box; padding: 24px; background: #FFFFFF; border-radius: 16px; display: flex; flex-direction: column; gap: 20px; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 8px 18px rgba(31,29,26,0.07)">
+<h2 id="del-title" style="margin: 0; font-family: Fraunces, Georgia, serif; font-size: 24px; font-weight: 600">Delete this note?</h2>
+<div style="display: flex; justify-content: flex-end; gap: 8px"><button type="button" onClick="{{ cancelDelete }}" style="height: 44px; padding: 0 18px; border-radius: 22px; border: 1px solid #D6D0C3; background: #FFFFFF; font-size: 15px; cursor: pointer">Cancel</button><button type="button" onClick="{{ doDelete }}" style="height: 44px; padding: 0 18px; border-radius: 22px; border: 0; background: #B3372A; color: #FFFFFF; font-size: 15px; font-weight: 600; cursor: pointer">Delete</button></div>
+</div></div>
+</sc-if>
+<sc-if value="{{viewerOpen}}" hint-placeholder-val="{{ true }}">
+<div role="dialog" aria-modal="true" aria-label="{{ viewerLabel }}" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 60; background: rgba(20,19,17,0.92); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px">
+<button type="button" aria-label="Close" onClick="{{ closeViewer }}" style="position: absolute; right: 28px; top: 24px; width: 44px; height: 44px; border-radius: 22px; border: 0; background: rgba(255,255,255,0.12); color: #FFFFFF; font-size: 22px; cursor: pointer">×</button>
+<img src="{{ viewerSrc }}" alt="{{ viewerAlt }}" style="display: block; max-width: 1000px; max-height: 900px; width: 1000px; height: 680px; object-fit: contain">
+<div style="display: flex; align-items: center; gap: 16px; color: #FFFFFF; font-size: 15px">
+<button type="button" aria-label="Previous photo" onClick="{{ prevPhoto }}" style="height: 44px; padding: 0 18px; border-radius: 22px; border: 1px solid rgba(255,255,255,0.3); background: transparent; color: #FFFFFF; font-size: 15px; cursor: pointer">‹ Previous</button>
+<span>{{ viewerLabel }}</span>
+<button type="button" aria-label="Next photo" onClick="{{ nextPhoto }}" style="height: 44px; padding: 0 18px; border-radius: 22px; border: 1px solid rgba(255,255,255,0.3); background: transparent; color: #FFFFFF; font-size: 15px; cursor: pointer">Next ›</button>
+</div></div>
+</sc-if>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1400}}'>
 class Component extends DCLogic {
   constructor(props) {
     super(props);
-    this.state = { filter: 'All', dismissed: false, suggested: false, added: false, draft: '', sent: [] };
+    this.state = { filter: 'All', dismissed: false, suggested: false, added: false, draft: '', sent: [],
+      menuOpen: false, muted: false, openActions: '', replyTo: null, askDeleted: false, confirming: false,
+      viewer: -1, mentionIdx: 0,
+      reacts: { photos: { '❤️': 2, '👍': 1 }, ask: {} }, mine: { photos: {}, ask: {} },
+      search: false, query: '', view: 'grid', day: '' };
+  }
+  mentionQuery() {
+    const m = /(^|\s)@(\w*)$/.exec(this.state.draft || '');
+    return m ? m[2].toLowerCase() : null;
+  }
+  mentionOptions() {
+    const q = this.mentionQuery();
+    if (q === null) return [];
+    const all = [{ name: 'Aiko', insert: '@Aiko ', c: '#2E5B4F', bot: false }, { name: 'Mika', insert: '@Mika ', c: '#B3372A', bot: false }, { name: 'Jonas', insert: '@Jonas ', c: '#6B5B3E', bot: false }, { name: 'Kasa Bot', insert: '@kasa ', c: '#2E5B4F', bot: true }];
+    return all.filter((o) => o.name.toLowerCase().indexOf(q) === 0 || (o.bot && 'kasa'.indexOf(q) === 0));
+  }
+  pick(o) {
+    const d = this.state.draft.replace(/@(\w*)$/, o.insert);
+    this.setState({ draft: d, mentionIdx: 0 });
   }
   send() {
     const text = (this.state.draft || '').trim();
     if (!text) return;
     const bot = text.toLowerCase().indexOf('@kasa') !== -1;
-    this.setState({ sent: this.state.sent.concat([{ text: text, bot: bot }]), draft: '', filter: 'All' });
+    const r = this.state.replyTo;
+    this.setState({ sent: this.state.sent.concat([{ text: text, bot: bot, isReply: !!r, plain: !r, label: r ? 'Re: ' + r : '' }]), draft: '', filter: 'All', replyTo: null });
+  }
+  toggleReact(key, emoji) {
+    const reacts = JSON.parse(JSON.stringify(this.state.reacts));
+    const mine = JSON.parse(JSON.stringify(this.state.mine));
+    const on = !mine[key][emoji];
+    mine[key][emoji] = on;
+    reacts[key][emoji] = (reacts[key][emoji] || 0) + (on ? 1 : -1);
+    if (reacts[key][emoji] <= 0) delete reacts[key][emoji];
+    this.setState({ reacts: reacts, mine: mine, openActions: '' });
+  }
+  reactList(key) {
+    const r = this.state.reacts[key];
+    return Object.keys(r).map((e) => ({ emoji: e, count: r[e],
+      style: 'height: 26px; padding: 0 9px; border-radius: 13px; font-size: 13px; display: inline-flex; align-items: center; gap: 2px; ' + (this.state.mine[key][e] ? 'background: #F9E7E4; border: 1px solid #E8B9B2; color: #8E2A20; font-weight: 600' : 'background: #FFFFFF; border: 1px solid #ECE8E0; color: #3E3A34') }));
   }
   renderVals() {
-    const f = this.state.filter;
+    const s = this.state;
+    const f = s.filter;
     const on = 'height: 36px; padding: 0 14px; border-radius: 18px; background: #1F1D1A; color: #FFFFFF; border: 1px solid #1F1D1A; font-size: 14px; font-weight: 500; cursor: pointer';
     const off = 'height: 36px; padding: 0 14px; border-radius: 18px; background: #FFFFFF; color: #1F1D1A; border: 1px solid #E2DDD2; font-size: 14px; font-weight: 500; cursor: pointer';
-    const extra = this.state.added ? 1 : 0;
+    const extra = s.added ? 1 : 0;
+    const askN = s.askDeleted ? 0 : 1;
     const defs = [
-      { label: 'All', count: 8 + this.state.sent.length + extra },
-      { label: 'Sights', count: 3 + extra },
+      { label: 'All', count: 8 + s.sent.length + extra - (s.askDeleted ? 1 : 0) },
+      { label: 'Sights', count: 2 + askN + extra },
       { label: 'Tokyo', count: 2 },
-      { label: 'Plans', count: this.state.dismissed ? 1 : 2 }
+      { label: 'Plans', count: s.dismissed ? 1 : 2 }
     ];
-    const chips = defs.map((d) => ({
-      label: d.label, count: d.count,
-      pressed: f === d.label ? 'true' : 'false',
-      style: f === d.label ? on : off,
-      pick: () => this.setState({ filter: d.label })
-    }));
+    const chips = defs.map((d) => ({ label: d.label, count: d.count, pressed: f === d.label ? 'true' : 'false', style: f === d.label ? on : off, pick: () => this.setState({ filter: d.label }) }));
     const all = f === 'All';
-    return {
-      chips: chips,
-      isAll: all,
-      showPlans: all || f === 'Plans',
-      showSights: all || f === 'Sights',
-      showTokyo: all || f === 'Tokyo',
-      showPro: (all || f === 'Plans') && !this.state.dismissed,
-      proAsk: !this.state.suggested,
-      suggested: this.state.suggested,
-      added: this.state.added,
-      notAdded: !this.state.added,
-      suggest: () => this.setState({ suggested: true }),
-      dismiss: () => this.setState({ dismissed: true }),
-      addToPile: () => this.setState({ added: true }),
-      draft: this.state.draft,
-      sent: this.state.sent,
-      onDraft: (e) => this.setState({ draft: e.target.value }),
-      onKey: (e) => { if (e.key === 'Enter') this.send(); },
-      send: () => this.send()
+    const opts = this.mentionOptions();
+    const idx = Math.min(s.mentionIdx, Math.max(opts.length - 1, 0));
+    const photos = [
+      { src: 'img/tokyo-fuji.jpg', alt: 'Tokyo Tower in front of Mount Fuji at sunset' },
+      { src: 'img/higashiyama.jpg', alt: 'A lane in Higashiyama under cherry blossoms' },
+      { src: 'img/kiyomizu.jpg', alt: 'Kiyomizu-dera pagoda at dusk' }
+    ];
+    const v = s.viewer;
+    const vals = {
+      chips: chips, isAll: all,
+      showPlans: all || f === 'Plans', showSights: all || f === 'Sights', showTokyo: all || f === 'Tokyo',
+      showPro: (all || f === 'Plans') && !s.dismissed, proAsk: !s.suggested, suggested: s.suggested,
+      added: s.added, notAdded: !s.added,
+      suggest: () => this.setState({ suggested: true }), dismiss: () => this.setState({ dismissed: true }), addToPile: () => this.setState({ added: true }),
+      draft: s.draft, sent: s.sent,
+      onDraft: (e) => this.setState({ draft: e.target.value, mentionIdx: 0 }),
+      onKey: (e) => {
+        if (opts.length) {
+          if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); this.setState({ mentionIdx: (idx + (e.key === 'ArrowDown' ? 1 : opts.length - 1)) % opts.length }); return; }
+          if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); this.pick(opts[idx]); return; }
+          if (e.key === 'Escape') { this.setState({ draft: s.draft + ' ' }); return; }
+        }
+        if (e.key === 'Escape' && s.replyTo) { this.setState({ replyTo: null }); return; }
+        if (e.key === 'Enter') this.send();
+      },
+      send: () => this.send(),
+      mentionOpen: opts.length > 0, mentionExpanded: opts.length > 0 ? 'true' : 'false',
+      mentions: opts.map((o, i) => ({ name: o.name, initial: o.bot ? 'k' : o.name[0], sel: i === idx ? 'true' : 'false', pick: () => this.pick(o),
+        style: 'display: flex; align-items: center; gap: 10px; width: 100%; height: 44px; padding: 0 10px; border: 0; border-radius: 8px; font-size: 15px; color: #1F1D1A; cursor: pointer; text-align: left; background: ' + (i === idx ? '#F4F2EC' : 'transparent'),
+        avStyle: 'width: 28px; height: 28px; border-radius: ' + (o.bot ? '7px' : '14px') + '; background: ' + o.c + '; color: #FFFFFF; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center' })),
+      replying: !!s.replyTo, replyLabel: s.replyTo || '', cancelReply: () => this.setState({ replyTo: null }),
+      composerLabel: s.replyTo ? 'Reply to ' + s.replyTo : 'Add to Japan 2027',
+      menuOpen: s.menuOpen, menuExpanded: s.menuOpen ? 'true' : 'false', menuBtnStyle: 'width: 44px; height: 44px; border-radius: 22px; border: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; background: ' + (s.menuOpen ? '#F4F2EC' : 'transparent'),
+      toggleMenu: () => this.setState({ menuOpen: !s.menuOpen, openActions: '' }),
+      toggleMute: () => this.setState({ muted: !s.muted, menuOpen: false }), muteLabel: s.muted ? 'Unmute emails' : 'Mute emails',
+      askAlive: !s.askDeleted, askDeleted: s.askDeleted,
+      confirming: s.confirming, cancelDelete: () => this.setState({ confirming: false }), doDelete: () => this.setState({ confirming: false, askDeleted: true }),
+      viewerOpen: v >= 0, viewerSrc: v >= 0 ? photos[v].src : '', viewerAlt: v >= 0 ? photos[v].alt : '', viewerLabel: 'Photo ' + (v + 1) + ' of 3',
+      openViewer: () => this.setState({ viewer: 0 }), closeViewer: () => this.setState({ viewer: -1 }),
+      prevPhoto: () => this.setState({ viewer: (v + 2) % 3 }), nextPhoto: () => this.setState({ viewer: (v + 1) % 3 }),
+      reacts_photos: this.reactList('photos'), reacts_ask: this.reactList('ask')
     };
+    const labels = { photos: "Jonas's photos", ask: "Aiko's note" };
+    ['photos', 'ask'].forEach((k) => {
+      vals['menu_' + k] = s.openActions === k;
+      vals['act_' + k] = () => this.setState({ openActions: s.openActions === k ? '' : k, menuOpen: false });
+      vals['reply_' + k] = () => this.setState({ replyTo: labels[k], openActions: '' });
+      vals['askDelete_' + k] = () => this.setState({ confirming: k === 'ask', openActions: '' });
+      ['❤️', '👍', '😂', '😮', '🎉', '👀'].forEach((e, i) => { vals['react_' + k + '_' + i] = () => this.toggleReact(k, e); });
+    });
+    const E = [
+      { id: 'e1', type: 'note', author: 'Aiko', date: '2026-09-27', text: "Starting a pile for the trip. Drop anything you find, we'll plan the days by Friday.", cat: 'Plans', c: ['plan'] },
+      { id: 'e2', type: 'link', author: 'Mika', date: '2026-09-27', text: 'Kinkaku-ji', sub: 'Link · kyoto-guide.jp', img: 'img/kinkakuji.jpg', cat: 'Sights', c: ['sight', 'temple'] },
+      { id: 'e3', type: 'link', author: 'Mika', date: '2026-09-27', text: 'Kiyomizu-dera', sub: 'Link · kyoto-guide.jp', img: 'img/kiyomizu.jpg', cat: 'Sights', c: ['sight', 'temple', 'sunset'] },
+      { id: 'e4', type: 'link', author: 'Mika', date: '2026-09-27', text: 'Osaka Castle', sub: 'Link · osaka-guide.jp', img: 'img/osaka-castle.jpg', cat: 'Sights', c: ['sight', 'daytrip'] },
+      { id: 'e5', type: 'photo', author: 'Jonas', date: '2026-09-28', text: 'Tower view, Fuji on a clear day', img: 'img/tokyo-fuji.jpg', cat: 'Tokyo', c: ['sight', 'view', 'sunset'] },
+      { id: 'e6', type: 'note', author: 'Mika', date: '2026-09-28', text: "Yes! Let's make it our first evening in Tokyo.", cat: 'Tokyo', c: ['plan'] },
+      { id: 'e7', type: 'note', author: 'Aiko', date: '2026-09-28', text: '@kasa what else is near Kiyomizu-dera for the same evening?', cat: 'Sights', c: ['sight'] },
+      { id: 'e8', type: 'bot', author: 'Kasa Bot', date: '2026-09-28', text: 'Walk down through Higashiyama afterwards. Sannenzaka and Ninenzaka are the old stone lanes just below the temple.', cat: 'Sights', c: ['sight', 'walk'] },
+      { id: 'e9', type: 'link', author: 'Aiko', date: '2026-09-12', text: 'Machiya townhouse, Nishijin', sub: 'Link · rental-site.com · whole home, 4 guests', cat: 'Stays', c: ['stay', 'rental'] },
+      { id: 'e10', type: 'note', author: 'Mika', date: '2026-09-12', text: 'Ryokan with a private onsen??', cat: 'Stays', c: ['stay', 'ryokan', 'onsen'] },
+      { id: 'e11', type: 'photo', author: 'Mika', date: '2026-09-06', text: 'This street, in Higashiyama', img: 'img/higashiyama.jpg', cat: 'Sights', c: ['sight', 'walk'] },
+      { id: 'e12', type: 'link', author: 'Jonas', date: '2026-09-16', text: 'Ramen place in Pontocho', sub: 'Link · food-guide.jp', cat: 'Food', c: ['food', 'dinner'] },
+      { id: 'e13', type: 'note', author: 'Jonas', date: '2026-09-18', text: 'Booked the Shinkansen, 9:03 from Tokyo', cat: 'Getting around', c: ['transport', 'train', 'booking'] },
+      { id: 'e14', type: 'note', author: 'Aiko', date: '2026-09-24', text: 'Who has the JR pass? Do we need one?', cat: 'Getting around', c: ['transport', 'train'] },
+      { id: 'e15', type: 'link', author: 'Mika', date: '2026-09-25', text: 'Sushi breakfast at the market', sub: 'Link · blog.example', cat: 'Food', c: ['food', 'breakfast'] },
+      { id: 'e16', type: 'note', author: 'Sam', date: '2026-08-23', text: 'Last night in Tokyo, somewhere high up', cat: 'Tokyo', c: ['plan', 'view'] },
+      { id: 'e17', type: 'link', author: 'Aiko', date: '2026-08-11', text: 'JR Pass: is it worth it?', sub: 'Link · rail-guide.jp', cat: 'Getting around', c: ['transport', 'train'] }
+      ,{ id: 'e18', type: 'link', author: 'Jonas', date: '2026-09-18', text: 'Hotel near Kyoto Station, twin rooms', sub: 'Link · booking-site.com · 3 nights', cat: 'Stays', c: ['stay', 'hotel', 'booking'] }
+      ,{ id: 'e19', type: 'link', author: 'Sam', date: '2026-09-24', text: 'Loft flat in Shinjuku', sub: 'Link · rental-site.com · entire place, 2 bedrooms', cat: 'Stays', c: ['stay', 'rental'] }
+      ,{ id: 'e20', type: 'link', author: 'Mika', date: '2026-09-25', text: 'Garden-view ryokan in Gion', sub: 'Link · ryokan-site.jp · private onsen', img: 'img/kiyomizu.jpg', cat: 'Stays', c: ['stay', 'ryokan', 'onsen', 'booking'] }
+    ];
+    const MON = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const MS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const TODAY = '2026-09-28';
+    const fmt = (d) => { const p = d.split('-'); return (d === TODAY ? 'Today' : d === '2026-09-27' ? 'Yesterday' : parseInt(p[2], 10) + ' ' + MS[parseInt(p[1], 10) - 1]); };
+    const q = (s.query || '').trim().toLowerCase();
+    const SYN = {
+      stay: ['hotel', 'hotels', 'airbnb', 'rental', 'flat', 'apartment', 'stay', 'stays', 'sleep', 'accommodation', 'ryokan', 'hostel', 'room', 'rooms', 'lodging', 'where to stay', 'booking'],
+      food: ['food', 'eat', 'restaurant', 'restaurants', 'dinner', 'lunch', 'breakfast', 'ramen', 'sushi'],
+      transport: ['train', 'trains', 'transport', 'shinkansen', 'rail', 'jr', 'getting around', 'tickets'],
+      sight: ['sight', 'sights', 'temple', 'temples', 'things to do', 'see', 'visit', 'shrine', 'castle'],
+      onsen: ['onsen', 'bath', 'hot spring', 'spa'],
+      sunset: ['sunset', 'evening', 'golden hour']
+    };
+    const LABEL = { stay: 'places to stay', food: 'places to eat', transport: 'getting around', sight: 'sights', onsen: 'onsen and baths', sunset: 'sunset spots' };
+    const concepts = Object.keys(SYN).filter((k) => q && SYN[k].some((w) => q === w || q.indexOf(w) !== -1 || (w.indexOf(q) === 0 && q.length >= 3)));
+    const literal = (e) => e.text.toLowerCase().indexOf(q) !== -1 || e.author.toLowerCase().indexOf(q) !== -1 || e.cat.toLowerCase().indexOf(q) !== -1 || (e.sub || '').toLowerCase().indexOf(q) !== -1;
+    const related = (e) => concepts.some((k) => (e.c || []).indexOf(k) !== -1);
+    const matches = E.filter((e) => !q || literal(e) || related(e));
+    const shown = matches.filter((e) => !s.day || e.date === s.day).sort((a, b) => (q && literal(a) !== literal(b) ? (literal(a) ? -1 : 1) : a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+    const split = (t) => { const i = q ? t.toLowerCase().indexOf(q) : -1; return i < 0 ? [t, '', ''] : [t.slice(0, i), t.slice(i, i + q.length), t.slice(i + q.length)]; };
+    vals.inSearch = s.search; vals.notSearch = !s.search;
+    vals.enterSearch = () => this.setState({ search: true, menuOpen: false, openActions: '', replyTo: null });
+    vals.exitSearch = () => this.setState({ search: false, query: '', day: '', view: 'grid' });
+    vals.query = s.query;
+    vals.onQuery = (e) => this.setState({ query: e.target.value });
+    vals.onQueryKey = (e) => { if (e.key === 'Escape') this.setState({ search: false, query: '', day: '', view: 'grid' }); };
+    const n = shown.length;
+    vals.resultLabel = (q ? n + (n === 1 ? ' match' : ' matches') : n + (n === 1 ? ' thing' : ' things') + ' in this pile');
+    const ANS = {
+      stay: () => { const st = shown.filter((e) => (e.c || []).indexOf('stay') !== -1); const h = st.filter((e) => (e.c || []).indexOf('hotel') !== -1).length, r = st.filter((e) => (e.c || []).indexOf('rental') !== -1).length, y = st.filter((e) => (e.c || []).indexOf('ryokan') !== -1).length;
+        return st.length + ' places to stay in this pile: ' + h + ' hotel' + (h === 1 ? '' : 's') + ', ' + r + ' rental' + (r === 1 ? '' : 's') + ', and ' + y + ' ryokan mention' + (y === 1 ? '' : 's') + '. Only the Gion ryokan has the private onsen Mika asked about.'; },
+      food: () => 'Two places to eat so far, both in Kyoto. Nobody has picked anything for Tokyo yet.',
+      transport: () => 'Jonas booked the 9:03 Shinkansen. The JR pass question from Aiko is still open.',
+      sight: () => 'Five sights across Kyoto, Osaka, and Tokyo. Kinkaku-ji and Kiyomizu-dera are on opposite sides of Kyoto.',
+      onsen: () => 'Mika wants a private onsen. Only the Gion ryokan in this pile mentions one.',
+      sunset: () => 'Two sunset spots: Kiyomizu-dera and the Tokyo Tower view.'
+    };
+    vals.hasAnswer = s.view === 'grid' && concepts.length > 0 && n > 0;
+    vals.answer = concepts.length ? ANS[concepts[0]]() : '';
+    vals.answerLabel = concepts.length ? 'Kasa understood “' + s.query.trim() + '” as ' + concepts.map((k) => LABEL[k]).join(' and ') : '';
+    vals.hasDay = !!s.day;
+    vals.dayLabel = s.day ? fmt(s.day) : '';
+    vals.dayClearLabel = 'Show all days';
+    vals.clearDay = () => this.setState({ day: '' });
+    const segOn = 'height: 34px; padding: 0 14px; border-radius: 17px; border: 0; background: #FFFFFF; color: #1F1D1A; font-size: 14px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 2px rgba(31,29,26,0.12)';
+    const segOff = 'height: 34px; padding: 0 14px; border-radius: 17px; border: 0; background: transparent; color: #6B665C; font-size: 14px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px';
+    const isGrid = s.view === 'grid';
+    vals.gridPressed = isGrid ? 'true' : 'false'; vals.calPressed = isGrid ? 'false' : 'true';
+    vals.gridBtnStyle = isGrid ? segOn : segOff; vals.calBtnStyle = isGrid ? segOff : segOn;
+    vals.showGrid = () => this.setState({ view: 'grid' });
+    vals.showCal = () => this.setState({ view: 'calendar', day: '' });
+    vals.showGridView = isGrid && n > 0; vals.noResults = isGrid && n === 0 && !!q; vals.showCalView = !isGrid;
+    vals.results = shown.map((e) => { const t = split(e.text); return {
+      t1: t[0], t2: t[1], t3: t[2], author: e.author, when: fmt(e.date), cat: e.cat, sub: e.sub || '', img: e.img || '',
+      isPhoto: e.type === 'photo', isLinkImg: e.type === 'link' && !!e.img, isLink: e.type === 'link' && !e.img, isNote: e.type === 'note', isBot: e.type === 'bot',
+      why: q && !literal(e) && related(e) ? 'Related: ' + LABEL[concepts.find((k) => (e.c || []).indexOf(k) !== -1)] : '',
+      aria: e.author + ', ' + fmt(e.date) + ': ' + e.text + '. Show in chat',
+      open: () => this.setState({ search: false, query: '', day: '', view: 'grid' }) }; });
+    const byDay = {};
+    matches.forEach((e) => { (byDay[e.date] = byDay[e.date] || []).push(e); });
+    const month = (y, m) => {
+      const first = new Date(Date.UTC(y, m, 1)).getUTCDay();
+      const lead = (first + 6) % 7;
+      const count = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+      const days = [];
+      for (let i = 0; i < lead; i++) days.push({ num: '', has: false, plain: true, numStyle: 'font-size: 0' });
+      for (let d = 1; d <= count; d++) {
+        const key = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+        const list = byDay[key] || [];
+        const future = key > TODAY, today = key === TODAY;
+        const has = list.length > 0;
+        const withImg = list.find((e) => e.img);
+        const first2 = list[0];
+        let bg = '#FFFFFF';
+        if (withImg) bg = 'linear-gradient(rgba(20,19,17,0.28), rgba(20,19,17,0.28)), url(' + withImg.img + ') center / cover';
+        else if (first2 && first2.type === 'note') bg = '#FFF1A8';
+        else if (first2 && first2.type === 'bot') bg = '#F1F5F2';
+        const light = !!withImg;
+        days.push({
+          num: String(d), has: has, plain: !has,
+          disc: 'position: relative; width: 76px; height: 76px; border-radius: 38px; border: ' + (withImg ? '0' : '1px solid #E2DDD2') + '; background: ' + bg + '; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(31,29,26,0.10), 0 6px 14px rgba(31,29,26,0.08)',
+          numStyle: 'font-size: 28px; font-weight: ' + (has || today ? '600' : '400') + '; color: ' + (today ? '#B3372A' : light ? '#FFFFFF' : future ? '#B5B0A6' : '#1F1D1A') + (light ? '; text-shadow: 0 1px 3px rgba(0,0,0,0.45)' : ''),
+          aria: d + ' ' + MON[m] + ': ' + list.length + (list.length === 1 ? ' thing' : ' things') + '. Show them',
+          pick: () => this.setState({ view: 'grid', day: key })
+        });
+      }
+      return { name: MON[m] + ' ' + y, days: days };
+    };
+    vals.months = [month(2026, 7), month(2026, 8)];
+    return vals;
   }
 }
 </script>
