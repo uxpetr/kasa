@@ -284,7 +284,7 @@ Depends on: F-01, OD-02
 - [x] `.env.example` with every variable documented; secrets never committed.
 - [x] Staging environment deploys automatically from main (Vercel project `kasa`, D-121).
 
-### F-09 · Staging data services · `todo`
+### F-09 · Staging data services · `in-progress` · branch `f-09-neon`
 Depends on: F-03, F-04
 - [ ] Neon Postgres in an EU region attached to the Vercel project; migrations run on deploy.
 - [ ] EU S3-compatible bucket for staging media (pick R2 EU or AWS `eu-central-1`, D-111); credentials only in Vercel env settings.
