@@ -55,7 +55,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
 **Next up:** staging (F-09, F-10, F-12), F-13 (Resend), and F-14's dashboard (once staging sends events) before the pilot starts. F-11 is unblocked.
-**Blocked:** P-16, on OD-14 (privacy note). In phase 2: V-03b on OD-15 (search answer card, free or paid), V-12 on OD-16 (which promo page), and V-03a's search placeholder on OD-17. Real emails, including feedback emails, need F-13 (a Resend account and a sender domain from Petr).
+**Blocked:** P-16, on OD-14 (privacy note). In phase 2: V-12 on OD-16 (which promo page), and V-03a's search placeholder on OD-17. Real emails, including feedback emails, need F-13 (a Resend account and a sender domain from Petr).
 
 ---
 
@@ -184,6 +184,7 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-185** · 2026-09-28 · **Search mode in the project chat.** Search is a core feature, entered from a magnifier button next to + in the composer or a "Search" item in the project menu (supersedes D-148's "Search (coming soon)"). In search mode the composer becomes the search field with "Done", and Escape also leaves. The category row becomes the result count ("5 matches", or "17 things in this pile" for an empty search) and the Grid / Calendar switch. The grid is four columns on desktop, newest first: each result is the same object as in the feed but untilted, matched words are highlighted, and under it goes author · date · category stamp. An empty search shows everything in the pile. Tapping a result leaves search and scrolls the chat to that entry. No results: "Nothing matches “{query}”" with "Try another word, or search by a person's name or a category." · Petr, design log DL-001
 - **D-186** · 2026-09-28 · **Search calendar.** Results switch between Grid (the default) and Calendar. The calendar shows month grids starting on Monday, in date order, and follows the current search: only days with matches light up. A matching day is a round disc showing a photo from that day, darkened slightly so the number stays readable, or, with no photo, the paper colour of its first entry (yellow for notes, pine tint for Kasa Bot, white for links). Today's number is in the accent colour, and future days are muted. Tapping a day opens the grid filtered to it, with a removable chip such as "12 Sep ×" next to the count. · Petr, design log DL-002
 - **D-187** · 2026-09-28 · **AI-powered search.**
+- **D-188** · 2026-09-28 · **Search by plan** (resolves OD-15). Free piles get basic search: words, tolerant of typos and partial words (fuzzy), with the grid and calendar (V-03a). AI search, meaning-based results and the answer card (D-187, V-03b), comes with the paid plan. Following D-009, it's the pile that's paid, not the person: if the pile's owner has the owner plan or a project pass for it, every member gets AI search there, free members included. A paying owner's personal piles get it too. · Petr, OD-15
   - Search matches by meaning as well as by words. "hotel", "airbnb", "where to stay", or "sleep" find every place to stay, and the same goes for food, getting around, sights, and so on. People can also ask questions ("who booked the train?").
   - Exact matches come first, then related ones, each with "✦ Related: {concept}" under it.
   - When Kasa recognises the intent, a Kasa Bot card above the results says how it read the search ("Kasa understood 'Hotel' as places to stay") and gives a one- or two-sentence answer drawn only from this pile.
@@ -212,7 +213,7 @@ Questions only Petr can answer. Agents add to this list and don't guess. When on
 - [x] **OD-13** (resolved by D-167) Email wording for P-12, provided by Petr: subject and body for the reply and `@mention` emails (including the batched form, several in one email), the unsubscribe confirmation page, and the "Mute emails" state in the app if it needs more than the toggle label. Blocks P-12.
 - [ ] **OD-14** Privacy note for the pilot: what Kasa tells pilot users about the data it keeps and the analytics it sends to PostHog (D-179), and where it shows. Blocks P-16, not the P-13 build.
 - [ ] **OD-09** Exact prices for the owner plan and project pass, and project pass duration. Blocks V-10.
-- [ ] **OD-15** Is the search answer card (D-187) part of the free plan, or only for paid owners? It extends OD-05, since it uses the same model costs as Kasa Bot. Blocks V-03b. (From design log DL-003.)
+- [x] **OD-15** (resolved by D-188) Is the search answer card (D-187) part of the free plan, or only for paid owners? It extends OD-05, since it uses the same model costs as Kasa Bot. Blocks V-03b. (From design log DL-003.)
 - [ ] **OD-16** Which promo page ships in V-12: the original (`design/prototype/Promo.dc.html`) or the scroll story (`Promo2.dc.html`)? Blocks V-12. (From design log DL-000.)
 - [ ] **OD-17** The search field's placeholder before AI search exists. D-187's "Search or ask: hotels, who booked the train, Kyoto food…" promises questions and meaning, which V-03a can't answer yet. Options: use D-187's text from the start; a plain one such as "Search this pile"; or something else. Blocks V-03a's search field only.
 
@@ -483,7 +484,7 @@ Split into sub-tasks as you go:
 Depends on: P-03, P-07; OD-17 for the field's placeholder. Designs: `design/prototype/Main.dc.html` (search mode) and the search states in `States.dc.html`.
 - [ ] The magnifier next to + in the composer and a "Search" item in the project menu (replacing "Search (coming soon)", D-148) enter search mode. The composer becomes the search field with "Done", and Escape also leaves (D-185).
 - [ ] The category row becomes the result count ("5 matches", or "17 things in this pile" for an empty search) and a Grid / Calendar switch; an empty search shows the whole pile.
-- [ ] Words match entry text, comments, link page titles and sites, and author names, so searching a site such as booking.com finds its links. Categories become searchable once V-05 assigns them. Text drawn with the text tool comes with L-06 (D-158).
+- [ ] Words match entry text, comments, link page titles and sites, and author names, so searching a site such as booking.com finds its links. Matching is fuzzy: typos and partial words still find results (D-188). This is the search every pile gets, free or paid. Categories become searchable once V-05 assigns them. Text drawn with the text tool comes with L-06 (D-158).
 - [ ] Grid: newest first, four columns on desktop and fewer on narrow screens. Each result is the feed object untilted, with matched words highlighted and author · date · category stamp under it (the stamp once V-05 exists).
 - [ ] Tapping a result leaves search and scrolls the chat to that entry, loading older pages if needed (as replies do, P-07).
 - [ ] No results: "Nothing matches “{query}”" with "Try another word, or search by a person's name or a category."
@@ -491,15 +492,15 @@ Depends on: P-03, P-07; OD-17 for the field's placeholder. Designs: `design/prot
 - [ ] Members only, and only the pile it's in: tested as a security requirement, like Kasa Bot.
 - [ ] Emits `search_used` (`projectId`, `view`: grid or calendar; never the query text). No horizontal scroll at 390px; axe passes in search mode.
 
-### V-03b · AI-powered search: meaning-based results and the answer card · `blocked` (OD-15)
-Depends on: V-03a, V-04 (model access), OD-15. Designs: `Main.dc.html` (try "Hotel", "airbnb", "dinner", "train", "onsen") and the search states in `States.dc.html`.
+### V-03b · AI-powered search: meaning-based results and the answer card · `todo`
+Depends on: V-03a, V-04 (model access), V-10 (knowing which piles are paid, D-188). Designs: `Main.dc.html` (try "Hotel", "airbnb", "dinner", "train", "onsen") and the search states in `States.dc.html`.
 - [ ] Search matches by meaning as well as words: "hotel", "airbnb", "where to stay", or "sleep" find booking and rental links, ryokans, and notes about them; the same for food, getting around, sights, and more (D-187).
 - [ ] Exact matches first, then related ones, each with "✦ Related: {concept}" under it.
 - [ ] A Kasa Bot answer card above the results when Kasa recognises the intent: "Kasa understood '{query}' as {concept}" plus a one- or two-sentence answer from this pile only. Questions such as "who booked the train?" work too.
 - [ ] The field shows the "✦ Kasa" tag and the placeholder "Search or ask: hotels, who booked the train, Kyoto food…".
 - [ ] Never waits on the model: results render first and the card may arrive later; if the model is slow or down, plain-word search from V-03a still works, without related results or the card.
 - [ ] Reads only its own pile, and the answer never mentions anything outside it: tested as a security requirement.
-- [ ] The answer card follows OD-15 (free or paid owners only), and model spend counts toward V-04's guardrails.
+- [ ] Only in paid piles (D-188): the owner has the owner plan or a project pass for the pile, and then every member gets it. Free piles keep V-03a's search, with no related results, answer card, "✦ Kasa" tag, or question placeholder. Model spend counts toward V-04's guardrails.
 
 ### V-04 · Kasa Bot: tagged answers · `todo`
 Depends on: OD-05
@@ -621,3 +622,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-27 · Fixes from review: invite accept re-checks the link under row locks, a failed upload enqueue rolls back to pending, retried media jobs still delete geotagged raw files, realtime holds `changed` until membership is confirmed and re-checks members after a LISTEN reconnect, viewers can delete their own entries in the UI, `@Jo` no longer matches `@John`, and unfurl blocks `fec0::/10`. · [#21](https://github.com/uxpetr/kasa/pull/21)
 - 2026-09-27 · F-14 (partial) · `PILOT_ADMIN_EMAILS` set in Vercel. The PostHog connection turned out to be Dash0's work org, so it isn't used (D-183), and Petr created Kasa's own PostHog EU project, whose key is now in Vercel Production. `FEEDBACK_EMAIL` moves to the worker setup in F-10. · [#23](https://github.com/uxpetr/kasa/pull/23)
 - 2026-09-28 · Design log DL-000 to DL-003 folded: prototype synced into `design/` (search mode, feed states, dialogs, pages, emails, tokens, promo v2, directions); D-184 to D-187; V-03 split into V-03a and V-03b; V-12 blocked on OD-16; OD-15 to OD-17 added. · [#24](https://github.com/uxpetr/kasa/pull/24)
+- 2026-09-28 · OD-15 answered (D-188): free piles get fuzzy word search (V-03a), and paid piles get AI search for every member (V-03b, now after V-10). · PR_LINK
