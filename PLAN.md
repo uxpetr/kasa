@@ -287,7 +287,7 @@ Depends on: F-01, OD-02
 
 ### F-09 · Staging data services · `in-progress` · branch `f-09-neon`
 Depends on: F-03, F-04
-- [ ] Neon Postgres in an EU region attached to the Vercel project; migrations run on deploy.
+- [x] Neon Postgres in an EU region attached to the Vercel project; migrations run on deploy. (PR #28, D-191. The first production build on 2026-09-28 applied all migrations. A signed-out invite lookup reads through the pooled connection. Sign-in waits on the auth env in F-12.)
 - [ ] EU S3-compatible bucket for staging media (pick R2 EU or AWS `eu-central-1`, D-111); credentials only in Vercel env settings.
 - [ ] CDN in front of the bucket for media downloads (signed URLs, D-132); confirm the bucket enforces the signed Content-Type and Content-Length on presigned PUTs, as the local store does.
 
@@ -633,3 +633,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-28 · OD-16 answered (D-189): the scroll story ships as the landing page; V-12 waits for its final version. · [#25](https://github.com/uxpetr/kasa/pull/25)
 - 2026-09-28 · Trademark search for "Kasa" in the USPTO, EUIPO, WIPO, and PRH registers: no conflict for collaboration software, but TP-Link's smart-home "Kasa" is close. Added OD-18, blocking V-12 and V-14. · [#26](https://github.com/uxpetr/kasa/pull/26)
 - 2026-09-28 · OD-17 answered (D-190): "Search this pile" until a pile has AI search, then D-187's "Search or ask…"; V-03a is unblocked. · [#27](https://github.com/uxpetr/kasa/pull/27)
+- 2026-09-28 · F-09, database: Neon (Free plan, EU) attached through Vercel. The production build migrates over the direct URL, and the app reads through the pooled connection (D-191). The bucket and CDN are still to do. · [#28](https://github.com/uxpetr/kasa/pull/28)
