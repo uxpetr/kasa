@@ -20,7 +20,7 @@ Never edit the decision text of an entry. If the plan can't follow an entry, add
 
 ---
 
-## DL-003 · 2026-09-28 · AI-powered search · `new`
+## DL-003 · 2026-09-28 · AI-powered search · `folded → D-187, V-03b, V-04, OD-15`
 
 **Affects:** V-03, V-04, OD-05
 
@@ -41,7 +41,7 @@ Never edit the decision text of an entry. If the plan can't follow an entry, add
 
 **Prototype:** `Main.dc.html`. Press Play, tap the magnifier, and try "Hotel", "airbnb", "dinner", "train", or "onsen".
 
-## DL-002 · 2026-09-28 · Search: calendar view · `new`
+## DL-002 · 2026-09-28 · Search: calendar view · `folded → D-186, V-03a`
 
 **Affects:** V-03
 
@@ -55,7 +55,7 @@ Never edit the decision text of an entry. If the plan can't follow an entry, add
 
 **Prototype:** `Main.dc.html`, in search mode, then Calendar.
 
-## DL-001 · 2026-09-28 · Search mode in the project chat · `new`
+## DL-001 · 2026-09-28 · Search mode in the project chat · `folded → D-185, V-03a, OD-17`
 
 **Affects:** V-03, D-148 (the project menu's placeholder Search item)
 
@@ -70,7 +70,7 @@ Never edit the decision text of an entry. If the plan can't follow an entry, add
 
 **Prototype:** `Main.dc.html`. Press Play and tap the magnifier.
 
-## DL-000 · 2026-09-28 · Earlier prototype work since v0 · `new`
+## DL-000 · 2026-09-28 · Earlier prototype work since v0 · `folded → D-184, V-12, OD-16`
 
 **Affects:** V-12, F-08
 

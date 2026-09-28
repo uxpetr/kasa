@@ -3,8 +3,8 @@
 This is the living plan for building Kasa. Humans and Claude Code agents both read it, and agents update it after every task. It is the single source of truth for **what's next, what's done, and what was decided**.
 
 - Product source: [`docs/PRD.md`](docs/PRD.md), exported from Petr's Claude Doc. If this plan and the PRD disagree, the PRD wins for product behaviour; raise the conflict under [Open decisions](#open-decisions).
-- Design source: [`design/`](design/). See [`design/README.md`](design/README.md) for what each screen is, the design tokens, and the mascot art.
-- Last updated: 2026-09-26 · by: Claude (F-08)
+- Design source: [`design/`](design/). See [`design/README.md`](design/README.md) for what each screen is, the design tokens, and the mascot art. Petr's design decisions arrive in [`design/DESIGN_LOG.md`](design/DESIGN_LOG.md).
+- Last updated: 2026-09-28 · by: Claude (design log DL-000 to DL-003)
 
 ---
 
@@ -12,7 +12,7 @@ This is the living plan for building Kasa. Humans and Claude Code agents both re
 
 Follow this loop for every task. It's short on purpose; don't skip steps.
 
-1. **Read first.** Read this whole file, then the task you're picking up and everything it depends on.
+1. **Read first.** Read this whole file, then the task you're picking up and everything it depends on. If [`design/DESIGN_LOG.md`](design/DESIGN_LOG.md) has entries marked `new`, fold them in first, following the steps at the top of that file, and commit that on its own.
 2. **Pick the next task.** Take the first `todo` task in the current phase whose dependencies are all `done`. Don't start tasks in a later phase until the current phase's gate is passed.
 3. **Claim it.** Set its status to `in-progress`, add your branch name, and commit that change on its own before writing code.
 4. **Build it.** Stay inside the task's scope. If you find more work, add it as a new task (next free ID, status `todo`) rather than doing it now.
@@ -55,7 +55,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
 **Next up:** staging (F-09, F-10, F-12), F-13 (Resend), and F-14's dashboard (once staging sends events) before the pilot starts. F-11 is unblocked.
-**Blocked:** P-16, on OD-14 (privacy note). Real emails, including feedback emails, need F-13 (a Resend account and a sender domain from Petr).
+**Blocked:** P-16, on OD-14 (privacy note). In phase 2: V-03b on OD-15 (search answer card, free or paid), V-12 on OD-16 (which promo page), and V-03a's search placeholder on OD-17. Real emails, including feedback emails, need F-13 (a Resend account and a sender domain from Petr).
 
 ---
 
@@ -180,6 +180,17 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-181** · 2026-09-27 · **Feedback**: "Send feedback" in the account menu opens a dialog titled "What's working, what isn't?" with a text box and "Send", then "Thanks! Petr reads every one." Messages are stored with the page they came from, listed for Petr, and emailed to him through Resend (once F-13 is set up). · Petr, P-13
 - **D-182** · 2026-09-27 · Pilot internals (P-13). Analytics: `track()` picks its sink from the environment on first use, so no setup call is needed in any bundle. With `POSTHOG_API_KEY` set, it posts each event to PostHog's `/i/v0/e/` endpoint (host `POSTHOG_HOST`, default EU), keyed by user id, with `$process_person_profile: false` and GeoIP off. Each post waits up to 2 s, and failures are logged and swallowed. Without a key, events print to stdout; e2e tests always run without one. `entry_created` now carries `entryId`, and `reply_created` carries `entryId` and `replyToId`, so G1 can join replies to what they answer. A new `feed_opened` event comes from the browser's first `POST /api/projects/:id/read?opened=1`, not the server render (prefetching); it defines active users. A new `feedback_sent` event carries no text. Welcome card: `entries.bot_card = 'welcome'` marks it; it's inserted with My pile at sign-up, unread and not tracked. It's left out of a pile's "things saved" count, and its "Start a pile" opens the usual New project dialog. Feedback: a `feedback` table (user, body up to 4000 characters, page path, `emailed_at`) and `POST /api/feedback`. The `feedback.send` job emails `FEEDBACK_EMAIL` once, with Reply-To set to the sender, and only logs when no address is set. `/feedback` lists messages for `PILOT_ADMIN_EMAILS` and returns 404 for everyone else. Dashboard SQL is in `docs/pilot-dashboard.md`. · P-13
 - **D-183** · 2026-09-27 · The PostHog connection available to Claude belongs to Dash0's work organization (its project is Dash0's "Production"), not Petr. Never use it for Kasa. Kasa's PostHog project is created by Petr in a personal EU Cloud account. Its key goes into Vercel only through the CLI prompt, never through chat, and only for the Production environment, so preview deployments don't send events. The worker sends no analytics, so it doesn't need the key. · Petr, F-14
+- **D-184** · 2026-09-28 · The prototype now has the screens the app already builds: feed states (`States.dc.html`), menus and dialogs (`Dialogs.dc.html`), the invite, unsubscribe, and feedback pages (`Pages.dc.html`), and the emails (`Emails.dc.html`). Use them when building or restyling those parts. `Tokens.dc.html` is a visual reference for `@kasa/ui` and `design/tokens.json` (F-08), not a source of new tokens. `Promo2.dc.html` is a second promo page, a scroll story whose hero reads "Planning anything as a group is *messy.*"; which page ships is OD-16. · Petr, design log DL-000
+- **D-185** · 2026-09-28 · **Search mode in the project chat.** Search is a core feature, entered from a magnifier button next to + in the composer or a "Search" item in the project menu (supersedes D-148's "Search (coming soon)"). In search mode the composer becomes the search field with "Done", and Escape also leaves. The category row becomes the result count ("5 matches", or "17 things in this pile" for an empty search) and the Grid / Calendar switch. The grid is four columns on desktop, newest first: each result is the same object as in the feed but untilted, matched words are highlighted, and under it goes author · date · category stamp. An empty search shows everything in the pile. Tapping a result leaves search and scrolls the chat to that entry. No results: "Nothing matches “{query}”" with "Try another word, or search by a person's name or a category." · Petr, design log DL-001
+- **D-186** · 2026-09-28 · **Search calendar.** Results switch between Grid (the default) and Calendar. The calendar shows month grids starting on Monday, in date order, and follows the current search: only days with matches light up. A matching day is a round disc showing a photo from that day, darkened slightly so the number stays readable, or, with no photo, the paper colour of its first entry (yellow for notes, pine tint for Kasa Bot, white for links). Today's number is in the accent colour, and future days are muted. Tapping a day opens the grid filtered to it, with a removable chip such as "12 Sep ×" next to the count. · Petr, design log DL-002
+- **D-187** · 2026-09-28 · **AI-powered search.**
+  - Search matches by meaning as well as by words. "hotel", "airbnb", "where to stay", or "sleep" find every place to stay, and the same goes for food, getting around, sights, and so on. People can also ask questions ("who booked the train?").
+  - Exact matches come first, then related ones, each with "✦ Related: {concept}" under it.
+  - When Kasa recognises the intent, a Kasa Bot card above the results says how it read the search ("Kasa understood 'Hotel' as places to stay") and gives a one- or two-sentence answer drawn only from this pile.
+  - The field shows a "✦ Kasa" tag and the placeholder "Search or ask: hotels, who booked the train, Kyoto food…".
+  - Search reads only its own pile, the same rule as Kasa Bot. The answer never mentions anything outside it.
+  - Search never waits on the model. Results appear first and the answer card may follow; if the model is slow or down, plain-word search still works, without related results or the card.
+  - Built as V-03b after V-04. Whether the answer card is free or paid is OD-15. · Petr, design log DL-003
 
 ---
 
@@ -201,6 +212,9 @@ Questions only Petr can answer. Agents add to this list and don't guess. When on
 - [x] **OD-13** (resolved by D-167) Email wording for P-12, provided by Petr: subject and body for the reply and `@mention` emails (including the batched form, several in one email), the unsubscribe confirmation page, and the "Mute emails" state in the app if it needs more than the toggle label. Blocks P-12.
 - [ ] **OD-14** Privacy note for the pilot: what Kasa tells pilot users about the data it keeps and the analytics it sends to PostHog (D-179), and where it shows. Blocks P-16, not the P-13 build.
 - [ ] **OD-09** Exact prices for the owner plan and project pass, and project pass duration. Blocks V-10.
+- [ ] **OD-15** Is the search answer card (D-187) part of the free plan, or only for paid owners? It extends OD-05, since it uses the same model costs as Kasa Bot. Blocks V-03b. (From design log DL-003.)
+- [ ] **OD-16** Which promo page ships in V-12: the original (`design/prototype/Promo.dc.html`) or the scroll story (`Promo2.dc.html`)? Blocks V-12. (From design log DL-000.)
+- [ ] **OD-17** The search field's placeholder before AI search exists. D-187's "Search or ask: hotels, who booked the train, Kyoto food…" promises questions and meaning, which V-03a can't answer yet. Options: use D-187's text from the start; a plain one such as "Search this pile"; or something else. Blocks V-03a's search field only.
 
 ---
 
@@ -461,16 +475,38 @@ Split into sub-tasks as you go:
 - [ ] V-02d File (folded-corner sheet, full-screen viewer).
 - [ ] V-02e Reactions as stickers, edited and deleted states, Star. (P-04 already ships plain reaction counts, D-154, and the deleted outline, D-155.)
 
-### V-03 · Search and filters · `todo`
-- [ ] Search across entries, comments, and page titles. Text drawn with the text tool comes with L-06 (D-158).
-- [ ] Filter by category and source domain.
+### V-03 · Search and filters · `dropped` (split into V-03a and V-03b, D-185 to D-187)
+- [ ] Search across entries, comments, and page titles. Text drawn with the text tool comes with L-06 (D-158). (Now in V-03a.)
+- [ ] Filter by category and source domain. (Now in V-03a; category chips stay in V-05.)
+
+### V-03a · Search mode: plain-text search, grid, and calendar · `todo`
+Depends on: P-03, P-07; OD-17 for the field's placeholder. Designs: `design/prototype/Main.dc.html` (search mode) and the search states in `States.dc.html`.
+- [ ] The magnifier next to + in the composer and a "Search" item in the project menu (replacing "Search (coming soon)", D-148) enter search mode. The composer becomes the search field with "Done", and Escape also leaves (D-185).
+- [ ] The category row becomes the result count ("5 matches", or "17 things in this pile" for an empty search) and a Grid / Calendar switch; an empty search shows the whole pile.
+- [ ] Words match entry text, comments, link page titles and sites, and author names, so searching a site such as booking.com finds its links. Categories become searchable once V-05 assigns them. Text drawn with the text tool comes with L-06 (D-158).
+- [ ] Grid: newest first, four columns on desktop and fewer on narrow screens. Each result is the feed object untilted, with matched words highlighted and author · date · category stamp under it (the stamp once V-05 exists).
+- [ ] Tapping a result leaves search and scrolls the chat to that entry, loading older pages if needed (as replies do, P-07).
+- [ ] No results: "Nothing matches “{query}”" with "Try another word, or search by a person's name or a category."
+- [ ] Calendar (D-186): Monday-first month grids following the search, with discs for matching days (a darkened photo, or the first entry's paper colour). Today is in the accent colour and future days are muted. Tapping a day filters the grid, with a removable "12 Sep ×" chip.
+- [ ] Members only, and only the pile it's in: tested as a security requirement, like Kasa Bot.
+- [ ] Emits `search_used` (`projectId`, `view`: grid or calendar; never the query text). No horizontal scroll at 390px; axe passes in search mode.
+
+### V-03b · AI-powered search: meaning-based results and the answer card · `blocked` (OD-15)
+Depends on: V-03a, V-04 (model access), OD-15. Designs: `Main.dc.html` (try "Hotel", "airbnb", "dinner", "train", "onsen") and the search states in `States.dc.html`.
+- [ ] Search matches by meaning as well as words: "hotel", "airbnb", "where to stay", or "sleep" find booking and rental links, ryokans, and notes about them; the same for food, getting around, sights, and more (D-187).
+- [ ] Exact matches first, then related ones, each with "✦ Related: {concept}" under it.
+- [ ] A Kasa Bot answer card above the results when Kasa recognises the intent: "Kasa understood '{query}' as {concept}" plus a one- or two-sentence answer from this pile only. Questions such as "who booked the train?" work too.
+- [ ] The field shows the "✦ Kasa" tag and the placeholder "Search or ask: hotels, who booked the train, Kyoto food…".
+- [ ] Never waits on the model: results render first and the card may arrive later; if the model is slow or down, plain-word search from V-03a still works, without related results or the card.
+- [ ] Reads only its own pile, and the answer never mentions anything outside it: tested as a security requirement.
+- [ ] The answer card follows OD-15 (free or paid owners only), and model spend counts toward V-04's guardrails.
 
 ### V-04 · Kasa Bot: tagged answers · `todo`
 Depends on: OD-05
 - [ ] `@kasa` in the composer (and in Telegram, after V-07) triggers an answer using only this project's content as context.
 - [ ] Answers render as bot cards; the bot never posts as a person.
 - [ ] Per-project proactivity setting, defaulting to Only when tagged.
-- [ ] Cost guardrails: per-project rate limits and a monthly spend alert.
+- [ ] Cost guardrails: per-project rate limits and a monthly spend alert. They also cover V-03b's search answers (D-187).
 
 ### V-05 · Kasa Bot: categories · `todo`
 Depends on: V-04
@@ -507,8 +543,9 @@ Depends on: OD-09
 - [ ] First-run flow: create a pile, invite people. Offering the extension (D-018) comes with L-06.
 - [ ] Empty states use the mascot (after OD-08).
 
-### V-12 · Landing page · `todo`
-- [ ] Build the promo page from `design/prototype/Promo.dc.html`, including the use-case pills in the hero.
+### V-12 · Landing page · `blocked` (OD-16)
+Depends on: OD-16
+- [ ] Build the promo page chosen in OD-16: `design/prototype/Promo.dc.html` (with the use-case pills in the hero) or `Promo2.dc.html` (the scroll story, D-184).
 - [ ] Only "Start a pile" calls to action; no Chrome button (D-018).
 
 ### V-13 · Security and privacy review · `todo`
@@ -583,3 +620,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-27 · P-13 · Pilot readiness: events go server-side to PostHog EU when `POSTHOG_API_KEY` is set, with entry ids for G1 and a new `feed_opened`, and the dashboard SQL is in `docs/pilot-dashboard.md`. My pile starts with a Kasa Bot welcome card and "Start a pile". "Send feedback" in the account menu stores each message, emails it to `FEEDBACK_EMAIL`, and lists it at `/feedback` for pilot admins. · [#22](https://github.com/uxpetr/kasa/pull/22)
 - 2026-09-27 · Fixes from review: invite accept re-checks the link under row locks, a failed upload enqueue rolls back to pending, retried media jobs still delete geotagged raw files, realtime holds `changed` until membership is confirmed and re-checks members after a LISTEN reconnect, viewers can delete their own entries in the UI, `@Jo` no longer matches `@John`, and unfurl blocks `fec0::/10`. · [#21](https://github.com/uxpetr/kasa/pull/21)
 - 2026-09-27 · F-14 (partial) · `PILOT_ADMIN_EMAILS` set in Vercel. The PostHog connection turned out to be Dash0's work org, so it isn't used (D-183), and Petr created Kasa's own PostHog EU project, whose key is now in Vercel Production. `FEEDBACK_EMAIL` moves to the worker setup in F-10. · [#23](https://github.com/uxpetr/kasa/pull/23)
+- 2026-09-28 · Design log DL-000 to DL-003 folded: prototype synced into `design/` (search mode, feed states, dialogs, pages, emails, tokens, promo v2, directions); D-184 to D-187; V-03 split into V-03a and V-03b; V-12 blocked on OD-16; OD-15 to OD-17 added. · PR_LINK
