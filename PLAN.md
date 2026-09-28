@@ -55,7 +55,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
 **Next up:** staging (F-09, F-10, F-12), F-13 (Resend), and F-14's dashboard (once staging sends events) before the pilot starts. F-11 is unblocked.
-**Blocked:** P-16, on OD-14 (privacy note). In phase 2: V-12 until Petr finishes the scroll story (D-189), V-12 and V-14 on OD-18 (clear or change the name), and V-03a's search placeholder on OD-17. Real emails, including feedback emails, need F-13 (a Resend account and a sender domain from Petr).
+**Blocked:** P-16, on OD-14 (privacy note). In phase 2: V-12 until Petr finishes the scroll story (D-189), V-12 and V-14 on OD-18 (clear or change the name). Real emails, including feedback emails, need F-13 (a Resend account and a sender domain from Petr).
 
 ---
 
@@ -186,6 +186,7 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-187** · 2026-09-28 · **AI-powered search.**
 - **D-188** · 2026-09-28 · **Search by plan** (resolves OD-15). Free piles get basic search: words, tolerant of typos and partial words (fuzzy), with the grid and calendar (V-03a). AI search, meaning-based results and the answer card (D-187, V-03b), comes with the paid plan. Following D-009, it's the pile that's paid, not the person: if the pile's owner has the owner plan or a project pass for it, every member gets AI search there, free members included. A paying owner's personal piles get it too. · Petr, OD-15
 - **D-189** · 2026-09-28 · **The scroll story ships as the landing page** (resolves OD-16): V-12 builds `design/prototype/Promo2.dc.html`, not `Promo.dc.html`. Petr is still refining it, so V-12 waits until a design log entry marks it final. · Petr, OD-16
+- **D-190** · 2026-09-28 · **Search placeholder** (resolves OD-17): "Search this pile" in every pile without AI search (free piles, and every pile until V-03b ships). Paid piles with AI search use D-187's "Search or ask: hotels, who booked the train, Kyoto food…", with the "✦ Kasa" tag. · Petr, OD-17
   - Search matches by meaning as well as by words. "hotel", "airbnb", "where to stay", or "sleep" find every place to stay, and the same goes for food, getting around, sights, and so on. People can also ask questions ("who booked the train?").
   - Exact matches come first, then related ones, each with "✦ Related: {concept}" under it.
   - When Kasa recognises the intent, a Kasa Bot card above the results says how it read the search ("Kasa understood 'Hotel' as places to stay") and gives a one- or two-sentence answer drawn only from this pile.
@@ -216,7 +217,7 @@ Questions only Petr can answer. Agents add to this list and don't guess. When on
 - [ ] **OD-09** Exact prices for the owner plan and project pass, and project pass duration. Blocks V-10.
 - [x] **OD-15** (resolved by D-188) Is the search answer card (D-187) part of the free plan, or only for paid owners? It extends OD-05, since it uses the same model costs as Kasa Bot. Blocks V-03b. (From design log DL-003.)
 - [x] **OD-16** (resolved by D-189) Which promo page ships in V-12: the original (`design/prototype/Promo.dc.html`) or the scroll story (`Promo2.dc.html`)? Blocks V-12. (From design log DL-000.)
-- [ ] **OD-17** The search field's placeholder before AI search exists. D-187's "Search or ask: hotels, who booked the train, Kyoto food…" promises questions and meaning, which V-03a can't answer yet. Options: use D-187's text from the start; a plain one such as "Search this pile"; or something else. Blocks V-03a's search field only.
+- [x] **OD-17** (resolved by D-190) The search field's placeholder before AI search exists. D-187's "Search or ask: hotels, who booked the train, Kyoto food…" promises questions and meaning, which V-03a can't answer yet. Options: use D-187's text from the start; a plain one such as "Search this pile"; or something else. Blocks V-03a's search field only.
 - [ ] **OD-18** Clear or change the name before launch. A trademark search on 2026-09-28 found no "Kasa" mark for planning or collaboration software, but TP-Link holds "Kasa" for smart-home software in the US (reg. 4992874) and the EU (018015313, plus "Kasa Smart"), and its "Kasa Smart" app is in both app stores. Kasa, Inc. holds "Kasa" for hotels and short-term rentals in the US (classes 36 and 43). Finland has no "Kasa" mark. Options: keep "Kasa" after a trademark attorney's clearance opinion (a few hundred euros), a distinctive variant (for example "Kasa Pile"), or a new name. The private pilot can run as "Kasa". Blocks V-12 and V-14.
 
 ---
@@ -483,8 +484,8 @@ Split into sub-tasks as you go:
 - [ ] Filter by category and source domain. (Now in V-03a; category chips stay in V-05.)
 
 ### V-03a · Search mode: plain-text search, grid, and calendar · `todo`
-Depends on: P-03, P-07; OD-17 for the field's placeholder. Designs: `design/prototype/Main.dc.html` (search mode) and the search states in `States.dc.html`.
-- [ ] The magnifier next to + in the composer and a "Search" item in the project menu (replacing "Search (coming soon)", D-148) enter search mode. The composer becomes the search field with "Done", and Escape also leaves (D-185).
+Depends on: P-03, P-07. Designs: `design/prototype/Main.dc.html` (search mode) and the search states in `States.dc.html`.
+- [ ] The magnifier next to + in the composer and a "Search" item in the project menu (replacing "Search (coming soon)", D-148) enter search mode. The composer becomes the search field, with the placeholder "Search this pile" (D-190) and "Done"; Escape also leaves (D-185).
 - [ ] The category row becomes the result count ("5 matches", or "17 things in this pile" for an empty search) and a Grid / Calendar switch; an empty search shows the whole pile.
 - [ ] Words match entry text, comments, link page titles and sites, and author names, so searching a site such as booking.com finds its links. Matching is fuzzy: typos and partial words still find results (D-188). This is the search every pile gets, free or paid. Categories become searchable once V-05 assigns them. Text drawn with the text tool comes with L-06 (D-158).
 - [ ] Grid: newest first, four columns on desktop and fewer on narrow screens. Each result is the feed object untilted, with matched words highlighted and author · date · category stamp under it (the stamp once V-05 exists).
@@ -499,7 +500,7 @@ Depends on: V-03a, V-04 (model access), V-10 (knowing which piles are paid, D-18
 - [ ] Search matches by meaning as well as words: "hotel", "airbnb", "where to stay", or "sleep" find booking and rental links, ryokans, and notes about them; the same for food, getting around, sights, and more (D-187).
 - [ ] Exact matches first, then related ones, each with "✦ Related: {concept}" under it.
 - [ ] A Kasa Bot answer card above the results when Kasa recognises the intent: "Kasa understood '{query}' as {concept}" plus a one- or two-sentence answer from this pile only. Questions such as "who booked the train?" work too.
-- [ ] The field shows the "✦ Kasa" tag and the placeholder "Search or ask: hotels, who booked the train, Kyoto food…".
+- [ ] In paid piles the field shows the "✦ Kasa" tag and the placeholder "Search or ask: hotels, who booked the train, Kyoto food…" instead of "Search this pile" (D-190).
 - [ ] Never waits on the model: results render first and the card may arrive later; if the model is slow or down, plain-word search from V-03a still works, without related results or the card.
 - [ ] Reads only its own pile, and the answer never mentions anything outside it: tested as a security requirement.
 - [ ] Only in paid piles (D-188): the owner has the owner plan or a project pass for the pile, and then every member gets it. Free piles keep V-03a's search, with no related results, answer card, "✦ Kasa" tag, or question placeholder. Model spend counts toward V-04's guardrails.
@@ -629,3 +630,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-28 · OD-15 answered (D-188): free piles get fuzzy word search (V-03a), and paid piles get AI search for every member (V-03b, now after V-10). · [#25](https://github.com/uxpetr/kasa/pull/25)
 - 2026-09-28 · OD-16 answered (D-189): the scroll story ships as the landing page; V-12 waits for its final version. · [#25](https://github.com/uxpetr/kasa/pull/25)
 - 2026-09-28 · Trademark search for "Kasa" in the USPTO, EUIPO, WIPO, and PRH registers: no conflict for collaboration software, but TP-Link's smart-home "Kasa" is close. Added OD-18, blocking V-12 and V-14. · [#26](https://github.com/uxpetr/kasa/pull/26)
+- 2026-09-28 · OD-17 answered (D-190): "Search this pile" until a pile has AI search, then D-187's "Search or ask…"; V-03a is unblocked. · PR_LINK
