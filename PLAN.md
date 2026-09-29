@@ -289,6 +289,36 @@ Depends on: F-01, OD-02
 - [x] `.env.example` with every variable documented; secrets never committed.
 - [x] Staging environment deploys automatically from main (Vercel project `kasa`, D-121).
 
+### F-04 · Database schema v0 · `done` · branch `f-04-db`
+Depends on: F-01
+- [x] Tables from the data model above, created by migration.
+- [x] Seed script creates the "Japan 2027" demo project from the prototype (4 members, notes, photos, a capture, a bot reply).
+- [x] Soft-delete columns and indexes for feed paging (project_id, created_at).
+
+### F-05 · Google sign-in and sessions · `done` · branch `f-05-auth`
+Depends on: F-04
+- [x] Sign in and out with Google; a user row is created on first sign-in. (Verified locally with a real Google client.)
+- [x] Session design supports the extension: a short-lived token exchange from the web session, no separate extension login (D-010). See D-128.
+- [x] Analytics: `signed_up`, `signed_in`.
+
+### F-06 · Uploads and media pipeline · `done` · branch `f-06-media`
+Depends on: F-03, F-04
+- [x] Presigned uploads for images and screenshots; size and type limits enforced server-side.
+- [x] Worker generates thumbnails and strips EXIF location data.
+- [x] Media served through the CDN with private, signed URLs scoped to project members. Signed, member-scoped URLs are done; the CDN in front of the bucket comes with the staging bucket (F-09).
+
+### F-07 · Observability baseline · `done` · branch `f-07-otel`
+Depends on: F-01
+- [x] OpenTelemetry traces across web, realtime, worker, and API calls from the extension. Extension calls are traced on the server (D-137); realtime has the bootstrap and gets real spans with P-06.
+- [x] Structured logs with request IDs; no personal data or message bodies in logs.
+- [x] Error reporting with alerts on staging and production. Dash0 check rule "Kasa: server errors" (error spans from `kasa-*` outside `local`, email to Petr) fired on a test burst of failed jobs. There is no production environment yet; the rule already covers it by environment name.
+
+### F-08 · Design tokens and physical-object components · `done` · branch `f-08-ui`
+Depends on: F-01
+- [x] Tokens from `design/tokens.json`: colours, fonts, spacing, the one shadow, rotation limits (under 2.5°).
+- [x] Components: Sticky, LinedSheet, Polaroid, Print (with tape), PinMarker, BotCard, CategoryStamp, Composer. (Also Note, BotButton, CategoryChip.)
+- [x] Storybook (or equivalent) page showing every component, matching `design/prototype/ContentTypes.dc.html`. It's `/design` in the web app.
+
 ### F-09 · Staging data services · `done` · branches `f-09-neon`, `f-09-bucket`
 Depends on: F-03, F-04
 - [x] Neon Postgres in an EU region attached to the Vercel project; migrations run on deploy. (PR #28, D-191. The first production build on 2026-09-28 applied all migrations. A signed-out invite lookup reads through the pooled connection. Sign-in waits on the auth env in F-12.)
@@ -302,12 +332,6 @@ Depends on: F-03; needed by F-06 and P-06
 - [ ] Worker env also has the `S3_*` variables for the staging bucket (D-192), with the same values as the web app.
 - [ ] Switch the Neon plan from Free to Launch before the worker and realtime service run all the time (D-191).
 - [ ] Worker env also includes `FEEDBACK_EMAIL` (`petr.andrianov@gmail.com`), so pilot feedback is emailed (D-182, from F-14).
-
-### F-04 · Database schema v0 · `done` · branch `f-04-db`
-Depends on: F-01
-- [x] Tables from the data model above, created by migration.
-- [x] Seed script creates the "Japan 2027" demo project from the prototype (4 members, notes, photos, a capture, a bot reply).
-- [x] Soft-delete columns and indexes for feed paging (project_id, created_at).
 
 ### F-11 · Seed media in local storage · `done` · branch `f-11-seed-media`
 Depends on: F-06
@@ -339,30 +363,6 @@ Depends on: F-09; OD-18 (the product name, so there is a domain to use)
 Depends on: F-12; needed before pilot testers are invited
 - [ ] Petr publishes the "Kasa staging" OAuth consent screen, which is in Testing mode now (D-193), so that pilot testers can sign in without being listed as test users.
 - [ ] A Google account that isn't a test user can sign in on staging.
-
-### F-05 · Google sign-in and sessions · `done` · branch `f-05-auth`
-Depends on: F-04
-- [x] Sign in and out with Google; a user row is created on first sign-in. (Verified locally with a real Google client.)
-- [x] Session design supports the extension: a short-lived token exchange from the web session, no separate extension login (D-010). See D-128.
-- [x] Analytics: `signed_up`, `signed_in`.
-
-### F-06 · Uploads and media pipeline · `done` · branch `f-06-media`
-Depends on: F-03, F-04
-- [x] Presigned uploads for images and screenshots; size and type limits enforced server-side.
-- [x] Worker generates thumbnails and strips EXIF location data.
-- [x] Media served through the CDN with private, signed URLs scoped to project members. Signed, member-scoped URLs are done; the CDN in front of the bucket comes with the staging bucket (F-09).
-
-### F-07 · Observability baseline · `done` · branch `f-07-otel`
-Depends on: F-01
-- [x] OpenTelemetry traces across web, realtime, worker, and API calls from the extension. Extension calls are traced on the server (D-137); realtime has the bootstrap and gets real spans with P-06.
-- [x] Structured logs with request IDs; no personal data or message bodies in logs.
-- [x] Error reporting with alerts on staging and production. Dash0 check rule "Kasa: server errors" (error spans from `kasa-*` outside `local`, email to Petr) fired on a test burst of failed jobs. There is no production environment yet; the rule already covers it by environment name.
-
-### F-08 · Design tokens and physical-object components · `done` · branch `f-08-ui`
-Depends on: F-01
-- [x] Tokens from `design/tokens.json`: colours, fonts, spacing, the one shadow, rotation limits (under 2.5°).
-- [x] Components: Sticky, LinedSheet, Polaroid, Print (with tape), PinMarker, BotCard, CategoryStamp, Composer. (Also Note, BotButton, CategoryChip.)
-- [x] Storybook (or equivalent) page showing every component, matching `design/prototype/ContentTypes.dc.html`. It's `/design` in the web app.
 
 ---
 
@@ -653,3 +653,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-29 · F-12 done: staging sign-in works with its own Google client. The auth secret, URL and Google keys are in Vercel. Petr signed in and out on https://kasa-zeta-rouge.vercel.app (D-193). · [#30](https://github.com/uxpetr/kasa/pull/30)
 - 2026-09-29 · F-14 done: the "Kasa pilot" dashboard is in Petr's PostHog EU project and shows staging events. The pilot window comes from a `pilot_start` variable, so no SQL needs editing (D-194). · [#31](https://github.com/uxpetr/kasa/pull/31)
 - 2026-09-29 · F-11 done: `pnpm db:seed` uploads the demo's 5 pictures to the local bucket, and an e2e test checks that they render in "Japan 2027" (D-195). · [#32](https://github.com/uxpetr/kasa/pull/32)
+- 2026-09-29 · PLAN: Phase 0 tasks sorted by id (F-01 to F-16); no content changed. · PR_LINK
