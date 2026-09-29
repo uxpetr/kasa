@@ -308,7 +308,7 @@ Depends on: F-01
 - [x] Seed script creates the "Japan 2027" demo project from the prototype (4 members, notes, photos, a capture, a bot reply).
 - [x] Soft-delete columns and indexes for feed paging (project_id, created_at).
 
-### F-11 · Seed media in local storage · `todo`
+### F-11 · Seed media in local storage · `in-progress` · branch `f-11-seed-media`
 Depends on: F-06
 - [ ] `pnpm db:seed` uploads the prototype images (`design/prototype/img/`) to the local bucket under the `seed/` keys the seed data already uses, so the demo renders with pictures.
 
