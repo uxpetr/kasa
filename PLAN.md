@@ -310,7 +310,7 @@ Depends on: F-01
 Depends on: F-06
 - [ ] `pnpm db:seed` uploads the prototype images (`design/prototype/img/`) to the local bucket under the `seed/` keys the seed data already uses, so the demo renders with pictures.
 
-### F-12 · Sign-in on staging · `todo`
+### F-12 · Sign-in on staging · `in-progress` · branch `f-12-staging-auth`
 Depends on: F-05, F-09
 - [ ] `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` set in the Vercel project (not in the repo); the staging callback URL added to the Google OAuth client.
 - [ ] Sign in and out on staging works end to end.
