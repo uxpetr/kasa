@@ -6,7 +6,9 @@ The pilot runs **4 weeks**. Gate G1 passes if **at least 40%** of the links and 
 
 1. Create a PostHog project on **EU Cloud** (eu.posthog.com) used only for production Kasa.
 2. Put its Project API key (`phc_…`) in `POSTHOG_API_KEY` for the web app in production. Leave it empty locally and in CI; events are then printed as JSON lines.
-3. Create a dashboard called "Kasa pilot" with the two SQL insights below (New insight → SQL). Replace `2026-10-01` with the pilot's first day.
+3. Create a Date SQL variable named "Pilot start" (code name `pilot_start`), and a dashboard called "Kasa pilot" with the two SQL insights below (New insight → SQL). Both insights cover the 28 days from `pilot_start`. Set the variable to the pilot's first day on the dashboard; no SQL needs editing.
+
+The dashboard is built: [Kasa pilot](https://eu.posthog.com/project/286043/dashboard/982136) in the personal `kasa` project (286043) on EU Cloud (F-14, D-194).
 
 Events carry ids and enums only (D-129). `distinct_id` is the Kasa user id. No person profiles are created.
 
@@ -27,7 +29,7 @@ WITH
     FROM events
     WHERE event = 'entry_created'
       AND properties.kind IN ('link', 'photo')
-      AND timestamp >= toDateTime('2026-10-01') AND timestamp < toDateTime('2026-10-01') + INTERVAL 28 DAY
+      AND timestamp >= toDateTime({variables.pilot_start}) AND timestamp < toDateTime({variables.pilot_start}) + INTERVAL 28 DAY
   ),
   replied AS (
     SELECT DISTINCT properties.replyToId AS id
@@ -55,7 +57,7 @@ SELECT
   uniqIf(distinct_id, event IN ('feed_opened', 'entry_created', 'reply_created', 'reaction_added')) AS active_users,
   round(items_added / active_users, 2) AS items_per_active_user
 FROM events
-WHERE timestamp >= toDateTime('2026-10-01') AND timestamp < toDateTime('2026-10-01') + INTERVAL 28 DAY
+WHERE timestamp >= toDateTime({variables.pilot_start}) AND timestamp < toDateTime({variables.pilot_start}) + INTERVAL 28 DAY
 GROUP BY week
 ORDER BY week
 ```
