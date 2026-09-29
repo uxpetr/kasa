@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Chrome extension (D-158), pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** staging (F-10, F-12), F-13 (Resend), and F-14's dashboard (once staging sends events) before the pilot starts. F-11 is unblocked.
+**Next up:** staging (F-10), F-13 (Resend), and F-14's dashboard (staging can send events now that sign-in works) before the pilot starts. F-11 is unblocked.
 **Blocked:** P-16, on OD-14 (privacy note). In phase 2: V-12 until Petr finishes the scroll story (D-189), V-12, V-14 and F-15 (media CDN) on OD-18 (clear or change the name). Real emails, including feedback emails, need F-13 (a Resend account and a sender domain from Petr).
 
 ---
@@ -189,6 +189,7 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-190** · 2026-09-28 · **Search placeholder** (resolves OD-17): "Search this pile" in every pile without AI search (free piles, and every pile until V-03b ships). Paid piles with AI search use D-187's "Search or ask: hotels, who booked the train, Kyoto food…", with the "✦ Kasa" tag. · Petr, OD-17
 - **D-191** · 2026-09-28 · Staging Postgres (F-09): Neon through the Vercel Marketplace, on the **Free** plan for now. The web app alone lets the database sleep, so it stays under 100 CU-hours. Switch to **Launch** (about $19/month) when F-10 starts the realtime service and worker: LISTEN and the job queue's polling keep it awake all month, about 183 CU-hours. Vercel gets the pooled `DATABASE_URL` and the direct `DATABASE_URL_UNPOOLED`. The postgres.js client turns prepared statements off on pooled (`-pooler.`) hosts. Migrations run in the Vercel build (`db:migrate:deploy`, over the direct URL), but only where `MIGRATE_ON_BUILD=1` is set, so previews sharing the staging database never apply unmerged migrations. · Petr, F-09
 - **D-192** · 2026-09-28 · Staging media storage (F-09): Cloudflare R2, bucket `kasa-staging-media`, in the **EU jurisdiction** (`<account>.eu.r2.cloudflarestorage.com`). A location hint isn't enough: D-111 needs the legal EU guarantee, and the first bucket had to be recreated. The web app uses an Account API token with Object Read & Write on that bucket only. Previews share the bucket, as they share the staging database. `S3_REGION=auto`, `S3_FORCE_PATH_STYLE=true`. The bucket's CORS policy allows only `PUT` with `content-type` from the two production origins (`kasa-zeta-rouge.vercel.app` and `kasa-petrandrianov-9913s-projects.vercel.app`), so uploads from preview URLs are refused. `pnpm --filter @kasa/media storage:check <origin>` checks a real bucket: signed PUT limits, stored type and size, and CORS. Its output never includes credentials. The CDN moves to F-15, because Cloudflare needs a custom domain for it, and the domain waits on the name (OD-18). Until then, members get 5-minute signed URLs straight from R2. · Petr, F-09
+- **D-193** · 2026-09-29 · Staging sign-in (F-12): staging is the Vercel production deployment at `https://kasa-zeta-rouge.vercel.app`, which is `BETTER_AUTH_URL` for Production. It uses its own Google OAuth Web client, "Kasa staging", in the same Google Cloud project as the dev client, so either can be rotated without breaking the other. Its only origin is the staging URL, and its only redirect URI is `<BETTER_AUTH_URL>/api/auth/callback/google`. `BETTER_AUTH_SECRET` is random and set for Production and for Preview, with a different value for each, so a session cookie from a preview is not accepted on staging, even though they share the database. Previews have no Google sign-in, because Google refuses wildcard redirect URIs and every preview has a new URL. Before pilot testers are invited, the Google consent screen must list them as test users or be published. Kasa asks only for name, email and profile picture, so publishing needs no Google review. · Petr, F-12
   - Search matches by meaning as well as by words. "hotel", "airbnb", "where to stay", or "sleep" find every place to stay, and the same goes for food, getting around, sights, and so on. People can also ask questions ("who booked the train?").
   - Exact matches come first, then related ones, each with "✦ Related: {concept}" under it.
   - When Kasa recognises the intent, a Kasa Bot card above the results says how it read the search ("Kasa understood 'Hotel' as places to stay") and gives a one- or two-sentence answer drawn only from this pile.
@@ -310,10 +311,10 @@ Depends on: F-01
 Depends on: F-06
 - [ ] `pnpm db:seed` uploads the prototype images (`design/prototype/img/`) to the local bucket under the `seed/` keys the seed data already uses, so the demo renders with pictures.
 
-### F-12 · Sign-in on staging · `in-progress` · branch `f-12-staging-auth`
+### F-12 · Sign-in on staging · `done` · branch `f-12-staging-auth`
 Depends on: F-05, F-09
-- [ ] `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` set in the Vercel project (not in the repo); the staging callback URL added to the Google OAuth client.
-- [ ] Sign in and out on staging works end to end.
+- [x] `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` set in the Vercel project (not in the repo); the staging callback URL added to the Google OAuth client. (A separate "Kasa staging" client, D-193.)
+- [x] Sign in and out on staging works end to end. (Petr, 2026-09-29, on https://kasa-zeta-rouge.vercel.app. He landed in his personal pile with the welcome card.)
 
 ### F-13 · Email sending on staging and production · `todo`
 Depends on: P-12, F-10
@@ -642,3 +643,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-28 · OD-17 answered (D-190): "Search this pile" until a pile has AI search, then D-187's "Search or ask…"; V-03a is unblocked. · [#27](https://github.com/uxpetr/kasa/pull/27)
 - 2026-09-28 · F-09, database: Neon (Free plan, EU) attached through Vercel. The production build migrates over the direct URL, and the app reads through the pooled connection (D-191). The bucket and CDN are still to do. · [#28](https://github.com/uxpetr/kasa/pull/28)
 - 2026-09-28 · F-09 done: the R2 staging bucket is in the EU jurisdiction and its keys are in Vercel. `storage:check` confirmed on Vercel that R2 enforces the signed type and size, and that CORS allows the staging origin. The media CDN moves to F-15, which waits on OD-18 (D-192). · [#29](https://github.com/uxpetr/kasa/pull/29)
+- 2026-09-29 · F-12 done: staging sign-in works with its own Google client. The auth secret, URL and Google keys are in Vercel. Petr signed in and out on https://kasa-zeta-rouge.vercel.app (D-193). · PR_LINK
