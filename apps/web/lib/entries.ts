@@ -6,6 +6,7 @@ import { errorAttributes } from "@kasa/observability";
 import { track } from "@kasa/shared";
 import { canAdd, canDeleteEntry, canReact, canRead, projectAccess } from "./access";
 import { log } from "./log";
+import { tagsKasa } from "./mentions";
 import { parseMentions, queueNotifications, recordNotifications } from "./notifications";
 import { isReaction, REACTIONS, type Reaction } from "./reactions";
 import { fail, isUuid, ok, type Result } from "./result";
@@ -319,6 +320,11 @@ function toFeedEntry(r: Row): FeedEntry {
   };
 }
 
+async function botMode(db: Database, projectId: string) {
+  const [row] = await db.select({ mode: schema.projects.botMode }).from(schema.projects).where(eq(schema.projects.id, projectId));
+  return row?.mode ?? "off";
+}
+
 /** A whole message that is one http(s) URL, or null (D-149). */
 export function soleUrl(text: string): string | null {
   if (!/^https?:\/\/\S+$/i.test(text)) return null;
@@ -396,8 +402,12 @@ export async function createEntry(
 
   const url = uploadIds.length === 0 ? soleUrl(text) : null;
   const kind: EntryKind = uploadIds.length ? "photo" : url ? "link" : "note";
+  // Tagging @kasa in a note or caption asks Kasa Bot (P-17), unless the pile turned it off.
+  // Without a queue nothing would fill in the answer, so no card is made.
+  const asksKasa = !!jobs && kind !== "link" && tagsKasa(text) && (await botMode(db, projectId)) !== "off";
 
   let recipients: string[] = [];
+  let botEntryId: string | null = null;
   const entryId = await db
     .transaction(async (tx) => {
     const [entry] = await tx
@@ -414,6 +424,15 @@ export async function createEntry(
     }
     if (kind === "link") await tx.insert(schema.linkPreviews).values({ entryId: entry!.id, url: url! });
     recipients = await recordNotifications(tx, { id: entry!.id, projectId, authorId: userId }, original?.authorId ?? null, mentions.value);
+    if (asksKasa) {
+      // The bot's reply, "pending" until the worker answers. clock_timestamp() puts it after the
+      // question, which has the transaction's now().
+      const [bot] = await tx
+        .insert(schema.entries)
+        .values({ projectId, authorId: null, kind: "bot", replyToId: entry!.id, botCard: "pending", createdAt: sql`clock_timestamp()` })
+        .returning({ id: schema.entries.id });
+      botEntryId = bot!.id;
+    }
     return entry!.id;
     })
     // Two sends racing with the same image: the unique index lets only one through.
@@ -429,6 +448,15 @@ export async function createEntry(
       await queueNotifications(db, jobs, projectId, recipients);
     } catch (error) {
       log.error("follow-up jobs not queued", { "entry.id": entryId, "project.id": projectId, ...errorAttributes(error) });
+    }
+    if (botEntryId) {
+      try {
+        await jobs.send("bot.answer", { entryId: botEntryId });
+      } catch (error) {
+        // Say so on the card rather than leaving it pending forever.
+        log.error("bot answer not queued", { "entry.id": botEntryId, "project.id": projectId, ...errorAttributes(error) });
+        await db.update(schema.entries).set({ botCard: "failed" }).where(eq(schema.entries.id, botEntryId));
+      }
     }
   }
   // Entry ids let the pilot dashboard join replies to what they answer (G1, docs/pilot-dashboard.md).

@@ -563,3 +563,9 @@ button.reaction::after {
 .inviteActions button {
   white-space: nowrap;
 }
+
+/* Kasa Bot is still answering (P-17). */
+.botPending {
+  font-style: italic;
+  opacity: 0.8;
+}

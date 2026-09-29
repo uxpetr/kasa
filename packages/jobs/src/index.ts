@@ -9,12 +9,14 @@ export interface JobPayloads {
   "link.unfurl": { entryId: string };
   "notify.send": { userId: string; projectId: string };
   "feedback.send": { feedbackId: string };
+  /** Fills in a pending Kasa Bot answer; `entryId` is the bot's own entry (P-17). */
+  "bot.answer": { entryId: string };
 }
 export type JobName = keyof JobPayloads;
 
 /** What's stored: the payload plus the sender's trace context, so the job continues its trace (D-137). */
 export type JobData<N extends JobName> = JobPayloads[N] & { _trace?: TraceCarrier };
-export const JOB_NAMES = ["media.process", "link.unfurl", "notify.send", "feedback.send"] as const satisfies readonly JobName[];
+export const JOB_NAMES = ["media.process", "link.unfurl", "notify.send", "feedback.send", "bot.answer"] as const satisfies readonly JobName[];
 
 export interface SendOptions {
   /** Don't run before this moment. */

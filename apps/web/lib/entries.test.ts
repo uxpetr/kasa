@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { and, eq, schema } from "@kasa/db";
 import { createTestDatabase, type TestDatabase } from "@kasa/db/testing";
+import type { JobQueue } from "@kasa/jobs";
 import { setAnalyticsSink, type TrackedEvent } from "@kasa/shared";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { FeedEntry } from "./entries";
@@ -147,6 +148,61 @@ describe.skipIf(!process.env.DATABASE_URL)("entries", () => {
       } finally {
         await db().update(schema.projects).set({ archivedAt: null }).where(eq(schema.projects.id, projectId));
       }
+    });
+  });
+
+  describe("asking Kasa Bot (P-17)", () => {
+    const sent: { name: string; payload: unknown }[] = [];
+    const queue: JobQueue = { send: async (name, payload) => void sent.push({ name, payload }) };
+    beforeEach(() => {
+      sent.length = 0;
+    });
+    const botReplies = (questionId: string) =>
+      db().select().from(schema.entries).where(and(eq(schema.entries.replyToId, questionId), eq(schema.entries.kind, "bot")));
+
+    it("makes a pending bot reply after the question and queues bot.answer", async () => {
+      const res = await createEntry(db(), u.editor, projectId, { text: "@kasa which of these is closest to Gion?" }, queue);
+      const questionId = res.ok ? res.value.id : "";
+      const [bot, ...rest] = await botReplies(questionId);
+      expect(rest).toHaveLength(0);
+      expect(bot).toMatchObject({ projectId, authorId: null, kind: "bot", body: null, botCard: "pending" });
+      const [question] = await db().select().from(schema.entries).where(eq(schema.entries.id, questionId));
+      expect(bot!.createdAt.getTime()).toBeGreaterThanOrEqual(question!.createdAt.getTime());
+      expect(sent).toContainEqual({ name: "bot.answer", payload: { entryId: bot!.id } });
+      // The bot's card isn't a person's post, so it isn't tracked as one (G1 counts people).
+      expect(events.map((e) => e.event)).toEqual(["entry_created"]);
+    });
+
+    it("counts a typed @kasa in any case, and a photo caption, but not an email address or a longer name", async () => {
+      for (const text of ["Hey @Kasa, any tips?", "(@kasa) ideas?", "@KASA"]) {
+        const res = await createEntry(db(), u.editor, projectId, { text }, queue);
+        expect(await botReplies(res.ok ? res.value.id : "")).toHaveLength(1);
+      }
+      const photo = await createEntry(db(), u.editor, projectId, { text: "@kasa where is this?", uploadIds: [await readyUpload()] }, queue);
+      expect(await botReplies(photo.ok ? photo.value.id : "")).toHaveLength(1);
+      for (const text of ["mail hello@kasa.com", "@kasabot hi", "@kasa_x hi", "kasa, hi"]) {
+        const res = await createEntry(db(), u.editor, projectId, { text }, queue);
+        expect(await botReplies(res.ok ? res.value.id : "")).toHaveLength(0);
+      }
+      expect(sent.filter((j) => j.name === "bot.answer")).toHaveLength(4);
+    });
+
+    it("stays quiet when the pile turned Kasa Bot off", async () => {
+      await db().update(schema.projects).set({ botMode: "off" }).where(eq(schema.projects.id, projectId));
+      try {
+        const res = await createEntry(db(), u.editor, projectId, { text: "@kasa hello?" }, queue);
+        expect(await botReplies(res.ok ? res.value.id : "")).toHaveLength(0);
+        expect(sent).toHaveLength(0);
+      } finally {
+        await db().update(schema.projects).set({ botMode: "tagged" }).where(eq(schema.projects.id, projectId));
+      }
+    });
+
+    it("says it failed on the card when the job can't be queued", async () => {
+      const broken: JobQueue = { send: async (name) => { if (name === "bot.answer") throw new Error("queue down"); } };
+      const res = await createEntry(db(), u.editor, projectId, { text: "@kasa hello?" }, broken);
+      expect(res.ok).toBe(true);
+      expect(await botReplies(res.ok ? res.value.id : "")).toMatchObject([{ botCard: "failed" }]);
     });
   });
 

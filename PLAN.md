@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Chrome extension (D-158), pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** P-17 (minimal Kasa Bot; its staging run needs F-10), staging (F-10), F-13 (Resend), F-16 (publish the Google consent screen before inviting testers) before the pilot starts; then set `pilot_start` on the pilot dashboard (D-194) once the first day is fixed.
+**Next up:** staging (F-10, which also switches on real Kasa Bot answers), F-13 (Resend), F-16 (publish the Google consent screen before inviting testers) before the pilot starts; then set `pilot_start` on the pilot dashboard (D-194) once the first day is fixed.
 **Blocked:** P-16, on OD-14 (privacy note). In phase 2: V-12 until Petr finishes the scroll story (D-189), V-12, V-14 and F-15 (media CDN) on OD-18 (clear or change the name). Real emails, including feedback emails, need F-13 (a Resend account and a sender domain from Petr).
 
 ---
@@ -194,6 +194,20 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-195** · 2026-09-29 · Seed media (F-11): after seeding, `pnpm db:seed` writes the 5 prototype images to the bucket from `.env` under `seed/<file>`, overwriting earlier copies. It prints "seed images skipped" when storage isn't configured. The file list, `SEED_IMAGES`, lives in `packages/db/src/seed-images.ts` so the seed script and the upload don't import each other; a module cycle under the script's top-level `await` hung the process. A db test checks that the seed refers only to those keys. `@kasa/db` now depends on `@kasa/media`, which brings the S3 SDK but not sharp, and exports `@kasa/db/seed`. The CI end-to-end job runs `pnpm db:seed` before Playwright. · F-11
 - **D-196** · 2026-09-29 · **Minimal Kasa Bot in the prototype** (P-17): tagging `@kasa` in the web composer gets an answer on a bot card, drawn only from that pile. There is no web search, categories or unprompted tips; those stay in V-05 and V-06. It's free during the pilot, and whether it's free or paid afterwards stays open in OD-05, decided with the pilot's usage and costs. Model spending is capped at **$20 a month** during the pilot; at the cap, the bot stops answering and says so. V-04 builds on P-17 and adds Telegram and launch pricing. The extension stays in v2, after launch (D-158). Its dropped Phase 1 tasks, P-08 to P-11, move to the Phase 3 section next to L-06, unchanged. · Petr
 - **D-197** · 2026-09-29 · Design principle: **Kasa Bot's cards are never tilted.** People's objects keep their gentle, stable tilt (up to 2.5°). `BotCard` in `packages/ui` has no `rotate` prop and always renders at 0°, and the feed doesn't tilt a bot entry's outline either. Unit and e2e tests check it, in the `/design` showcase and the seeded feed. · Petr
+- **D-198** · 2026-09-29 · Kasa Bot's minimal tagged answers (P-17):
+  - **Trigger:** a note or photo caption that tags `@kasa` (a whole word, any case; typed or picked) makes the web app add a pending bot reply, `bot_card` "pending", and queue `bot.answer`. It doesn't when the pile's `bot_mode` is "off". The reply's `created_at` is `clock_timestamp()`, so it sorts after the question.
+  - **Answering:** the worker fills in the body and clears `bot_card`, or sets "failed", "paused" or "limited". Only a still-pending card changes, so a retried job can't overwrite an answer. Live updates carry the change, like link unfurls.
+  - **Reading one pile:** the bot reads the pile only through `apps/worker/src/bot/pile.ts`. That covers the pile name, its members' names, and its newest 200 live entries, up to 40,000 characters. Each entry gives author, kind, time, body, link title, site, URL and place, capture page and comments, and which entry it replies to. Every query is filtered by the pile id, and images and storage keys are never read. The prompt marks pile content as information, not instructions.
+  - **Model:** a `BotModel` interface. Real answers use the AI SDK through the Vercel AI Gateway, `anthropic/claude-haiku-4.5`, capped at 600 output tokens, a 30-second timeout and one retry. `KASA_BOT_MODEL=stub` answers without a model, for local development and CI. Without a key and without the stub, the bot is off and tags get a "couldn't answer" card, so a stub answer can never reach pilot users.
+  - **Spending:** every model call is recorded in `bot_usage`, with model, tokens, list-price cost in millionths of a dollar, and outcome. Rows outlive their pile, so deleting a pile doesn't reset the spend. That table drives the pile limit, 30 per 24 hours (Petr), and the monthly cap, $20 per calendar month in UTC (D-196). The prices live in `PRICES`, and a model without a price is refused.
+  - **Card wording (Petr):**
+    - "On it. Looking through this pile…"
+    - "I couldn't answer that just now. Tag @kasa again to retry."
+    - "I'm paused until next month, because I've used this month's budget. Everything else in Kasa works as usual."
+    - "That's a lot of questions for one day. I'll be back tomorrow."
+  - **Analytics:** bot answers aren't tracked as `entry_created` or `reply_created`, so G1 counts only people's replies. `bot_answered` and `bot_failed` (reason: error, no_model, paused, limited) come from the worker, attributed to the person who asked.
+  - **Instructions:** they tell the bot to be short and in plain text, say when the pile doesn't have the answer, and never invent facts or claim web lookups. Petr can revise them in `apps/worker/src/bot/index.ts`.
+  · Petr, P-17
   - Search matches by meaning as well as by words. "hotel", "airbnb", "where to stay", or "sleep" find every place to stay, and the same goes for food, getting around, sights, and so on. People can also ask questions ("who booked the train?").
   - Exact matches come first, then related ones, each with "✦ Related: {concept}" under it.
   - When Kasa recognises the intent, a Kasa Bot card above the results says how it read the search ("Kasa understood 'Hotel' as places to stay") and gives a one- or two-sentence answer drawn only from this pile.
@@ -334,6 +348,8 @@ Depends on: F-03; needed by F-06 and P-06
 - [ ] Worker env also has the `S3_*` variables for the staging bucket (D-192), with the same values as the web app.
 - [ ] Switch the Neon plan from Free to Launch before the worker and realtime service run all the time (D-191).
 - [ ] Worker env also includes `FEEDBACK_EMAIL` (`petr.andrianov@gmail.com`), so pilot feedback is emailed (D-182, from F-14).
+- [ ] Kasa Bot answers for real (D-198): Petr creates an AI Gateway key on his personal Vercel team, and the worker gets it as `AI_GATEWAY_API_KEY`, with `KASA_BOT_MODEL` unset (Claude Haiku 4.5). Check the gateway's monthly free credit and that the model id works. A tag on staging gets a real answer.
+- [ ] Worker env also has `POSTHOG_API_KEY`, because `bot_answered` and `bot_failed` are sent from the worker (D-198, changing D-183's "the worker sends no events").
 
 ### F-11 · Seed media in local storage · `done` · branch `f-11-seed-media`
 Depends on: F-06
@@ -449,14 +465,14 @@ Depends on: P-01
 - [x] Removing a member or a member leaving also ends their live updates. P-06 tickets are only checked when connecting, so close that user's sockets for the project.
 - [x] Permissions enforced on the server and tested, like P-01.
 
-### P-17 · Kasa Bot: minimal tagged answers · `in-progress` · branch `p-17-kasa-bot`
+### P-17 · Kasa Bot: minimal tagged answers · `done` · branch `p-17-kasa-bot`
 Depends on: P-03, P-07; on staging, the worker (F-10)
-- [ ] `@kasa` in the web composer makes Kasa Bot reply with a bot card, as a reply to the tagging entry. It answers from this pile only: notes, replies, link titles and descriptions, place details, and capture comments. There is no web search, categories or unprompted posts (D-196).
-- [ ] The bot is a separate service with read access to one pile per answer. Tests prove that it can't read another pile's entries, members or media, even when the question names one (CLAUDE.md hard rule).
-- [ ] The answer runs as a worker job, not in the web request. The composer shows that Kasa Bot is answering, and a failed answer says so on a bot card instead of failing silently.
-- [ ] The bot never posts as a person; answers are `kind` "bot" entries, like the welcome card.
-- [ ] Cost guardrails: a per-pile rate limit, plus a spending cap of **$20 a month** across all piles during the pilot. At the cap, the bot stops answering and says so on a bot card. The wording is Petr's to confirm in this task.
-- [ ] Analytics: `bot_answered` and `bot_failed` with ids only. The model and token counts go in logs, not in PostHog.
+- [x] `@kasa` in the web composer makes Kasa Bot reply with a bot card, as a reply to the tagging entry. It answers from this pile only: notes, replies, link titles and descriptions, place details, and capture comments. There is no web search, categories or unprompted posts (D-196). (Links give their title, site name, URL, and place details; there is no description column yet. A typed `@kasa` counts as well as a picked one; an email address like `hi@kasa.com` doesn't. D-198.)
+- [x] The bot is a separate service with read access to one pile per answer. Tests prove that it can't read another pile's entries, members or media, even when the question names one (CLAUDE.md hard rule). (It runs in the worker, not as its own deployment, and reads only through `apps/worker/src/bot/pile.ts`, where every query is filtered by the asking pile's id and media is never read. `bot.test.ts` asks about another pile by name, by id, and with an "ignore your rules" prompt, from a member of both piles, and checks that the model sees none of it, D-198.)
+- [x] The answer runs as a worker job, not in the web request. The composer shows that Kasa Bot is answering, and a failed answer says so on a bot card instead of failing silently. (The "answering" state is a pending bot card in the feed, "On it. Looking through this pile…", which the answer replaces through live updates.)
+- [x] The bot never posts as a person; answers are `kind` "bot" entries, like the welcome card.
+- [x] Cost guardrails: a per-pile rate limit, plus a spending cap of **$20 a month** across all piles during the pilot. At the cap, the bot stops answering and says so on a bot card. The wording is Petr's to confirm in this task. (30 answers per pile in any 24 hours; the cap counts list-price cost per calendar month in UTC. Petr approved the card wording, D-198.)
+- [x] Analytics: `bot_answered` and `bot_failed` with ids only. The model and token counts go in logs, not in PostHog. (`bot_failed` also has a `reason` enum.)
 
 ### G1 · Gate: shared items get replies (D-159)
 Pass bar set in OD-03. Record the result and Petr's go/no-go in the Decision log. If it fails, stop and rethink the core loop with Petr before phase 2.
@@ -668,3 +684,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-29 · F-11 done: `pnpm db:seed` uploads the demo's 5 pictures to the local bucket, and an e2e test checks that they render in "Japan 2027" (D-195). · [#32](https://github.com/uxpetr/kasa/pull/32)
 - 2026-09-29 · PLAN: Phase 0 tasks sorted by id (F-01 to F-16); no content changed. · [#33](https://github.com/uxpetr/kasa/pull/33)
 - 2026-09-29 · PLAN: new P-17 (minimal Kasa Bot tagged answers) in the prototype, with a $20/month cap during the pilot. OD-05 is narrowed to pricing. The dropped extension tasks P-08 to P-11 move to Phase 3 (D-196). · [#33](https://github.com/uxpetr/kasa/pull/33)
+- 2026-09-29 · P-17 done: tagging `@kasa` gets a bot card answered from that pile only, with a pending card first and then the answer or a reason. There's a 30-per-day pile limit and a $20 monthly cap. Tests prove the bot can't read other piles. It uses the stub model locally and in CI; real answers switch on in F-10 (D-198). Kasa Bot cards are never tilted (D-197). · PR_LINK
