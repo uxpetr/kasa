@@ -44,14 +44,22 @@ export function sdkModel(id: string, model: LanguageModel = id): BotModel {
   };
 }
 
-/** Answers without a model: says how much of the pile it was given, so tests and local runs can see the wiring. */
-export const stubModel: BotModel = {
-  id: "stub",
-  async answer({ prompt }) {
-    const entries = prompt.split("\n").filter((line) => line.startsWith("#")).length;
-    return { text: `(Stub answer, no model.) I read ${entries} entries in this pile.`, model: "stub", inputTokens: 0, outputTokens: 0 };
-  },
-};
+/**
+ * Answers without a model: says how much of the pile it was given, so tests and local runs can see
+ * the wiring. `delayMs` stands in for the model's time, so the thinking state shows locally (D-199).
+ */
+export function createStubModel(delayMs = 0): BotModel {
+  return {
+    id: "stub",
+    async answer({ prompt }) {
+      if (delayMs > 0) await new Promise((resolve) => setTimeout(resolve, delayMs));
+      const entries = prompt.split("\n").filter((line) => line.startsWith("#")).length;
+      return { text: `(Stub answer, no model.) I read ${entries} entries in this pile.`, model: "stub", inputTokens: 0, outputTokens: 0 };
+    },
+  };
+}
+export const stubModel = createStubModel();
+export const STUB_DELAY_MS = 1500;
 
 /**
  * KASA_BOT_MODEL picks the model: "stub" for local development and CI, otherwise a priced
@@ -60,7 +68,7 @@ export const stubModel: BotModel = {
  */
 export function botModelFromEnv(env: NodeJS.ProcessEnv): BotModel | null {
   const id = env.KASA_BOT_MODEL || DEFAULT_MODEL;
-  if (id === "stub") return stubModel;
+  if (id === "stub") return createStubModel(env.KASA_BOT_STUB_DELAY_MS ? Number(env.KASA_BOT_STUB_DELAY_MS) : STUB_DELAY_MS);
   if (!env.AI_GATEWAY_API_KEY) return null;
   return sdkModel(id);
 }

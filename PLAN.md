@@ -209,6 +209,15 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
   - **AI SDK version:** `ai` is pinned to `~7.0.118`, because pnpm's default one-day release-age check refused newer builds. The check stays on, with no exclusions.
   - **Instructions:** they tell the bot to be short and in plain text, say when the pile doesn't have the answer, and never invent facts or claim web lookups. Petr can revise them in `apps/worker/src/bot/index.ts`.
   · Petr, P-17
+- **D-199** · 2026-09-29 · Kasa Bot's thinking state, inspired by AI assistants such as Claude and Perplexity (Petr picked it from three options):
+  - **The card:** the k mark beside it breathes, and the card shows a shimmering step. "Reading 24 entries…" holds for at least a second, then "Writing an answer…" appears once the worker has read the pile. The answer replaces the step.
+  - **Above the composer:** a pill reads "Kasa Bot is answering…" and goes to the card when clicked.
+  - **Reduced motion:** no shimmer or breathing, just the text.
+  - **The count:** the web app stores how many entries the answer will read in `entries.bot_entries_read`, counted the way the worker reads. The worker sets `bot_card` "writing" with the exact count just before calling the model. A job retried after a crash finishes a "writing" card too.
+  - **Stuck answers:** an answer still open after 2 minutes (`BOT_ANSWER_STALE_MS`), for example with no worker running, stops thinking and shows the "couldn't answer" text.
+  - **Local stub:** it waits 1.5 seconds (`KASA_BOT_STUB_DELAY_MS`), so the state can be seen.
+  - **Wording:** "Reading N entries…", "Writing an answer…" and "Kasa Bot is answering…" are from the option Petr chose. "On it. Looking through this pile…" remains only for cards without a count.
+  · Petr, P-17
   - Search matches by meaning as well as by words. "hotel", "airbnb", "where to stay", or "sleep" find every place to stay, and the same goes for food, getting around, sights, and so on. People can also ask questions ("who booked the train?").
   - Exact matches come first, then related ones, each with "✦ Related: {concept}" under it.
   - When Kasa recognises the intent, a Kasa Bot card above the results says how it read the search ("Kasa understood 'Hotel' as places to stay") and gives a one- or two-sentence answer drawn only from this pile.
@@ -685,4 +694,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-29 · F-11 done: `pnpm db:seed` uploads the demo's 5 pictures to the local bucket, and an e2e test checks that they render in "Japan 2027" (D-195). · [#32](https://github.com/uxpetr/kasa/pull/32)
 - 2026-09-29 · PLAN: Phase 0 tasks sorted by id (F-01 to F-16); no content changed. · [#33](https://github.com/uxpetr/kasa/pull/33)
 - 2026-09-29 · PLAN: new P-17 (minimal Kasa Bot tagged answers) in the prototype, with a $20/month cap during the pilot. OD-05 is narrowed to pricing. The dropped extension tasks P-08 to P-11 move to Phase 3 (D-196). · [#33](https://github.com/uxpetr/kasa/pull/33)
-- 2026-09-29 · P-17 done: tagging `@kasa` gets a bot card answered from that pile only, with a pending card first and then the answer or a reason. There's a 30-per-day pile limit and a $20 monthly cap. Tests prove the bot can't read other piles. It uses the stub model locally and in CI; real answers switch on in F-10 (D-198). Kasa Bot cards are never tilted (D-197). · [#34](https://github.com/uxpetr/kasa/pull/34)
+- 2026-09-29 · P-17 done: tagging `@kasa` gets a bot card answered from that pile only, with a pending card first and then the answer or a reason. There's a 30-per-day pile limit and a $20 monthly cap. Tests prove the bot can't read other piles. It uses the stub model locally and in CI; real answers switch on in F-10 (D-198). Kasa Bot cards are never tilted (D-197). A thinking state shows while it answers: a breathing k, "Reading N entries…" then "Writing an answer…", and a pill above the composer (D-199). · [#34](https://github.com/uxpetr/kasa/pull/34)

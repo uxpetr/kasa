@@ -251,7 +251,10 @@ export const entries = pgTable(
     // Kasa Bot cards with an action: "welcome" is the first card in My pile (D-180).
     // An answer to @kasa (P-17) is "pending" until the worker fills in the body and clears it,
     // or sets "failed", "paused" (monthly spending cap), or "limited" (the pile's daily limit).
+    // "writing" means the worker has read the pile and the model is answering (D-199).
     botCard: text("bot_card"),
+    // How many entries a pending answer reads, for its "Reading 24 entries…" step (D-199).
+    botEntriesRead: integer("bot_entries_read"),
     editedAt: timestamp("edited_at", { withTimezone: true }),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
     // Who deleted it, for the outline's wording (D-155); the author or the owner.
