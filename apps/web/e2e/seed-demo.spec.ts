@@ -13,6 +13,12 @@ test("the seeded demo renders its pictures", async ({ browser }) => {
     const page = await context.newPage();
     await page.goto(`/projects/${SEED.projectId}`);
     await expect(page.getByRole("heading", { name: "Japan 2027" })).toBeVisible();
+    // Kasa Bot's cards in the feed are never tilted (D-197).
+    const bots = page.locator(".kasa-bot");
+    await expect(bots.first()).toBeVisible();
+    for (const t of await bots.evaluateAll((els) => els.map((el) => getComputedStyle(el).transform))) {
+      expect(["none", "matrix(1, 0, 0, 1, 0, 0)"]).toContain(t);
+    }
     const images = page.locator('img[src^="/api/entries/"]');
     await expect(images).toHaveCount(5);
     for (const image of await images.all()) {

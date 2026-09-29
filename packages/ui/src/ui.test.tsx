@@ -190,6 +190,10 @@ describe("BotCard in the feed", () => {
     expect(renderToStaticMarkup(<BotCard>Hi</BotCard>)).toContain("kasa-bot-header");
     expect(renderToStaticMarkup(<BotCard header={false}>Hi</BotCard>)).not.toContain("kasa-bot-header");
   });
+
+  it("is never tilted (D-197)", () => {
+    expect(renderToStaticMarkup(<BotCard>Hi</BotCard>)).toContain("--kasa-rotate:0deg");
+  });
 });
 
 describe("P-04 objects", () => {

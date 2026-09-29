@@ -4,20 +4,19 @@ import { objectStyle } from "../rotation";
 /**
  * Kasa Bot always uses the pine index card with the k mark, never a sticky or an avatar.
  * In the feed the k mark and name already sit beside the card, so `header={false}` drops them.
+ * Bot cards are never tilted (D-197), so unlike the other objects it takes no `rotate`.
  */
 export function BotCard({
   children,
   actions,
-  rotate = -1,
   header = true,
 }: {
   children: ReactNode;
   actions?: ReactNode;
-  rotate?: number;
   header?: boolean;
 }) {
   return (
-    <article className="kasa-object kasa-bot" style={objectStyle(rotate)} aria-label="Kasa Bot">
+    <article className="kasa-object kasa-bot" style={objectStyle(0)} aria-label="Kasa Bot">
       {header ? (
         <div className="kasa-bot-header">
           <span className="kasa-bot-mark" aria-hidden="true">
