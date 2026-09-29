@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./testing": "./src/testing.ts"
+    "./testing": "./src/testing.ts",
+    "./seed": "./src/seed.ts"
   },
   "scripts": {
     "typecheck": "tsc",
@@ -24,6 +25,7 @@
     "vitest": "^5.0.2"
   },
   "dependencies": {
+    "@kasa/media": "workspace:*",
     "drizzle-orm": "^0.45.3",
     "postgres": "^3.4.9"
   }
