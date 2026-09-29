@@ -206,6 +206,7 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
     - "I'm paused until next month, because I've used this month's budget. Everything else in Kasa works as usual."
     - "That's a lot of questions for one day. I'll be back tomorrow."
   - **Analytics:** bot answers aren't tracked as `entry_created` or `reply_created`, so G1 counts only people's replies. `bot_answered` and `bot_failed` (reason: error, no_model, paused, limited) come from the worker, attributed to the person who asked.
+  - **AI SDK version:** `ai` is pinned to `~7.0.118`, because pnpm's default one-day release-age check refused newer builds. The check stays on, with no exclusions.
   - **Instructions:** they tell the bot to be short and in plain text, say when the pile doesn't have the answer, and never invent facts or claim web lookups. Petr can revise them in `apps/worker/src/bot/index.ts`.
   · Petr, P-17
   - Search matches by meaning as well as by words. "hotel", "airbnb", "where to stay", or "sleep" find every place to stay, and the same goes for food, getting around, sights, and so on. People can also ask questions ("who booked the train?").
@@ -684,4 +685,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-29 · F-11 done: `pnpm db:seed` uploads the demo's 5 pictures to the local bucket, and an e2e test checks that they render in "Japan 2027" (D-195). · [#32](https://github.com/uxpetr/kasa/pull/32)
 - 2026-09-29 · PLAN: Phase 0 tasks sorted by id (F-01 to F-16); no content changed. · [#33](https://github.com/uxpetr/kasa/pull/33)
 - 2026-09-29 · PLAN: new P-17 (minimal Kasa Bot tagged answers) in the prototype, with a $20/month cap during the pilot. OD-05 is narrowed to pricing. The dropped extension tasks P-08 to P-11 move to Phase 3 (D-196). · [#33](https://github.com/uxpetr/kasa/pull/33)
-- 2026-09-29 · P-17 done: tagging `@kasa` gets a bot card answered from that pile only, with a pending card first and then the answer or a reason. There's a 30-per-day pile limit and a $20 monthly cap. Tests prove the bot can't read other piles. It uses the stub model locally and in CI; real answers switch on in F-10 (D-198). Kasa Bot cards are never tilted (D-197). · PR_LINK
+- 2026-09-29 · P-17 done: tagging `@kasa` gets a bot card answered from that pile only, with a pending card first and then the answer or a reason. There's a 30-per-day pile limit and a $20 monthly cap. Tests prove the bot can't read other piles. It uses the stub model locally and in CI; real answers switch on in F-10 (D-198). Kasa Bot cards are never tilted (D-197). · [#34](https://github.com/uxpetr/kasa/pull/34)
