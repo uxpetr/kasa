@@ -88,7 +88,8 @@ export function FeedEntryView({ entry, viewerId, canAdd, isOwner, archived, onCh
   const [viewing, setViewing] = useState(false);
   const isBot = entry.kind === "bot";
   const name = isBot ? "Kasa Bot" : entry.author?.id === viewerId ? "You" : (entry.author?.name ?? "");
-  const rotate = tiltFor(entry.id);
+  // Kasa Bot's cards are never tilted (D-197); everything else gets a stable hand-placed tilt.
+  const rotate = isBot ? 0 : tiltFor(entry.id);
 
   if (entry.deleted) {
     return (
@@ -112,7 +113,6 @@ export function FeedEntryView({ entry, viewerId, canAdd, isOwner, archived, onCh
   } else if (isBot) {
     object = (
       <BotCard
-        rotate={rotate}
         header={false}
         actions={entry.botCard === "welcome" ? <NewProject trigger={(open) => <BotButton onClick={open}>Start a pile</BotButton>} /> : undefined}
       >

@@ -27,6 +27,10 @@ test.describe("component showcase", () => {
     );
     expect(angles.length).toBeGreaterThan(5);
     for (const a of angles) expect(a).toBeLessThanOrEqual(2.5001);
+    // Kasa Bot's cards are never tilted (D-197).
+    const botAngles = await page.locator(".kasa-bot").evaluateAll((els) => els.map((el) => getComputedStyle(el).transform));
+    expect(botAngles.length).toBeGreaterThan(0);
+    for (const t of botAngles) expect(["none", "matrix(1, 0, 0, 1, 0, 0)"]).toContain(t);
   });
 
   test("chips, pins, and the composer work from the keyboard with visible focus", async ({ page }) => {

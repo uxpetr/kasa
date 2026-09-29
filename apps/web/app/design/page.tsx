@@ -60,9 +60,8 @@ export default function DesignPage() {
           </Print>
         </Sample>
 
-        <Sample title="Kasa Bot" what="A pine index card with the k mark. Tips always have “Not now”.">
+        <Sample title="Kasa Bot" what="A pine index card with the k mark, never tilted. Tips always have “Not now”.">
           <BotCard
-            rotate={-1}
             actions={
               <>
                 <BotButton>Yes, suggest</BotButton>
@@ -72,7 +71,7 @@ export default function DesignPage() {
           >
             Kinkaku-ji and Kiyomizu-dera are on opposite sides of Kyoto. Split them across days?
           </BotCard>
-          <BotCard rotate={1.5}>
+          <BotCard>
             Sorted 3 new things into <strong>Sights</strong>.
           </BotCard>
         </Sample>
