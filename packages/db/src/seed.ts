@@ -3,6 +3,9 @@
 import { eq, inArray } from "drizzle-orm";
 import { createDb, requireDatabaseUrl, type Database } from "./client";
 import * as s from "./schema";
+import { seedKey, type SeedImage } from "./seed-images";
+
+export { SEED_IMAGES } from "./seed-images";
 
 // Fixed ids so the demo is stable across re-seeds and easy to link to.
 export const SEED = {
@@ -80,7 +83,7 @@ export async function seed(db: Database, now = new Date()) {
       "Plans",
     );
 
-    const sights = [
+    const sights: { title: string; area: string; image: SeedImage; url: string }[] = [
       { title: "Kinkaku-ji", area: "Kyoto · go early", image: "kinkakuji.jpg", url: "https://example.com/kinkaku-ji" },
       { title: "Kiyomizu-dera", area: "Kyoto · at sunset", image: "kiyomizu.jpg", url: "https://example.com/kiyomizu-dera" },
       { title: "Osaka Castle", area: "Day trip from Kyoto", image: "osaka-castle.jpg", url: "https://example.com/osaka-castle" },
@@ -94,7 +97,7 @@ export async function seed(db: Database, now = new Date()) {
         entryId: row.id,
         url: sight.url,
         title: sight.title,
-        imageKey: `seed/${sight.image}`,
+        imageKey: seedKey(sight.image),
         placeMeta: { type: "sight", area: sight.area },
       });
     }
@@ -126,7 +129,7 @@ export async function seed(db: Database, now = new Date()) {
     });
     await tx.insert(s.entryMedia).values({
       entryId: capture.id,
-      storageKey: "seed/tokyo-fuji.jpg",
+      storageKey: seedKey("tokyo-fuji.jpg"),
       role: "screenshot",
       width: 1440,
       height: 900,
@@ -192,7 +195,7 @@ export async function seed(db: Database, now = new Date()) {
       entryId: answer.id,
       url: "https://example.com/higashiyama",
       title: "Higashiyama lanes",
-      imageKey: "seed/higashiyama.jpg",
+      imageKey: seedKey("higashiyama.jpg"),
       placeMeta: { type: "sight", area: "Kyoto · a short walk from Kiyomizu-dera" },
     });
   });
@@ -203,6 +206,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   try {
     await seed(db);
     console.log("seeded Japan 2027");
+    const { uploadSeedImages } = await import("./seed-media");
+    console.log(await uploadSeedImages());
   } finally {
     await close();
   }

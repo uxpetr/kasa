@@ -3,7 +3,7 @@ import postgres from "postgres";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Database } from "./client";
 import * as s from "./schema";
-import { SEED, seed } from "./seed";
+import { SEED, SEED_IMAGES, seed } from "./seed";
 import { createTestDatabase, type TestDatabase } from "./testing";
 
 // Runs against a throwaway database next to DATABASE_URL, so local data is never touched.
@@ -35,6 +35,15 @@ describe.skipIf(!baseUrl)("database", () => {
         "telegram_messages", "uploads", "users", "verifications",
       ].sort(),
     );
+  });
+
+  it("only refers to seed images that are uploaded", async () => {
+    const keys = [
+      ...(await db.select({ key: s.linkPreviews.imageKey }).from(s.linkPreviews)),
+      ...(await db.select({ key: s.entryMedia.storageKey }).from(s.entryMedia)),
+    ].map((row) => row.key);
+    const seedKeys = new Set(keys.filter((key) => key?.startsWith("seed/")));
+    expect([...seedKeys].sort()).toEqual(SEED_IMAGES.map((file) => `seed/${file}`).sort());
   });
 
   it("seeds Japan 2027 with four members and one owner", async () => {
