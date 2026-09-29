@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Chrome extension (D-158), pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** staging (F-10), F-13 (Resend), F-16 (publish the Google consent screen before inviting testers) before the pilot starts; then set `pilot_start` on the pilot dashboard (D-194) once the first day is fixed.
+**Next up:** P-17 (minimal Kasa Bot; its staging run needs F-10), staging (F-10), F-13 (Resend), F-16 (publish the Google consent screen before inviting testers) before the pilot starts; then set `pilot_start` on the pilot dashboard (D-194) once the first day is fixed.
 **Blocked:** P-16, on OD-14 (privacy note). In phase 2: V-12 until Petr finishes the scroll story (D-189), V-12, V-14 and F-15 (media CDN) on OD-18 (clear or change the name). Real emails, including feedback emails, need F-13 (a Resend account and a sender domain from Petr).
 
 ---
@@ -192,6 +192,7 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-193** · 2026-09-29 · Staging sign-in (F-12): staging is the Vercel production deployment at `https://kasa-zeta-rouge.vercel.app`, which is `BETTER_AUTH_URL` for Production. It uses its own Google OAuth Web client, "Kasa staging", in the same Google Cloud project as the dev client, so either can be rotated without breaking the other. Its only origin is the staging URL, and its only redirect URI is `<BETTER_AUTH_URL>/api/auth/callback/google`. `BETTER_AUTH_SECRET` is random and set for Production and for Preview, with a different value for each, so a session cookie from a preview is not accepted on staging, even though they share the database. Previews have no Google sign-in, because Google refuses wildcard redirect URIs and every preview has a new URL. The consent screen is in **Testing** mode for now, so only listed test users can sign in. It must be published before the pilot testers are invited (F-16). Kasa asks only for name, email and profile picture, so publishing needs no Google review. · Petr, F-12
 - **D-194** · 2026-09-29 · Pilot dashboard (F-14): "Kasa pilot" in Petr's personal PostHog EU project `kasa` (id 286043), built through the REST API with a short-lived personal key limited to that project. The pilot start date isn't fixed, so both insights read a Date SQL variable, `pilot_start` ("Pilot start"), and cover the 28 days from it. The variable is set to 2026-09-29 for now; Petr changes it on the dashboard when the pilot starts. A check of staging events found only ids, `personal`, and PostHog's own `$lib`, `$geoip_disable` and `$process_person_profile` properties: no IP address, location or person profile (D-129). · Petr, F-14
 - **D-195** · 2026-09-29 · Seed media (F-11): after seeding, `pnpm db:seed` writes the 5 prototype images to the bucket from `.env` under `seed/<file>`, overwriting earlier copies. It prints "seed images skipped" when storage isn't configured. The file list, `SEED_IMAGES`, lives in `packages/db/src/seed-images.ts` so the seed script and the upload don't import each other; a module cycle under the script's top-level `await` hung the process. A db test checks that the seed refers only to those keys. `@kasa/db` now depends on `@kasa/media`, which brings the S3 SDK but not sharp, and exports `@kasa/db/seed`. The CI end-to-end job runs `pnpm db:seed` before Playwright. · F-11
+- **D-196** · 2026-09-29 · **Minimal Kasa Bot in the prototype** (P-17): tagging `@kasa` in the web composer gets an answer on a bot card, drawn only from that pile. There is no web search, categories or unprompted tips; those stay in V-05 and V-06. It's free during the pilot, and whether it's free or paid afterwards stays open in OD-05, decided with the pilot's usage and costs. Model spending is capped at **$20 a month** during the pilot; at the cap, the bot stops answering and says so. V-04 builds on P-17 and adds Telegram and launch pricing. The extension stays in v2, after launch (D-158). Its dropped Phase 1 tasks, P-08 to P-11, move to the Phase 3 section next to L-06, unchanged. · Petr
   - Search matches by meaning as well as by words. "hotel", "airbnb", "where to stay", or "sleep" find every place to stay, and the same goes for food, getting around, sights, and so on. People can also ask questions ("who booked the train?").
   - Exact matches come first, then related ones, each with "✦ Related: {concept}" under it.
   - When Kasa recognises the intent, a Kasa Bot card above the results says how it read the search ("Kasa understood 'Hotel' as places to stay") and gives a one- or two-sentence answer drawn only from this pile.
@@ -210,7 +211,7 @@ Questions only Petr can answer. Agents add to this list and don't guess. When on
 - [x] **OD-02** → D-111. Hosting and region. Suggested: EU hosting, since users and the company are in Finland, for GDPR. Blocks F-03.
 - [x] **OD-03** (resolved by D-178) Pilot length and the numeric pass bar for gate G1 (the share of links and photos with at least one reply, D-159). Blocks P-13.
 - [ ] **OD-04** Positioning line for the product (PRD open question).
-- [ ] **OD-05** Kasa Bot: free or paid, given model costs, and which phase it first ships in. The PRD has it in v1; confirm. Blocks V-04.
+- [ ] **OD-05** Kasa Bot: free or paid, given model costs, and which phase it first ships in. The PRD has it in v1; confirm. Blocks V-04. (Phase answered by D-196: minimal tagged answers ship in the prototype, P-17. Still open, to decide after the pilot using its usage and costs: free or paid after the pilot.)
 - [ ] **OD-06** Kasa Bot: what triggers an unprompted post, and the maximum frequency. Blocks V-06.
 - [ ] **OD-07** Decisions (voting) and the Keep strip: v1 or after pilot feedback? Blocks V-02c.
 - [ ] **OD-08** Mascot direction (Heap, Pebble, Drop, or Stack; art in `design/mascot/`). Blocks F-08 icon work, not the rest of F-08.
@@ -416,34 +417,6 @@ Depends on: P-04, P-06
 - [ ] ~~Tapping a pin on a capture opens its thread; comments can be added per pin.~~ Moved to L-06 (D-160).
 - [x] Analytics: `reply_created` (`pin_comment_created` moved to L-06, D-160).
 
-### P-08 · Extension scaffold · `dropped`
-Moved to v2 as part of L-06 (D-158); the criteria below carry over unchanged.
-Depends on: F-05
-- [ ] MV3 extension with `activeTab` only, and no "all websites" permission.
-- [ ] Toolbar with Comment, Draw, Save page, Close, as in the prototype.
-- [ ] Signs in through the web session; shows a clear message on pages extensions can't access.
-
-### P-09 · Extension: Comment mode · `dropped`
-Moved to v2 as part of L-06 (D-158); the criteria below carry over unchanged.
-Depends on: P-08
-- [ ] Click any element to highlight it and drop a numbered pin with a note.
-- [ ] Stores the full anchor (D-011) plus a screenshot of the visible area.
-- [ ] Inline project picker, defaulting to the last project used.
-
-### P-10 · Extension: Draw mode · `dropped`
-Moved to v2 as part of L-06 (D-158); the criteria below carry over unchanged.
-Depends on: P-08
-- [ ] Pen, arrow, box, highlighter, text, three ink colours, undo.
-- [ ] The drawing is saved as a separate layer as well as flattened into the screenshot.
-
-### P-11 · Extension: Save page and send step · `dropped`
-Moved to v2 as part of L-06 (D-158); the criteria below carry over unchanged.
-Depends on: P-09, P-10
-- [ ] Full-page screenshot for Save page.
-- [ ] Send step with preview, crop, and blur (required), a note, and a searchable project picker.
-- [ ] Upload continues in the background if the popup closes; capture to saved in under 5 seconds on a normal connection.
-- [ ] Analytics: `capture_created` with mode.
-
 ### P-12 · Minimal notifications · `done` · branch `p-12-notifications`
 Depends on: P-07
 - [x] Email for replies and `@mentions`, batched to at most one email per 15 minutes per project.
@@ -474,6 +447,15 @@ Depends on: P-01
 - [x] Members can leave; their entries stay (D-015).
 - [x] Removing a member or a member leaving also ends their live updates. P-06 tickets are only checked when connecting, so close that user's sockets for the project.
 - [x] Permissions enforced on the server and tested, like P-01.
+
+### P-17 · Kasa Bot: minimal tagged answers · `todo`
+Depends on: P-03, P-07; on staging, the worker (F-10)
+- [ ] `@kasa` in the web composer makes Kasa Bot reply with a bot card, as a reply to the tagging entry. It answers from this pile only: notes, replies, link titles and descriptions, place details, and capture comments. There is no web search, categories or unprompted posts (D-196).
+- [ ] The bot is a separate service with read access to one pile per answer. Tests prove that it can't read another pile's entries, members or media, even when the question names one (CLAUDE.md hard rule).
+- [ ] The answer runs as a worker job, not in the web request. The composer shows that Kasa Bot is answering, and a failed answer says so on a bot card instead of failing silently.
+- [ ] The bot never posts as a person; answers are `kind` "bot" entries, like the welcome card.
+- [ ] Cost guardrails: a per-pile rate limit, plus a spending cap of **$20 a month** across all piles during the pilot. At the cap, the bot stops answering and says so on a bot card. The wording is Petr's to confirm in this task.
+- [ ] Analytics: `bot_answered` and `bot_failed` with ids only. The model and token counts go in logs, not in PostHog.
 
 ### G1 · Gate: shared items get replies (D-159)
 Pass bar set in OD-03. Record the result and Petr's go/no-go in the Decision log. If it fails, stop and rethink the core loop with Petr before phase 2.
@@ -523,11 +505,11 @@ Depends on: V-03a, V-04 (model access), V-10 (knowing which piles are paid, D-18
 - [ ] Only in paid piles (D-188): the owner has the owner plan or a project pass for the pile, and then every member gets it. Free piles keep V-03a's search, with no related results, answer card, "✦ Kasa" tag, or question placeholder. Model spend counts toward V-04's guardrails.
 
 ### V-04 · Kasa Bot: tagged answers · `todo`
-Depends on: OD-05
-- [ ] `@kasa` in the composer (and in Telegram, after V-07) triggers an answer using only this project's content as context.
+Depends on: P-17, OD-05 (pricing only, D-196)
+- [ ] `@kasa` in the composer (and in Telegram, after V-07) triggers an answer using only this project's content as context. (The web composer part ships in P-17, D-196; the Telegram part remains.)
 - [ ] Answers render as bot cards; the bot never posts as a person.
 - [ ] Per-project proactivity setting, defaulting to Only when tagged.
-- [ ] Cost guardrails: per-project rate limits and a monthly spend alert. They also cover V-03b's search answers (D-187).
+- [ ] Cost guardrails: per-project rate limits and a monthly spend alert. They also cover V-03b's search answers (D-187). (P-17 adds the pilot's rate limit and spending cap; this item sets them for launch pricing.)
 
 ### V-05 · Kasa Bot: categories · `todo`
 Depends on: V-04
@@ -595,6 +577,36 @@ Record the result and Petr's go/no-go in the Decision log.
 - **L-05** WhatsApp two-way sync (D-012), once an Official Business Account is in place.
 - **L-06** Chrome extension (D-158): the dropped P-08 to P-11 with their criteria (scaffold, Comment, Draw, Save page and send step, `capture_created`), plus pin threads on captures and `pin_comment_created` (D-160), the extension offer after sign-up (D-018), the extension threat model, the Chrome Web Store listing, searchable drawn text, and week-4 extension retention in the metrics dashboard. Split into tasks when phase 3 starts.
 
+Extension tasks dropped from Phase 1 (D-158), kept here for L-06 until phase 3 is split into tasks:
+
+### P-08 · Extension scaffold · `dropped`
+Moved to v2 as part of L-06 (D-158); the criteria below carry over unchanged. Listed here, out of Phase 1, since D-196.
+Depends on: F-05
+- [ ] MV3 extension with `activeTab` only, and no "all websites" permission.
+- [ ] Toolbar with Comment, Draw, Save page, Close, as in the prototype.
+- [ ] Signs in through the web session; shows a clear message on pages extensions can't access.
+
+### P-09 · Extension: Comment mode · `dropped`
+Moved to v2 as part of L-06 (D-158); the criteria below carry over unchanged. Listed here, out of Phase 1, since D-196.
+Depends on: P-08
+- [ ] Click any element to highlight it and drop a numbered pin with a note.
+- [ ] Stores the full anchor (D-011) plus a screenshot of the visible area.
+- [ ] Inline project picker, defaulting to the last project used.
+
+### P-10 · Extension: Draw mode · `dropped`
+Moved to v2 as part of L-06 (D-158); the criteria below carry over unchanged. Listed here, out of Phase 1, since D-196.
+Depends on: P-08
+- [ ] Pen, arrow, box, highlighter, text, three ink colours, undo.
+- [ ] The drawing is saved as a separate layer as well as flattened into the screenshot.
+
+### P-11 · Extension: Save page and send step · `dropped`
+Moved to v2 as part of L-06 (D-158); the criteria below carry over unchanged. Listed here, out of Phase 1, since D-196.
+Depends on: P-09, P-10
+- [ ] Full-page screenshot for Save page.
+- [ ] Send step with preview, crop, and blur (required), a note, and a searchable project picker.
+- [ ] Upload continues in the background if the popup closes; capture to saved in under 5 seconds on a normal connection.
+- [ ] Analytics: `capture_created` with mode.
+
 ### G3 · Gate: users ask for phone capture
 
 ## Phase 4: Mobile (outline)
@@ -654,3 +666,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-29 · F-14 done: the "Kasa pilot" dashboard is in Petr's PostHog EU project and shows staging events. The pilot window comes from a `pilot_start` variable, so no SQL needs editing (D-194). · [#31](https://github.com/uxpetr/kasa/pull/31)
 - 2026-09-29 · F-11 done: `pnpm db:seed` uploads the demo's 5 pictures to the local bucket, and an e2e test checks that they render in "Japan 2027" (D-195). · [#32](https://github.com/uxpetr/kasa/pull/32)
 - 2026-09-29 · PLAN: Phase 0 tasks sorted by id (F-01 to F-16); no content changed. · [#33](https://github.com/uxpetr/kasa/pull/33)
+- 2026-09-29 · PLAN: new P-17 (minimal Kasa Bot tagged answers) in the prototype, with a $20/month cap during the pilot. OD-05 is narrowed to pricing. The dropped extension tasks P-08 to P-11 move to Phase 3 (D-196). · [#33](https://github.com/uxpetr/kasa/pull/33)
