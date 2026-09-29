@@ -3,9 +3,10 @@
 // entries, members, or media, whatever the question says (CLAUDE.md hard rule). Media is never
 // read at all: the bot sees captions and titles, not images or storage keys.
 import { and, asc, desc, eq, inArray, isNull, schema, type Database } from "@kasa/db";
+import { BOT_MAX_CONTEXT_ENTRIES } from "@kasa/shared";
 
 /** How much of a pile goes to the model: the newest entries, oldest first. */
-export const MAX_CONTEXT_ENTRIES = 200;
+export const MAX_CONTEXT_ENTRIES = BOT_MAX_CONTEXT_ENTRIES;
 export const MAX_CONTEXT_CHARS = 40_000;
 
 export interface PileEntry {

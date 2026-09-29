@@ -1,0 +1,1 @@
+ALTER TABLE "entries" ADD COLUMN "bot_entries_read" integer;

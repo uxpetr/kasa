@@ -564,8 +564,75 @@ button.reaction::after {
   white-space: nowrap;
 }
 
-/* Kasa Bot is still answering (P-17). */
-.botPending {
-  font-style: italic;
-  opacity: 0.8;
+/* Kasa Bot's thinking state (D-199): a shimmer sweeps across the step, and the k breathes. */
+.thinking {
+  background: linear-gradient(90deg, var(--kasa-color-bot) 0%, var(--kasa-color-bot) 35%, #8FB5A7 50%, var(--kasa-color-bot) 65%, var(--kasa-color-bot) 100%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: kasa-shimmer 1.8s linear infinite;
+}
+
+.breathing {
+  animation: kasa-breathe 1.6s ease-in-out infinite;
+}
+
+@keyframes kasa-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+@keyframes kasa-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thinking {
+    animation: none;
+    background: none;
+    color: var(--kasa-color-bot);
+  }
+  .breathing {
+    animation: none;
+  }
+}
+
+/* "Kasa Bot is answering…" above the composer; it goes to the card. */
+.answering {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding: 4px 10px 4px 4px;
+  border: 1px solid var(--kasa-color-bot-line);
+  border-radius: 999px;
+  background: var(--kasa-color-bot-paper);
+  color: var(--kasa-color-bot-stamp-text);
+  font: 500 13px/1.2 var(--kasa-font-body);
+  cursor: pointer;
+}
+
+.answering:focus-visible {
+  outline: 2px solid var(--kasa-color-bot);
+  outline-offset: 2px;
+}
+
+.botMarkSmall {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  font-size: 12px;
 }

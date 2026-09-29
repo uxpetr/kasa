@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { FeedChanges, FeedEntry, FeedPage } from "@/lib/entries";
 import { connectLive, mergeChanges } from "@/lib/live";
+import { AnsweringLine } from "./bot-thinking";
 import { FeedComposer } from "./feed-composer";
 import { objectLabel } from "./entry-actions";
 import { FeedEntryView, DayDivider, dayKey } from "./feed-entry";
@@ -191,6 +192,7 @@ export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
       </section>
       </main>
       <footer className={styles.footer}>
+        <AnsweringLine entries={entries} onJump={jumpTo} />
         {can.post ? (
           <FeedComposer
             projectId={project.id}

@@ -166,6 +166,11 @@ describe.skipIf(!process.env.DATABASE_URL)("entries", () => {
       const [bot, ...rest] = await botReplies(questionId);
       expect(rest).toHaveLength(0);
       expect(bot).toMatchObject({ projectId, authorId: null, kind: "bot", body: null, botCard: "pending" });
+      // What the bot will read: this pile's live entries, including the question, but no unfinished bot cards (D-199).
+      const readable = (await db().select().from(schema.entries).where(eq(schema.entries.projectId, projectId))).filter(
+        (e) => !e.deletedAt && (e.kind !== "bot" || e.botCard === null),
+      );
+      expect(bot!.botEntriesRead).toBe(readable.length);
       const [question] = await db().select().from(schema.entries).where(eq(schema.entries.id, questionId));
       expect(bot!.createdAt.getTime()).toBeGreaterThanOrEqual(question!.createdAt.getTime());
       expect(sent).toContainEqual({ name: "bot.answer", payload: { entryId: bot!.id } });

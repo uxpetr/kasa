@@ -3,6 +3,7 @@
 import { Fragment, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Avatar, BotButton, BotCard, DeletedOutline, IndexCard, Note, Polaroid, Print, Reply, tiltFor } from "@kasa/ui";
 import { botCardText } from "@/lib/bot-cards";
+import { BotThinking, useIsAnswering } from "./bot-thinking";
 import type { FeedEntry } from "@/lib/entries";
 import { hostOf, previewLine } from "@/lib/preview";
 import { deletedText, EntryActions, nounFor, objectLabel } from "./entry-actions";
@@ -91,6 +92,7 @@ export function FeedEntryView({ entry, viewerId, canAdd, isOwner, archived, onCh
   const name = isBot ? "Kasa Bot" : entry.author?.id === viewerId ? "You" : (entry.author?.name ?? "");
   // Kasa Bot's cards are never tilted (D-197); everything else gets a stable hand-placed tilt.
   const rotate = isBot ? 0 : tiltFor(entry.id);
+  const thinking = useIsAnswering(entry);
 
   if (entry.deleted) {
     return (
@@ -117,13 +119,7 @@ export function FeedEntryView({ entry, viewerId, canAdd, isOwner, archived, onCh
         header={false}
         actions={entry.botCard === "welcome" ? <NewProject trigger={(open) => <BotButton onClick={open}>Start a pile</BotButton>} /> : undefined}
       >
-        {entry.botCard === "pending" ? (
-          <span className={styles.botPending} role="status">
-            {botCardText(entry)}
-          </span>
-        ) : (
-          botCardText(entry)
-        )}
+        {thinking ? <BotThinking entry={entry} /> : botCardText(entry)}
       </BotCard>
     );
   } else if (entry.kind === "photo" && entry.photos.length > 0) {
@@ -208,7 +204,7 @@ export function FeedEntryView({ entry, viewerId, canAdd, isOwner, archived, onCh
   return (
     <article id={`entry-${entry.id}`} tabIndex={-1} className={styles.entry} aria-label={`${name}, ${entry.kind}`}>
       {isBot ? (
-        <span className={styles.botMark} aria-hidden="true">
+        <span className={thinking ? `${styles.botMark} ${styles.breathing}` : styles.botMark} aria-hidden="true">
           k
         </span>
       ) : entry.author ? (

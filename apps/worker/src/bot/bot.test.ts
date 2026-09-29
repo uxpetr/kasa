@@ -17,6 +17,7 @@ describe("the model (D-198)", () => {
 
   it("uses the stub only when asked, and is off without a gateway key", () => {
     expect(botModelFromEnv({ KASA_BOT_MODEL: "stub" })?.id).toBe("stub");
+    expect(botModelFromEnv({ KASA_BOT_MODEL: "stub", KASA_BOT_STUB_DELAY_MS: "0" })?.id).toBe("stub");
     expect(botModelFromEnv({})).toBeNull();
     expect(botModelFromEnv({ AI_GATEWAY_API_KEY: "k" })?.id).toBe("anthropic/claude-haiku-4.5");
   });
@@ -125,6 +126,29 @@ describe.skipIf(!process.env.DATABASE_URL)("Kasa Bot answers (P-17)", () => {
     const [usage] = await db().select().from(schema.botUsage);
     expect(usage).toMatchObject({ projectId: pile, entryId: id, inputTokens: 2000, outputTokens: 100, costMicros: 2500, outcome: "answered" });
     expect(events).toEqual([expect.objectContaining({ event: "bot_answered", userId: u.mika, properties: { projectId: pile, entryId: id, replyToId: expect.any(String) } })]);
+  });
+
+  it("moves the card to writing, with how many entries it read, before the model answers (D-199)", async () => {
+    let seen: { botCard: string | null; botEntriesRead: number | null } | undefined;
+    const id = await ask("@kasa anything?");
+    const model: BotModel = {
+      id: "stub",
+      async answer({ prompt }) {
+        seen = await card(id);
+        return { text: `read ${prompt.split("\n").filter((l) => l.startsWith("#")).length}`, model: "stub", inputTokens: 0, outputTokens: 0 };
+      },
+    };
+    await answerBot({ db: db(), model }, id);
+    expect(seen).toMatchObject({ botCard: "writing" });
+    expect((await card(id)).body).toBe(`read ${seen!.botEntriesRead}`);
+  });
+
+  it("finishes a card left writing by a crashed job", async () => {
+    const { model } = recording();
+    const id = await ask("@kasa again?");
+    await db().update(schema.entries).set({ botCard: "writing" }).where(eq(schema.entries.id, id));
+    await answerBot({ db: db(), model }, id);
+    expect(await card(id)).toMatchObject({ botCard: null, body: "Gion is closest." });
   });
 
   it("never shows the model another pile's entries, members, or media, even when asked about it", async () => {

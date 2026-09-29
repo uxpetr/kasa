@@ -1,9 +1,9 @@
 // The zen chat feed (P-03, P-04): reading pages, posting, reacting, deleting, and marking read.
 // Access: members read (viewers included); owners and editors post and react unless archived (lib/access).
-import { and, asc, count, desc, eq, gt, inArray, isNull, lt, or, schema, sql, type Database } from "@kasa/db";
+import { and, asc, count, desc, eq, gt, inArray, isNull, lt, ne, or, schema, sql, type Database } from "@kasa/db";
 import type { JobQueue } from "@kasa/jobs";
 import { errorAttributes } from "@kasa/observability";
-import { track } from "@kasa/shared";
+import { BOT_MAX_CONTEXT_ENTRIES, track } from "@kasa/shared";
 import { canAdd, canDeleteEntry, canReact, canRead, projectAccess } from "./access";
 import { log } from "./log";
 import { tagsKasa } from "./mentions";
@@ -22,8 +22,10 @@ export interface FeedEntry {
   id: string;
   kind: EntryKind;
   body: string | null;
-  /** A Kasa Bot card with an action, e.g. "welcome" (D-180). */
+  /** A Kasa Bot card with an action, e.g. "welcome" (D-180), or an answer's state (P-17). */
   botCard: string | null;
+  /** How many entries a pending answer reads (D-199). */
+  botEntriesRead: number | null;
   createdAt: string;
   author: { id: string; name: string } | null;
   /** A deleted entry keeps its kind and author for the outline, and nothing else (D-155). */
@@ -158,6 +160,7 @@ const rowColumns = {
   kind: schema.entries.kind,
   body: schema.entries.body,
   botCard: schema.entries.botCard,
+  botEntriesRead: schema.entries.botEntriesRead,
   createdAt: schema.entries.createdAt,
   deletedAt: schema.entries.deletedAt,
   deletedById: schema.entries.deletedBy,
@@ -173,6 +176,7 @@ type Row = {
   kind: EntryKind;
   body: string | null;
   botCard: string | null;
+  botEntriesRead: number | null;
   createdAt: Date;
   deletedAt: Date | null;
   deletedById: string | null;
@@ -308,6 +312,7 @@ function toFeedEntry(r: Row): FeedEntry {
     kind: r.kind,
     body: r.deletedAt ? null : r.body,
     botCard: r.deletedAt ? null : r.botCard,
+    botEntriesRead: r.deletedAt ? null : r.botEntriesRead,
     createdAt: r.createdAt.toISOString(),
     author: r.authorId ? { id: r.authorId, name: r.authorName ?? "" } : null,
     deleted: r.deletedAt !== null,
@@ -425,11 +430,23 @@ export async function createEntry(
     if (kind === "link") await tx.insert(schema.linkPreviews).values({ entryId: entry!.id, url: url! });
     recipients = await recordNotifications(tx, { id: entry!.id, projectId, authorId: userId }, original?.authorId ?? null, mentions.value);
     if (asksKasa) {
+      // What the bot will read, counted the way the worker reads it, for "Reading 24 entries…" (D-199).
+      const [readable] = await tx
+        .select({ n: count() })
+        .from(schema.entries)
+        .where(
+          and(
+            eq(schema.entries.projectId, projectId),
+            isNull(schema.entries.deletedAt),
+            or(ne(schema.entries.kind, "bot"), isNull(schema.entries.botCard)),
+          ),
+        );
+      const botEntriesRead = Math.min(readable?.n ?? 0, BOT_MAX_CONTEXT_ENTRIES);
       // The bot's reply, "pending" until the worker answers. clock_timestamp() puts it after the
       // question, which has the transaction's now().
       const [bot] = await tx
         .insert(schema.entries)
-        .values({ projectId, authorId: null, kind: "bot", replyToId: entry!.id, botCard: "pending", createdAt: sql`clock_timestamp()` })
+        .values({ projectId, authorId: null, kind: "bot", replyToId: entry!.id, botCard: "pending", botEntriesRead, createdAt: sql`clock_timestamp()` })
         .returning({ id: schema.entries.id });
       botEntryId = bot!.id;
     }
