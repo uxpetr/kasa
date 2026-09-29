@@ -448,7 +448,7 @@ Depends on: P-01
 - [x] Removing a member or a member leaving also ends their live updates. P-06 tickets are only checked when connecting, so close that user's sockets for the project.
 - [x] Permissions enforced on the server and tested, like P-01.
 
-### P-17 · Kasa Bot: minimal tagged answers · `todo`
+### P-17 · Kasa Bot: minimal tagged answers · `in-progress` · branch `p-17-kasa-bot`
 Depends on: P-03, P-07; on staging, the worker (F-10)
 - [ ] `@kasa` in the web composer makes Kasa Bot reply with a bot card, as a reply to the tagging entry. It answers from this pile only: notes, replies, link titles and descriptions, place details, and capture comments. There is no web search, categories or unprompted posts (D-196).
 - [ ] The bot is a separate service with read access to one pile per answer. Tests prove that it can't read another pile's entries, members or media, even when the question names one (CLAUDE.md hard rule).
