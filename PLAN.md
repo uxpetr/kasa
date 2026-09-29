@@ -653,4 +653,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-29 · F-12 done: staging sign-in works with its own Google client. The auth secret, URL and Google keys are in Vercel. Petr signed in and out on https://kasa-zeta-rouge.vercel.app (D-193). · [#30](https://github.com/uxpetr/kasa/pull/30)
 - 2026-09-29 · F-14 done: the "Kasa pilot" dashboard is in Petr's PostHog EU project and shows staging events. The pilot window comes from a `pilot_start` variable, so no SQL needs editing (D-194). · [#31](https://github.com/uxpetr/kasa/pull/31)
 - 2026-09-29 · F-11 done: `pnpm db:seed` uploads the demo's 5 pictures to the local bucket, and an e2e test checks that they render in "Japan 2027" (D-195). · [#32](https://github.com/uxpetr/kasa/pull/32)
-- 2026-09-29 · PLAN: Phase 0 tasks sorted by id (F-01 to F-16); no content changed. · PR_LINK
+- 2026-09-29 · PLAN: Phase 0 tasks sorted by id (F-01 to F-16); no content changed. · [#33](https://github.com/uxpetr/kasa/pull/33)
