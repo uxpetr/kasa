@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { activeMention, insertMention, KASA_BOT, matchMentions, mentionIds } from "./mentions";
+import { activeMention, insertMention, KASA_BOT, matchMentions, mentionIds, tagsKasa } from "./mentions";
 
 const mika = { id: "u-mika", name: "Mika Tanaka" };
 const aiko = { id: "u-aiko", name: "Aiko" };
@@ -36,5 +36,20 @@ describe("mentions", () => {
     expect(mentionIds("@John Smith", [jo, { id: "u-john", name: "John Smith" }])).toEqual(["u-john"]);
     expect(mentionIds("email me@Aiko.com", [aiko])).toEqual([]);
     expect(mentionIds("@Mika Tanaka's idea (@Aiko)", [mika, aiko])).toEqual(["u-mika", "u-aiko"]);
+  });
+});
+
+describe("tagsKasa (P-17)", () => {
+  it.each([
+    ["@kasa hi", true],
+    ["hi @Kasa", true],
+    ["(@kasa)", true],
+    ["@kasa, any ideas?", true],
+    ["mail hello@kasa.com", false],
+    ["@kasabot", false],
+    ["@@kasa", false],
+    ["kasa", false],
+  ])("%s", (text, expected) => {
+    expect(tagsKasa(text)).toBe(expected);
   });
 });

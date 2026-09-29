@@ -4,6 +4,8 @@ import { createDb, requireDatabaseUrl } from "@kasa/db";
 import { startQueue, type JobData } from "@kasa/jobs";
 import { createStorage, storageConfigFromEnv } from "@kasa/media";
 import { telemetry } from "./telemetry";
+import { answerBot } from "./bot";
+import { botModelFromEnv } from "./bot/model";
 import { emailFeedback } from "./feedback";
 import { log, runJob } from "./jobs";
 import { processUpload } from "./media";
@@ -26,6 +28,7 @@ const notifyDeps = {
   unsubscribeSecret: process.env.UNSUBSCRIBE_SECRET,
   log,
 };
+const botDeps = { db, model: botModelFromEnv(process.env), log };
 const feedbackDeps = { db, mailer, to: process.env.FEEDBACK_EMAIL || undefined, appUrl: notifyDeps.appUrl, log };
 
 await boss.work<JobData<"media.process">>("media.process", { localConcurrency: 2 }, async ([job]) => {
@@ -44,7 +47,16 @@ await boss.work<JobData<"feedback.send">>("feedback.send", async ([job]) => {
   if (job) await runJob("feedback.send", job.id, job.data, () => emailFeedback(feedbackDeps, job.data.feedbackId));
 });
 
-log.info("worker started", { jobs: "media.process,link.unfurl,notify.send,feedback.send", unfurl_policy: policy, mailer: mailer.kind });
+await boss.work<JobData<"bot.answer">>("bot.answer", { localConcurrency: 2 }, async ([job]) => {
+  if (job) await runJob("bot.answer", job.id, job.data, () => answerBot(botDeps, job.data.entryId));
+});
+
+log.info("worker started", {
+  jobs: "media.process,link.unfurl,notify.send,feedback.send,bot.answer",
+  unfurl_policy: policy,
+  mailer: mailer.kind,
+  bot_model: botDeps.model?.id ?? "none",
+});
 
 async function shutdown() {
   await boss.stop({ graceful: true, timeout: 20_000 });

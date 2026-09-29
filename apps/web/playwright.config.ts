@@ -47,8 +47,8 @@ export default defineConfig({
     // feed tests; links unfurl only from local test servers, never the internet.
     {
       command: "pnpm --filter @kasa/worker start",
-      // Never real emails from tests, even if the local .env has a Resend key.
-      env: { UNFURL_LOOPBACK_ONLY: "1", RESEND_API_KEY: "", FEEDBACK_EMAIL: "" },
+      // Never real emails or model calls from tests, even if the local .env has keys.
+      env: { UNFURL_LOOPBACK_ONLY: "1", RESEND_API_KEY: "", FEEDBACK_EMAIL: "", KASA_BOT_MODEL: "stub", AI_GATEWAY_API_KEY: "" },
       wait: { stdout: /worker started/ },
       reuseExistingServer: !process.env.CI,
       gracefulShutdown: { signal: "SIGTERM", timeout: 5000 },

@@ -194,6 +194,26 @@ export const feedback = pgTable(
   (t) => [index("feedback_created_idx").on(t.createdAt)],
 );
 
+// One row per Kasa Bot answer that reached the model (P-17), for the pile's daily limit and the
+// monthly spending cap. Rows outlive their entry and pile, so deleting a pile doesn't reset spend.
+export const botUsage = pgTable(
+  "bot_usage",
+  {
+    id: id(),
+    projectId: uuid("project_id").references(() => projects.id, { onDelete: "set null" }),
+    entryId: uuid("entry_id").references(() => entries.id, { onDelete: "set null" }),
+    model: text("model").notNull(),
+    inputTokens: integer("input_tokens").notNull().default(0),
+    outputTokens: integer("output_tokens").notNull().default(0),
+    // Millionths of a US dollar, from the model's list price.
+    costMicros: integer("cost_micros").notNull().default(0),
+    // "answered" or "failed" (the model was called but no answer was posted).
+    outcome: text("outcome").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [index("bot_usage_project_idx").on(t.projectId, t.createdAt), index("bot_usage_created_idx").on(t.createdAt)],
+);
+
 export const invites = pgTable(
   "invites",
   {
@@ -229,6 +249,8 @@ export const entries = pgTable(
     // Smart grouping (D-007): entries sharing a key render as one spread.
     groupKey: text("group_key"),
     // Kasa Bot cards with an action: "welcome" is the first card in My pile (D-180).
+    // An answer to @kasa (P-17) is "pending" until the worker fills in the body and clears it,
+    // or sets "failed", "paused" (monthly spending cap), or "limited" (the pile's daily limit).
     botCard: text("bot_card"),
     editedAt: timestamp("edited_at", { withTimezone: true }),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),

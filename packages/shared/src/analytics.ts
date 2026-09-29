@@ -15,6 +15,9 @@ export const ANALYTICS_EVENTS = [
   // The member opened a project's feed; counts viewers as active too (P-13).
   "feed_opened",
   "feedback_sent",
+  // Kasa Bot answered a tag, or didn't: `reason` is error, no_model, paused, or limited (P-17).
+  "bot_answered",
+  "bot_failed",
 ] as const;
 export type AnalyticsEvent = (typeof ANALYTICS_EVENTS)[number];
 

@@ -2,6 +2,7 @@
 
 import { Fragment, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Avatar, BotButton, BotCard, DeletedOutline, IndexCard, Note, Polaroid, Print, Reply, tiltFor } from "@kasa/ui";
+import { botCardText } from "@/lib/bot-cards";
 import type { FeedEntry } from "@/lib/entries";
 import { hostOf, previewLine } from "@/lib/preview";
 import { deletedText, EntryActions, nounFor, objectLabel } from "./entry-actions";
@@ -116,7 +117,13 @@ export function FeedEntryView({ entry, viewerId, canAdd, isOwner, archived, onCh
         header={false}
         actions={entry.botCard === "welcome" ? <NewProject trigger={(open) => <BotButton onClick={open}>Start a pile</BotButton>} /> : undefined}
       >
-        {entry.body}
+        {entry.botCard === "pending" ? (
+          <span className={styles.botPending} role="status">
+            {botCardText(entry)}
+          </span>
+        ) : (
+          botCardText(entry)
+        )}
       </BotCard>
     );
   } else if (entry.kind === "photo" && entry.photos.length > 0) {

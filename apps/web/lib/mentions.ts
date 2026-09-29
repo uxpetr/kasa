@@ -55,3 +55,11 @@ function mentionPresent(text: string, picked: Mentionable): boolean {
 export function mentionIds(text: string, picked: Mentionable[]): string[] {
   return [...new Set(picked.filter((p) => !p.bot && mentionPresent(text, p)).map((p) => p.id))];
 }
+
+/**
+ * True when the text tags Kasa Bot: "@kasa" as a whole word, in any case (P-17). The server
+ * decides from the text itself, so a typed "@kasa" counts as much as a picked one.
+ */
+export function tagsKasa(text: string): boolean {
+  return /(^|[^\p{L}\p{N}_@.])@kasa(?![\p{L}\p{N}_])/iu.test(text);
+}
