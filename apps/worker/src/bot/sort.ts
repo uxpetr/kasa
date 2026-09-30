@@ -95,17 +95,19 @@ export async function sortPile(deps: BotDeps, projectId: string): Promise<SortRe
       // Throw so pg-boss retries; the entries stay unsorted until then.
       throw error;
     }
-    await db.insert(schema.botUsage).values({
-      projectId,
-      model: reply.model,
-      inputTokens: reply.inputTokens,
-      outputTokens: reply.outputTokens,
-      costMicros: costMicros(reply),
-      outcome: "sorted",
+    // Later batches of the same job go on the same receipt. The charge is saved with the
+    // sort, so a failed save doesn't bill the pile or get billed again on retry.
+    const result = await apply(db, projectId, items, categories, reply.decision, {
+      first,
+      now,
+      receiptId,
+      usage: {
+        model: reply.model,
+        inputTokens: reply.inputTokens,
+        outputTokens: reply.outputTokens,
+        costMicros: costMicros(reply),
+      },
     });
-
-    // Later batches of the same job go on the same receipt.
-    const result = await apply(db, projectId, items, categories, reply.decision, { first, now, receiptId });
     sorted += result.sorted;
     receiptId = result.receiptId ?? receiptId;
     deps.log?.info("pile sorted", {
@@ -122,14 +124,24 @@ export async function sortPile(deps: BotDeps, projectId: string): Promise<SortRe
   return { sorted, receiptId };
 }
 
-/** Saves one model decision: new categories, assignments, the receipt, and `sorted_at`. */
+/** Saves one model decision: the charge, new categories, assignments, the receipt, and `sorted_at`. */
 async function apply(
   db: Database,
   projectId: string,
   items: SortItem[],
   existing: { id: string; name: string }[],
   decision: { newCategories?: unknown; assignments?: unknown },
-  { first, now, receiptId: current }: { first: boolean; now: Date; receiptId: string | null },
+  {
+    first,
+    now,
+    receiptId: current,
+    usage,
+  }: {
+    first: boolean;
+    now: Date;
+    receiptId: string | null;
+    usage: { model: string; inputTokens: number; outputTokens: number; costMicros: number };
+  },
 ): Promise<SortResult> {
   const byName = new Map(existing.map((c) => [c.name.toLowerCase(), c.name]));
   const room = Math.max(0, BOT_MAX_CATEGORIES - existing.length);
@@ -151,6 +163,8 @@ async function apply(
   }
 
   return db.transaction(async (tx) => {
+    // Same commit as the assignments: if this transaction rolls back, the pile isn't charged.
+    await tx.insert(schema.botUsage).values({ projectId, ...usage, outcome: "sorted" });
     // Only entries still unsorted and live: a member may have moved or deleted one meanwhile.
     const still = await tx
       .update(schema.entries)

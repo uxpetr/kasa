@@ -212,6 +212,36 @@ describe.skipIf(!process.env.DATABASE_URL)("Kasa Bot sorts piles (P-19)", () => 
     expect(answered!.botCard).toBeNull();
   });
 
+  it("doesn't charge the pile when saving the sort fails, so a retry is billed once", async () => {
+    for (let i = 0; i < SORT_START_AT; i++) await post(`Note ${i}`);
+    const base = db();
+    const transaction = base.transaction.bind(base);
+    const failing = new Proxy(base, {
+      get(target, prop, receiver) {
+        if (prop === "transaction") {
+          const wrapped: typeof base.transaction = (run, config) =>
+            transaction(async (tx) => {
+              await run(tx);
+              throw new Error("apply failed");
+            }, config);
+          return wrapped;
+        }
+        const value = Reflect.get(target, prop, receiver);
+        return typeof value === "function" ? value.bind(target) : value;
+      },
+    });
+
+    await expect(sortPile({ db: failing, model: simple.model }, pile)).rejects.toThrow("apply failed");
+    expect(await base.select().from(schema.botUsage).where(eq(schema.botUsage.projectId, pile))).toHaveLength(0);
+    expect(
+      await base.select().from(schema.entries).where(and(eq(schema.entries.projectId, pile), isNull(schema.entries.sortedAt), eq(schema.entries.kind, "note"))),
+    ).toHaveLength(SORT_START_AT);
+
+    await sortPile({ db: base, model: simple.model }, pile);
+    const usage = await base.select().from(schema.botUsage).where(eq(schema.botUsage.projectId, pile));
+    expect(usage.map((r) => r.outcome)).toEqual(["sorted"]);
+  });
+
   it("does nothing when the pile has Kasa Bot off or there's no model", async () => {
     for (let i = 0; i < SORT_START_AT; i++) await post(`Note ${i}`);
     expect((await sortPile({ db: db(), model: null }, pile)).sorted).toBe(0);
