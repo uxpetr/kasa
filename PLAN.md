@@ -49,12 +49,12 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | Phase | Goal | Status | Gate |
 | --- | --- | --- | --- |
 | 0. Foundations | Repo, CI, auth, database, storage | `in-progress` | none |
-| 1. Prototype | The collect → discuss loop in the web app, tested with one trip-planning group | `in-progress` | G1: shared items get replies (D-159) |
-| 2. v1 launch | Full web app, Kasa Bot, Telegram, billing | `todo` | G2: week-4 retention holds |
+| 1. Prototype | The collect → discuss loop in the web app and Telegram, with Kasa Bot answers, categories and recommendations (D-200), tested with one trip-planning group | `in-progress` | G1: shared items get replies (D-159) |
+| 2. v1 launch | Full web app, Kasa Bot tips, search, billing | `todo` | G2: week-4 retention holds |
 | 3. v2 | Chrome extension (D-158), pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** staging (F-10, which also switches on real Kasa Bot answers), F-13 (Resend), F-16 (publish the Google consent screen before inviting testers) before the pilot starts; then set `pilot_start` on the pilot dashboard (D-194) once the first day is fixed.
+**Next up:** P-19 (categories) and P-20 (recommendations), then P-18 (Telegram sync, once F-17 gives it a bot); staging (F-10, which also switches on real Kasa Bot answers), F-13 (Resend), F-16 (publish the Google consent screen before inviting testers) and F-17 (a Telegram bot) before the pilot starts; then set `pilot_start` on the pilot dashboard (D-194) once the first day is fixed.
 **Blocked:** P-16, on OD-14 (privacy note). In phase 2: V-12 until Petr finishes the scroll story (D-189), V-12, V-14 and F-15 (media CDN) on OD-18 (clear or change the name). Real emails, including feedback emails, need F-13 (a Resend account and a sender domain from Petr).
 
 ---
@@ -184,6 +184,13 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 - **D-185** · 2026-09-28 · **Search mode in the project chat.** Search is a core feature, entered from a magnifier button next to + in the composer or a "Search" item in the project menu (supersedes D-148's "Search (coming soon)"). In search mode the composer becomes the search field with "Done", and Escape also leaves. The category row becomes the result count ("5 matches", or "17 things in this pile" for an empty search) and the Grid / Calendar switch. The grid is four columns on desktop, newest first: each result is the same object as in the feed but untilted, matched words are highlighted, and under it goes author · date · category stamp. An empty search shows everything in the pile. Tapping a result leaves search and scrolls the chat to that entry. No results: "Nothing matches “{query}”" with "Try another word, or search by a person's name or a category." · Petr, design log DL-001
 - **D-186** · 2026-09-28 · **Search calendar.** Results switch between Grid (the default) and Calendar. The calendar shows month grids starting on Monday, in date order, and follows the current search: only days with matches light up. A matching day is a round disc showing a photo from that day, darkened slightly so the number stays readable, or, with no photo, the paper colour of its first entry (yellow for notes, pine tint for Kasa Bot, white for links). Today's number is in the accent colour, and future days are muted. Tapping a day opens the grid filtered to it, with a removable chip such as "12 Sep ×" next to the count. · Petr, design log DL-002
 - **D-187** · 2026-09-28 · **AI-powered search.**
+  - Search matches by meaning as well as by words. "hotel", "airbnb", "where to stay", or "sleep" find every place to stay, and the same goes for food, getting around, sights, and so on. People can also ask questions ("who booked the train?").
+  - Exact matches come first, then related ones, each with "✦ Related: {concept}" under it.
+  - When Kasa recognises the intent, a Kasa Bot card above the results says how it read the search ("Kasa understood 'Hotel' as places to stay") and gives a one- or two-sentence answer drawn only from this pile.
+  - The field shows a "✦ Kasa" tag and the placeholder "Search or ask: hotels, who booked the train, Kyoto food…".
+  - Search reads only its own pile, the same rule as Kasa Bot. The answer never mentions anything outside it.
+  - Search never waits on the model. Results appear first and the answer card may follow; if the model is slow or down, plain-word search still works, without related results or the card.
+  - Built as V-03b after V-04. Whether the answer card is free or paid is OD-15. · Petr, design log DL-003
 - **D-188** · 2026-09-28 · **Search by plan** (resolves OD-15). Free piles get basic search: words, tolerant of typos and partial words (fuzzy), with the grid and calendar (V-03a). AI search, meaning-based results and the answer card (D-187, V-03b), comes with the paid plan. Following D-009, it's the pile that's paid, not the person: if the pile's owner has the owner plan or a project pass for it, every member gets AI search there, free members included. A paying owner's personal piles get it too. · Petr, OD-15
 - **D-189** · 2026-09-28 · **The scroll story ships as the landing page** (resolves OD-16): V-12 builds `design/prototype/Promo2.dc.html`, not `Promo.dc.html`. Petr is still refining it, so V-12 waits until a design log entry marks it final. · Petr, OD-16
 - **D-190** · 2026-09-28 · **Search placeholder** (resolves OD-17): "Search this pile" in every pile without AI search (free piles, and every pile until V-03b ships). Paid piles with AI search use D-187's "Search or ask: hotels, who booked the train, Kyoto food…", with the "✦ Kasa" tag. · Petr, OD-17
@@ -218,13 +225,13 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
   - **Local stub:** it waits 1.5 seconds (`KASA_BOT_STUB_DELAY_MS`), so the state can be seen.
   - **Wording:** "Reading N entries…", "Writing an answer…" and "Kasa Bot is answering…" are from the option Petr chose. "On it. Looking through this pile…" remains only for cards without a count.
   · Petr, P-17
-  - Search matches by meaning as well as by words. "hotel", "airbnb", "where to stay", or "sleep" find every place to stay, and the same goes for food, getting around, sights, and so on. People can also ask questions ("who booked the train?").
-  - Exact matches come first, then related ones, each with "✦ Related: {concept}" under it.
-  - When Kasa recognises the intent, a Kasa Bot card above the results says how it read the search ("Kasa understood 'Hotel' as places to stay") and gives a one- or two-sentence answer drawn only from this pile.
-  - The field shows a "✦ Kasa" tag and the placeholder "Search or ask: hotels, who booked the train, Kyoto food…".
-  - Search reads only its own pile, the same rule as Kasa Bot. The answer never mentions anything outside it.
-  - Search never waits on the model. Results appear first and the answer card may follow; if the model is slow or down, plain-word search still works, without related results or the card.
-  - Built as V-03b after V-04. Whether the answer card is free or paid is OD-15. · Petr, design log DL-003
+- **D-200** · 2026-09-30 · **The pilot needs more of Kasa Bot and Telegram** (supersedes the pilot scope in D-196 and the v1-only Telegram timing in the PRD). A pilot without these wouldn't test Kasa as it's meant to be used, so they move into the prototype, before gate G1:
+  - **Telegram two-way sync** (was V-07), all of it: link a group to a pile, entries post to the group, the group's messages, photos and links land in the pile, replies map both ways, and `@kasa` works in the group. New task P-18.
+  - **Kasa Bot categories** (was V-05): filter chips above the feed, members fix them, sorting receipts batched. New task P-19.
+  - **Kasa Bot recommendations** (the first half of V-06): suggestions from the web, posted as entries with "Add to pile". New task P-20.
+  - **Stay in v1:** unprompted tips (V-06, still on OD-06) and the per-pile proactivity setting (V-04).
+  - **Spending:** categories and recommendations count toward the same $20 a month cap as tagged answers (D-196).
+  · Petr
 
 ---
 
@@ -244,7 +251,7 @@ Questions only Petr can answer. Agents add to this list and don't guess. When on
 - [x] **OD-11** (resolved by D-179) Analytics provider. Options: PostHog EU Cloud (product analytics, EU hosting), Plausible (simple, EU, less product depth), self-hosted PostHog, or events in our own Postgres. Needs a privacy/cookie decision too. Events are already tracked (D-129). Blocks P-13's pilot dashboard.
 - [x] **OD-12** → D-136. Where do traces, logs, and error alerts go? F-07 exports OpenTelemetry over OTLP, so any OTLP backend works. Options: a personal Dash0 account (you know it; keep it separate from work), Grafana Cloud free tier (EU region), Honeycomb, or Sentry for errors plus a separate trace backend. Blocks F-07's export and alerting criteria.
 - [x] **OD-13** (resolved by D-167) Email wording for P-12, provided by Petr: subject and body for the reply and `@mention` emails (including the batched form, several in one email), the unsubscribe confirmation page, and the "Mute emails" state in the app if it needs more than the toggle label. Blocks P-12.
-- [ ] **OD-14** Privacy note for the pilot: what Kasa tells pilot users about the data it keeps and the analytics it sends to PostHog (D-179), and where it shows. Blocks P-16, not the P-13 build.
+- [ ] **OD-14** Privacy note for the pilot: what Kasa tells pilot users about the data it keeps and the analytics it sends to PostHog (D-179), what goes to Telegram when a pile is linked and to web search for recommendations (D-200), and where it shows. Blocks P-16, not the P-13 build.
 - [ ] **OD-09** Exact prices for the owner plan and project pass, and project pass duration. Blocks V-10.
 - [x] **OD-15** (resolved by D-188) Is the search answer card (D-187) part of the free plan, or only for paid owners? It extends OD-05, since it uses the same model costs as Kasa Bot. Blocks V-03b. (From design log DL-003.)
 - [x] **OD-16** (resolved by D-189) Which promo page ships in V-12: the original (`design/prototype/Promo.dc.html`) or the scroll story (`Promo2.dc.html`)? Blocks V-12. (From design log DL-000.)
@@ -392,6 +399,11 @@ Depends on: F-12; needed before pilot testers are invited
 - [ ] Petr publishes the "Kasa staging" OAuth consent screen, which is in Testing mode now (D-193), so that pilot testers can sign in without being listed as test users.
 - [ ] A Google account that isn't a test user can sign in on staging.
 
+### F-17 · Telegram bot for staging · `todo` (waiting on Petr)
+Needed by: P-18 (D-200)
+- [ ] Petr creates a Telegram bot with @BotFather for staging, and its token goes into Vercel as a sensitive variable (and into the worker in F-10).
+- [ ] Every new Telegram variable is in `.env.example` with a comment.
+
 ---
 
 ## Phase 1: Prototype
@@ -484,6 +496,29 @@ Depends on: P-03, P-07; on staging, the worker (F-10)
 - [x] Cost guardrails: a per-pile rate limit, plus a spending cap of **$20 a month** across all piles during the pilot. At the cap, the bot stops answering and says so on a bot card. The wording is Petr's to confirm in this task. (30 answers per pile in any 24 hours; the cap counts list-price cost per calendar month in UTC. Petr approved the card wording, D-198.)
 - [x] Analytics: `bot_answered` and `bot_failed` with ids only. The model and token counts go in logs, not in PostHog. (`bot_failed` also has a `reason` enum.)
 
+### P-18 · Telegram two-way sync · `todo`
+Depends on: P-07, P-17, F-17; on staging, the worker (F-10). Moved from V-07 (D-200).
+- [ ] The owner links a Telegram group from pile settings; one pile maps to one group.
+- [ ] Members link their Telegram account in settings; unlinked senders show as guests.
+- [ ] Kasa to Telegram: new entries post with image, link, and note; bot answers post like any other entry.
+- [ ] Telegram to Kasa: messages, photos, and links land in the feed with a "via Telegram" meta line.
+- [ ] Replies map both ways; synced messages never loop.
+- [ ] `@kasa` in the group asks Kasa Bot, with the same one-pile rule, rate limit and cap as the web composer (from V-04).
+- [ ] The Telegram bot token never reaches the browser, and incoming webhooks are verified.
+
+### P-19 · Kasa Bot: categories · `todo`
+Depends on: P-17. Moved from V-05 (D-200).
+- [ ] New entries get a category from a pile-specific set (for example Stays, Sights, Food, Transport).
+- [ ] Filter chips above the feed; members can rename, merge, and move; the bot learns from fixes. The feed order never changes.
+- [ ] Sorting receipts are batched: one card per burst, with Undo.
+- [ ] Model spending counts toward the $20 monthly cap (D-200).
+
+### P-20 · Kasa Bot: recommendations · `todo`
+Depends on: P-17. Moved from V-06 (D-200).
+- [ ] Asked with `@kasa` ("suggest dinner spots near the ryokan"), the bot uses web search and posts recommendations as normal entries with "Add to pile".
+- [ ] The web search sees only the question and what the answer needs from this pile, never another pile.
+- [ ] Web search and model spending count toward the $20 monthly cap (D-200).
+
 ### G1 · Gate: shared items get replies (D-159)
 Pass bar set in OD-03. Record the result and Petr's go/no-go in the Decision log. If it fails, stop and rethink the core loop with Petr before phase 2.
 
@@ -533,23 +568,23 @@ Depends on: V-03a, V-04 (model access), V-10 (knowing which piles are paid, D-18
 
 ### V-04 · Kasa Bot: tagged answers · `todo`
 Depends on: P-17, OD-05 (pricing only, D-196)
-- [ ] `@kasa` in the composer (and in Telegram, after V-07) triggers an answer using only this project's content as context. (The web composer part ships in P-17, D-196; the Telegram part remains.)
+- [ ] `@kasa` in the composer (and in Telegram, after V-07) triggers an answer using only this project's content as context. (The web composer part ships in P-17, D-196; the Telegram part moves to P-18, D-200.)
 - [ ] Answers render as bot cards; the bot never posts as a person.
 - [ ] Per-project proactivity setting, defaulting to Only when tagged.
 - [ ] Cost guardrails: per-project rate limits and a monthly spend alert. They also cover V-03b's search answers (D-187). (P-17 adds the pilot's rate limit and spending cap; this item sets them for launch pricing.)
 
-### V-05 · Kasa Bot: categories · `todo`
+### V-05 · Kasa Bot: categories · `dropped` (moved to P-19, D-200)
 Depends on: V-04
 - [ ] New entries get a category from a project-specific set (for example Stays, Sights, Food, Transport).
 - [ ] Filter chips above the feed; members can rename, merge, and move; the bot learns from fixes.
 - [ ] Sorting receipts are batched: one card per burst, with Undo.
 
 ### V-06 · Kasa Bot: recommendations and unprompted tips · `todo`
-Depends on: V-05, OD-06
-- [ ] Recommendations use web search and post as normal entries with "Add to pile".
+Depends on: P-19, OD-06. Recommendations moved to P-20 (D-200); this task keeps unprompted tips.
+- [ ] Recommendations use web search and post as normal entries with "Add to pile". (Moved to P-20, D-200.)
 - [ ] Unprompted tips follow the OD-06 triggers and rate limit, and always have "Not now".
 
-### V-07 · Telegram two-way sync · `todo`
+### V-07 · Telegram two-way sync · `dropped` (moved to P-18, D-200)
 - [ ] The owner links a Telegram group from project settings; one project maps to one group.
 - [ ] App to Telegram: new entries post with image, link, and note; pins and drawings as a flattened image with a link back.
 - [ ] Telegram to app: messages, photos, and links land in the feed with a "via Telegram" meta line.
@@ -696,3 +731,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-29 · PLAN: new P-17 (minimal Kasa Bot tagged answers) in the prototype, with a $20/month cap during the pilot. OD-05 is narrowed to pricing. The dropped extension tasks P-08 to P-11 move to Phase 3 (D-196). · [#33](https://github.com/uxpetr/kasa/pull/33)
 - 2026-09-29 · P-17 done: tagging `@kasa` gets a bot card answered from that pile only, with a pending card first and then the answer or a reason. There's a 30-per-day pile limit and a $20 monthly cap. Tests prove the bot can't read other piles. It uses the stub model locally and in CI; real answers switch on in F-10 (D-198). Kasa Bot cards are never tilted (D-197). A thinking state shows while it answers: a breathing k, "Reading N entries…" then "Writing an answer…", and a pill above the composer (D-199). · [#34](https://github.com/uxpetr/kasa/pull/34)
 - 2026-09-29 · Realtime fix: a blank `REALTIME_ALLOWED_ORIGINS=` in `.env` refused every live connection, so new entries and the thinking state only showed after a reload. Blank now counts as unset and falls back to `BETTER_AUTH_URL`, then `http://localhost:3000`. · [#34](https://github.com/uxpetr/kasa/pull/34)
+- 2026-09-30 · PLAN: the pilot gets Telegram two-way sync (P-18), Kasa Bot categories (P-19) and recommendations (P-20), moved from V-07, V-05 and V-06; F-17 adds a Telegram bot for staging (D-200). D-187's details are back under D-187. · PR pending
