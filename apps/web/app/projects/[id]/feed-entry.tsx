@@ -1,8 +1,9 @@
 "use client";
 
 import { Fragment, useState, useSyncExternalStore, type ReactNode } from "react";
-import { Avatar, BotButton, BotCard, DeletedOutline, IndexCard, Note, Polaroid, Print, Reply, tiltFor } from "@kasa/ui";
-import { botCardText } from "@/lib/bot-cards";
+import { Avatar, BotButton, BotCard, CategoryStamp, DeletedOutline, IndexCard, Note, Polaroid, Print, Reply, tiltFor } from "@kasa/ui";
+import { botCardText, isReceipt, receiptParts } from "@/lib/bot-cards";
+import { hasCategories, useCategories } from "./categories";
 import { BotThinking, useIsAnswering } from "./bot-thinking";
 import type { FeedEntry } from "@/lib/entries";
 import { hostOf, previewLine } from "@/lib/preview";
@@ -93,6 +94,10 @@ export function FeedEntryView({ entry, viewerId, canAdd, isOwner, archived, onCh
   // Kasa Bot's cards are never tilted (D-197); everything else gets a stable hand-placed tilt.
   const rotate = isBot ? 0 : tiltFor(entry.id);
   const thinking = useIsAnswering(entry);
+  const categories = useCategories();
+
+  // An undone sorting receipt leaves the feed (D-201), and so does one with nothing left in it.
+  if (isReceipt(entry) && (entry.deleted || !receiptParts(entry))) return null;
 
   if (entry.deleted) {
     return (
@@ -113,6 +118,8 @@ export function FeedEntryView({ entry, viewerId, canAdd, isOwner, archived, onCh
         <Linkified text={text} />
       </Note>
     );
+  } else if (isReceipt(entry)) {
+    object = <ReceiptCard entry={entry} canEdit={categories.canEdit} onEdit={categories.openEditor} onChange={onChange} />;
   } else if (isBot) {
     object = (
       <BotCard
@@ -215,6 +222,9 @@ export function FeedEntryView({ entry, viewerId, canAdd, isOwner, archived, onCh
       <div className={styles.entryBody}>
         <div className={styles.meta}>
           <span className={styles.author}>{name}</span> · <Time iso={entry.createdAt} />
+          {entry.categories.map((c) => (
+            <CategoryStamp key={c.id}>{c.name}</CategoryStamp>
+          ))}
         </div>
         <EntryActions
           entry={entry}
@@ -223,6 +233,7 @@ export function FeedEntryView({ entry, viewerId, canAdd, isOwner, archived, onCh
           canDelete={!archived && (isOwner || (entry.author !== null && entry.author.id === viewerId))}
           onChange={onChange}
           onReply={canAdd ? onReply : undefined}
+          onCategories={categories.canEdit && hasCategories(entry) ? () => categories.editEntry(entry) : undefined}
         >
           {object}
         </EntryActions>
@@ -252,5 +263,58 @@ function QuotePrint({ entry, viewerId }: { entry: FeedEntry; viewerId: string })
       {image ? <img src={image} alt="" /> : null}
       {!image || entry.body ? <span className="kasa-quote-text">{text}</span> : null}
     </>
+  );
+}
+
+/** A sorting receipt (D-201): "Sorted 3 new things into **Sights**. Undo", or the first sort's names and Edit. */
+function ReceiptCard({ entry, canEdit, onEdit, onChange }: { entry: FeedEntry; canEdit: boolean; onEdit: () => void; onChange: (entry: FeedEntry) => void }) {
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const parts = receiptParts(entry)!;
+  const first = entry.botCard === "sorted-first";
+  // The names in bold, joined the way listNames joins them.
+  const bold = parts.names.map((n, i) => (
+    <Fragment key={n}>
+      {i === 0 ? "" : i === parts.names.length - 1 ? " and " : ", "}
+      <strong>{n}</strong>
+    </Fragment>
+  ));
+  return (
+    <BotCard header={false}>
+      <span className={styles.receipt}>
+        <span>
+          {parts.before}
+          {bold}
+          {parts.after}
+        </span>
+        {canEdit ? (
+          first ? (
+            <button type="button" className={styles.receiptAction} onClick={onEdit}>
+              Edit
+            </button>
+          ) : (
+            <button
+              type="button"
+              className={styles.receiptAction}
+              disabled={pending}
+              onClick={async () => {
+                setPending(true);
+                const res = await fetch(`/api/entries/${entry.id}/undo`, { method: "POST" }).catch(() => null);
+                setPending(false);
+                if (res?.ok) onChange({ ...entry, deleted: true });
+                else setError("Couldn't undo that. Try again.");
+              }}
+            >
+              Undo
+            </button>
+          )
+        ) : null}
+      </span>
+      {error ? (
+        <span role="alert" className={styles.actionError}>
+          {error}
+        </span>
+      ) : null}
+    </BotCard>
   );
 }

@@ -24,7 +24,8 @@ describe.skipIf(!process.env.DATABASE_URL)("notifications", () => {
   const u = { owner: randomUUID(), editor: randomUUID(), viewer: randomUUID(), muted: randomUUID(), outsider: randomUUID() };
   const projectId = randomUUID();
   const sent: { name: string; payload: JobPayloads[keyof JobPayloads]; options?: SendOptions }[] = [];
-  const queue: JobQueue = { send: async (name, payload, options) => void sent.push({ name, payload, options }) };
+  // Sorting (P-19) is queued after posts too; it's tested in categories.test.ts.
+  const queue: JobQueue = { send: async (name, payload, options) => void (name !== "bot.sort" && sent.push({ name, payload, options })) };
 
   beforeAll(async () => {
     testDb = await createTestDatabase(process.env.DATABASE_URL!);

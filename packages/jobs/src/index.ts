@@ -11,12 +11,14 @@ export interface JobPayloads {
   "feedback.send": { feedbackId: string };
   /** Fills in a pending Kasa Bot answer; `entryId` is the bot's own entry (P-17). */
   "bot.answer": { entryId: string };
+  /** Sorts a pile's new posts into categories (P-19); stately, so a burst is one job. */
+  "bot.sort": { projectId: string };
 }
 export type JobName = keyof JobPayloads;
 
 /** What's stored: the payload plus the sender's trace context, so the job continues its trace (D-137). */
 export type JobData<N extends JobName> = JobPayloads[N] & { _trace?: TraceCarrier };
-export const JOB_NAMES = ["media.process", "link.unfurl", "notify.send", "feedback.send", "bot.answer"] as const satisfies readonly JobName[];
+export const JOB_NAMES = ["media.process", "link.unfurl", "notify.send", "feedback.send", "bot.answer", "bot.sort"] as const satisfies readonly JobName[];
 
 export interface SendOptions {
   /** Don't run before this moment. */
@@ -33,8 +35,8 @@ export interface JobQueue {
   send<N extends JobName>(name: N, payload: JobPayloads[N], options?: SendOptions): Promise<void>;
 }
 
-/** Per-queue settings; `notify.send` is stately so emails batch per person and project (P-12). */
-const QUEUE_POLICY: Partial<Record<JobName, "stately">> = { "notify.send": "stately" };
+/** Per-queue settings; `notify.send` is stately so emails batch per person and project (P-12), `bot.sort` per pile (P-19). */
+const QUEUE_POLICY: Partial<Record<JobName, "stately">> = { "notify.send": "stately", "bot.sort": "stately" };
 
 /**
  * `producer` (web app, short-lived functions) only sends jobs; `worker` also runs
@@ -77,3 +79,11 @@ export function nextEmailAt(lastEmailedAt: Date | null, now = new Date()): Date 
 }
 
 export const notifyKey = (userId: string, projectId: string) => `${userId}:${projectId}`;
+
+/** Sorting waits this long after a post, so a burst is sorted in one job (P-19). */
+export const SORT_DELAY_MS = 5_000;
+
+/** Queues sorting for a pile; while one waits, more sends are no-ops. */
+export function sendSort(queue: JobQueue, projectId: string, now = new Date()): Promise<void> {
+  return queue.send("bot.sort", { projectId }, { singletonKey: projectId, startAfter: new Date(now.getTime() + SORT_DELAY_MS) });
+}

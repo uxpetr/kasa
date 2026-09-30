@@ -66,21 +66,23 @@ interface ActionsProps {
   onChange: (entry: FeedEntry) => void;
   /** Starts a reply in the composer (D-153); absent when the viewer can't post. */
   onReply?: (entry: FeedEntry) => void;
+  /** Opens the post's Categories… checklist (P-19); absent when it can't have categories. */
+  onCategories?: () => void;
   children: ReactNode;
 }
 
 /**
  * The one actions menu (D-016): hover or focus shows the button, long-press opens it on touch.
- * React and Delete for now (D-153); reactions show as counts under the object (D-154).
+ * Reply, React, Categories… (P-19), and Delete (D-153); reactions show as counts under the object (D-154).
  */
-export function EntryActions({ entry, label, canReact, canDelete, onChange, onReply, children }: ActionsProps) {
+export function EntryActions({ entry, label, canReact, canDelete, onChange, onReply, onCategories, children }: ActionsProps) {
   const menu = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
   const press = useRef<number | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const menuId = `actions-${entry.id}`;
-  const hasMenu = canReact || canDelete || !!onReply;
+  const hasMenu = canReact || canDelete || !!onReply || !!onCategories;
 
   async function toggle(emoji: Reaction, on: boolean) {
     menu.current?.hidePopover();
@@ -191,6 +193,19 @@ export function EntryActions({ entry, label, canReact, canDelete, onChange, onRe
                   </button>
                 ))}
               </div>
+            ) : null}
+            {onCategories ? (
+              <button
+                type="button"
+                role="menuitem"
+                className={controls.menuItem}
+                onClick={() => {
+                  menu.current?.hidePopover();
+                  onCategories();
+                }}
+              >
+                Categories…
+              </button>
             ) : null}
             {canDelete ? (
               <button

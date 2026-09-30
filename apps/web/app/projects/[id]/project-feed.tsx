@@ -1,10 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { isReceipt, receiptParts } from "@/lib/bot-cards";
+import type { CategoryChipData } from "@/lib/categories";
 import type { FeedChanges, FeedEntry, FeedPage } from "@/lib/entries";
 import { connectLive, mergeChanges } from "@/lib/live";
 import { AnsweringLine } from "./bot-thinking";
+import { CategoriesContext, CategoriesDialog, CategoryBar, EntryCategoriesDialog } from "./categories";
 import { FeedComposer } from "./feed-composer";
 import { objectLabel } from "./entry-actions";
 import { FeedEntryView, DayDivider, dayKey } from "./feed-entry";
@@ -14,7 +17,7 @@ import styles from "./feed.module.css";
 export interface FeedProps {
   project: { id: string; name: string; archived: boolean };
   viewer: { id: string; name: string; role: "owner" | "editor" | "viewer"; emailsMuted: boolean };
-  can: { post: boolean; rename: boolean; archive: boolean; manageMembers: boolean; leave: boolean; invite: boolean };
+  can: { post: boolean; rename: boolean; archive: boolean; manageMembers: boolean; leave: boolean; invite: boolean; editCategories: boolean };
   initialPage: FeedPage;
 }
 
@@ -34,6 +37,31 @@ export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
   const since = useRef(initialPage.syncedAt);
   const cursorRef = useRef(cursor);
   cursorRef.current = cursor;
+  // Categories (P-19): the chips, the chip being filtered on, and the dialogs.
+  const [chips, setChips] = useState<CategoryChipData[]>(initialPage.categories);
+  const [postCount, setPostCount] = useState(initialPage.postCount);
+  const [filter, setFilter] = useState<string | null>(null);
+  const filterRef = useRef<string | null>(null);
+  // Posted while filtering: stays in view, with its replies, until the filter changes.
+  const shownHere = useRef(new Set<string>());
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editing, setEditing] = useState<FeedEntry | null>(null);
+  const pageUrl = useCallback(
+    (params: Record<string, string> = {}) => {
+      const query = new URLSearchParams(params);
+      if (filterRef.current) query.set("category", filterRef.current);
+      const qs = query.toString();
+      return `/api/projects/${project.id}/entries${qs ? `?${qs}` : ""}`;
+    },
+    [project.id],
+  );
+  /** Whether an entry belongs in the filtered feed: in the category, a reply to one, or posted here. */
+  const inFilter = useCallback((e: FeedEntry) => {
+    const id = filterRef.current;
+    if (!id) return true;
+    const has = (x: FeedEntry | null) => !!x && (x.categories.some((c) => c.id === id) || shownHere.current.has(x.id));
+    return has(e) || has(e.replyTo);
+  }, []);
 
   // Open at the newest entry (D-005) and mark the feed read (D-147).
   useEffect(() => {
@@ -55,7 +83,7 @@ export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
   const loadOlder = useCallback(async () => {
     if (!cursor || loadingOlder) return;
     setLoadingOlder(true);
-    const res = await fetch(`/api/projects/${project.id}/entries?before=${encodeURIComponent(cursor)}`).catch(() => null);
+    const res = await fetch(pageUrl({ before: cursor })).catch(() => null);
     if (res?.ok) {
       const page = (await res.json()) as FeedPage;
       anchor.current = { height: document.documentElement.scrollHeight, y: window.scrollY };
@@ -63,7 +91,7 @@ export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
       setCursor(page.nextCursor);
     }
     setLoadingOlder(false);
-  }, [cursor, loadingOlder, project.id]);
+  }, [cursor, loadingOlder, pageUrl]);
 
   // Live updates (P-06): the realtime service says "changed", then we fetch what changed.
   useEffect(() => {
@@ -84,9 +112,11 @@ export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
         if (stopped || !res?.ok) break;
         const changes = (await res.json()) as FeedChanges;
         const atBottom = nearBottom();
+        setChips(changes.categories);
+        setPostCount(changes.postCount);
         if (changes.truncated) {
           // Too much changed while away: start again from the newest page.
-          const page = await fetch(`/api/projects/${project.id}/entries`).then((r) => (r.ok ? (r.json() as Promise<FeedPage>) : null)).catch(() => null);
+          const page = await fetch(pageUrl()).then((r) => (r.ok ? (r.json() as Promise<FeedPage>) : null)).catch(() => null);
           if (stopped || !page) break;
           follow.current = atBottom;
           setEntries(page.entries);
@@ -96,7 +126,8 @@ export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
           since.current = changes.syncedAt;
           if (changes.entries.length === 0) continue;
           follow.current = atBottom;
-          setEntries((current) => mergeChanges(current, changes.entries, { complete: cursorRef.current === null }));
+          // While filtering, an entry that left the category leaves the view too.
+          setEntries((current) => mergeChanges(current, changes.entries, { complete: cursorRef.current === null }).filter(inFilter));
         }
         // New things seen while the feed is open count as read (D-147).
         if (document.visibilityState === "visible") void fetch(`/api/projects/${project.id}/read`, { method: "POST" });
@@ -113,7 +144,7 @@ export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
       live.stop();
       window.removeEventListener("online", wake);
     };
-  }, [project.id, router]);
+  }, [project.id, router, pageUrl, inFilter]);
 
   // Scrolling up to the top loads the previous page.
   useEffect(() => {
@@ -144,7 +175,7 @@ export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
       let before = cursorRef.current;
       const older: FeedEntry[] = [];
       for (let i = 0; before && i < 20 && !older.some((e) => e.id === id); i++) {
-        const res = await fetch(`/api/projects/${project.id}/entries?before=${encodeURIComponent(before)}`).catch(() => null);
+        const res = await fetch(pageUrl({ before })).catch(() => null);
         if (!res?.ok) return;
         const page = (await res.json()) as FeedPage;
         older.unshift(...page.entries);
@@ -155,10 +186,46 @@ export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
       setCursor(before);
       requestAnimationFrame(() => requestAnimationFrame(show));
     },
-    [project.id],
+    [pageUrl],
   );
 
+  /** Picks a chip: the feed reloads with only that category's posts and their replies (D-201). */
+  const selectFilter = useCallback(
+    async (id: string | null) => {
+      filterRef.current = id;
+      shownHere.current.clear();
+      setFilter(id);
+      const page = await fetch(pageUrl()).then((r) => (r.ok ? (r.json() as Promise<FeedPage>) : null)).catch(() => null);
+      if (!page || filterRef.current !== id) return;
+      follow.current = true;
+      setEntries(page.entries);
+      setCursor(page.nextCursor);
+      setChips(page.categories);
+      setPostCount(page.postCount);
+    },
+    [pageUrl],
+  );
+
+  // A filtered category that was removed or merged away: back to All.
+  useEffect(() => {
+    if (filter && !chips.some((c) => c.id === filter)) void selectFilter(null);
+  }, [chips, filter, selectFilter]);
+
+  const refreshChips = useCallback(async () => {
+    const res = await fetch(`/api/projects/${project.id}/categories`).catch(() => null);
+    if (res?.ok) setChips((await res.json()) as CategoryChipData[]);
+  }, [project.id]);
+
+  const categoriesApi = useMemo(
+    () => ({ chips, canEdit: can.editCategories, openEditor: () => setEditorOpen(true), editEntry: setEditing }),
+    [chips, can.editCategories],
+  );
+
+  // An undone sorting receipt, or one with nothing left in it, isn't shown (D-201).
+  const visible = entries.filter((e) => !(isReceipt(e) && (e.deleted || !receiptParts(e))));
+
   const onSent = (entry: FeedEntry) => {
+    if (filterRef.current) shownHere.current.add(entry.id);
     setReplyingTo(null);
     setEntries((current) => [...current, entry]);
     requestAnimationFrame(() => window.scrollTo(0, document.documentElement.scrollHeight));
@@ -166,15 +233,17 @@ export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
 
   return (
     // data-hydrated: the menu opens natively before its actions are wired up; tests wait for this.
+    <CategoriesContext.Provider value={categoriesApi}>
     <div className={styles.page} data-hydrated={hydrated || undefined}>
       <ProjectHeader project={project} viewer={viewer} can={can} />
+      <CategoryBar chips={chips} postCount={postCount} filter={filter} onFilter={(id) => void selectFilter(id)} />
       <main className={styles.main}>
       <section aria-label="Feed" className={styles.feed} aria-busy={loadingOlder}>
         <div ref={top} className={styles.top} />
-        {entries.length === 0 ? <p className={styles.empty}>Nothing here yet. Paste a link, drop a photo, or write a note.</p> : null}
-        {entries.map((entry, i) => (
+        {visible.length === 0 && !filter ? <p className={styles.empty}>Nothing here yet. Paste a link, drop a photo, or write a note.</p> : null}
+        {visible.map((entry, i) => (
           <div key={entry.id} className={styles.item}>
-            {i === 0 || dayKey(entries[i - 1]!.createdAt) !== dayKey(entry.createdAt) ? <DayDivider iso={entry.createdAt} /> : null}
+            {i === 0 || dayKey(visible[i - 1]!.createdAt) !== dayKey(entry.createdAt) ? <DayDivider iso={entry.createdAt} /> : null}
             <div className={styles.jumpTarget} data-highlight={highlight === entry.id || undefined}>
               <FeedEntryView
                 entry={entry}
@@ -208,7 +277,21 @@ export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
           <p className={styles.notice}>You can view this pile but not add to it.</p>
         )}
       </footer>
+      {editorOpen ? (
+        <CategoriesDialog projectId={project.id} chips={chips} onClose={() => setEditorOpen(false)} onChanged={() => void refreshChips()} />
+      ) : null}
+      {editing ? (
+        <EntryCategoriesDialog
+          projectId={project.id}
+          entry={editing}
+          chips={chips}
+          onClose={() => setEditing(null)}
+          onChange={onChange}
+          onChipsChanged={() => void refreshChips()}
+        />
+      ) : null}
     </div>
+    </CategoriesContext.Provider>
   );
 }
 

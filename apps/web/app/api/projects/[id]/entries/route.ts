@@ -8,7 +8,7 @@ import { getQueue } from "@/lib/services";
 type Context = RouteContext<"/api/projects/[id]/entries">;
 
 /**
- * GET ?before=<cursor> -> { entries (oldest first), nextCursor, syncedAt }.
+ * GET ?before=<cursor>&category=<id> -> { entries (oldest first), nextCursor, syncedAt, categories }; `category` shows only its posts and their replies (P-19).
  * GET ?since=<syncedAt> -> { entries, syncedAt, truncated }: what changed since then (P-06).
  * Members only.
  */
@@ -18,7 +18,7 @@ export async function GET(request: Request, { params }: Context) {
   const { id } = await params;
   const query = new URL(request.url).searchParams;
   if (query.has("since")) return toResponse(await listChanges(getDb(), user.id, id, query.get("since")));
-  return toResponse(await listEntries(getDb(), user.id, id, { before: query.get("before") ?? undefined }));
+  return toResponse(await listEntries(getDb(), user.id, id, { before: query.get("before") ?? undefined, category: query.get("category") ?? undefined }));
 }
 
 /** POST { text?, uploadIds?, replyToId?, mentions? } -> 201 entry. Owners and editors, not while archived. */

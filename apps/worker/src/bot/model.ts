@@ -1,6 +1,6 @@
 // The language model behind Kasa Bot (P-17, D-198). Real answers go through the Vercel AI
 // Gateway; development and tests use a stub, so building and testing costs nothing.
-import { generateText, type LanguageModel } from "ai";
+import { generateText, jsonSchema, Output, type LanguageModel } from "ai";
 
 export interface BotReply {
   text: string;
@@ -9,11 +9,49 @@ export interface BotReply {
   outputTokens: number;
 }
 
+/** What the model decided when sorting (P-19): new category names, and each entry's categories by ref. */
+export interface SortDecision {
+  newCategories: string[];
+  assignments: { ref: number; categories: string[] }[];
+}
+
+export interface SortReply extends Omit<BotReply, "text"> {
+  decision: SortDecision;
+}
+
+export interface SortInput {
+  instructions: string;
+  prompt: string;
+  /** For the stub, which can't read the prompt: what's being sorted and what exists. */
+  items: { ref: number; kind: string }[];
+  categories: string[];
+}
+
 export interface BotModel {
   /** A model id with a known price, or "stub". */
   id: string;
   answer(input: { instructions: string; prompt: string }): Promise<BotReply>;
+  sort(input: SortInput): Promise<SortReply>;
 }
+
+const SORT_SCHEMA = jsonSchema<SortDecision>({
+  type: "object",
+  properties: {
+    newCategories: { type: "array", items: { type: "string" } },
+    assignments: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: { ref: { type: "integer" }, categories: { type: "array", items: { type: "string" } } },
+        required: ["ref", "categories"],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ["newCategories", "assignments"],
+  additionalProperties: false,
+});
+export const MAX_SORT_TOKENS = 1500;
 
 /** List prices in US dollars per million tokens, for the spending cap. */
 export const PRICES: Record<string, { input: number; output: number }> = {
@@ -41,8 +79,23 @@ export function sdkModel(id: string, model: LanguageModel = id): BotModel {
       const result = await generateText({ model, instructions, prompt, maxOutputTokens: MAX_ANSWER_TOKENS, timeout: ANSWER_TIMEOUT_MS, maxRetries: 1 });
       return { text: result.text.trim(), model: id, inputTokens: result.usage.inputTokens ?? 0, outputTokens: result.usage.outputTokens ?? 0 };
     },
+    async sort({ instructions, prompt }) {
+      const result = await generateText({
+        model,
+        instructions,
+        prompt,
+        output: Output.object({ schema: SORT_SCHEMA }),
+        maxOutputTokens: MAX_SORT_TOKENS,
+        timeout: ANSWER_TIMEOUT_MS,
+        maxRetries: 1,
+      });
+      return { decision: result.output, model: id, inputTokens: result.usage.inputTokens ?? 0, outputTokens: result.usage.outputTokens ?? 0 };
+    },
   };
 }
+
+/** The stub's categories: one per kind, so local runs and tests can see sorting work. */
+export const STUB_CATEGORIES: Record<string, string> = { link: "Links", photo: "Photos", note: "Notes" };
 
 /**
  * Answers without a model: says how much of the pile it was given, so tests and local runs can see
@@ -55,6 +108,17 @@ export function createStubModel(delayMs = 0): BotModel {
       if (delayMs > 0) await new Promise((resolve) => setTimeout(resolve, delayMs));
       const entries = prompt.split("\n").filter((line) => line.startsWith("#")).length;
       return { text: `(Stub answer, no model.) I read ${entries} entries in this pile.`, model: "stub", inputTokens: 0, outputTokens: 0 };
+    },
+    async sort({ items, categories }) {
+      const known = new Set(categories.map((c) => c.toLowerCase()));
+      const wanted = items.map((i) => ({ ref: i.ref, name: STUB_CATEGORIES[i.kind] ?? "Other" }));
+      const newCategories = [...new Set(wanted.map((w) => w.name))].filter((n) => !known.has(n.toLowerCase()));
+      return {
+        decision: { newCategories, assignments: wanted.map((w) => ({ ref: w.ref, categories: [w.name] })) },
+        model: "stub",
+        inputTokens: 0,
+        outputTokens: 0,
+      };
     },
   };
 }

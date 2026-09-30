@@ -1,11 +1,12 @@
 // Job runner (D-104). Each job type is registered here with its handler.
 // Telemetry is preloaded via --import ./src/telemetry.ts (see package.json).
-import { createDb, requireDatabaseUrl } from "@kasa/db";
-import { startQueue, type JobData } from "@kasa/jobs";
+import { createDb, eq, requireDatabaseUrl, schema } from "@kasa/db";
+import { sendSort, startQueue, type JobData } from "@kasa/jobs";
 import { createStorage, storageConfigFromEnv } from "@kasa/media";
 import { telemetry } from "./telemetry";
 import { answerBot } from "./bot";
 import { botModelFromEnv } from "./bot/model";
+import { sortPile } from "./bot/sort";
 import { emailFeedback } from "./feedback";
 import { log, runJob } from "./jobs";
 import { processUpload } from "./media";
@@ -36,7 +37,13 @@ await boss.work<JobData<"media.process">>("media.process", { localConcurrency: 2
 });
 
 await boss.work<JobData<"link.unfurl">>("link.unfurl", { localConcurrency: 4 }, async ([job]) => {
-  if (job) await runJob("link.unfurl", job.id, job.data, () => unfurlEntry({ db, storage, log, policy }, job.data.entryId));
+  if (job)
+    await runJob("link.unfurl", job.id, job.data, async () => {
+      await unfurlEntry({ db, storage, log, policy }, job.data.entryId);
+      // Links are sorted once their title is known (P-19).
+      const [entry] = await db.select({ projectId: schema.entries.projectId }).from(schema.entries).where(eq(schema.entries.id, job.data.entryId));
+      if (entry) await sendSort(queue, entry.projectId);
+    });
 });
 
 await boss.work<JobData<"notify.send">>("notify.send", { localConcurrency: 2 }, async ([job]) => {
@@ -51,8 +58,14 @@ await boss.work<JobData<"bot.answer">>("bot.answer", { localConcurrency: 2 }, as
   if (job) await runJob("bot.answer", job.id, job.data, () => answerBot(botDeps, job.data.entryId));
 });
 
+await boss.work<JobData<"bot.sort">>("bot.sort", async ([job]) => {
+  if (job) await runJob("bot.sort", job.id, job.data, async () => {
+      await sortPile(botDeps, job.data.projectId);
+    });
+});
+
 log.info("worker started", {
-  jobs: "media.process,link.unfurl,notify.send,feedback.send,bot.answer",
+  jobs: "media.process,link.unfurl,notify.send,feedback.send,bot.answer,bot.sort",
   unfurl_policy: policy,
   mailer: mailer.kind,
   bot_model: botDeps.model?.id ?? "none",

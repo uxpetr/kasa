@@ -24,6 +24,24 @@ interface BotEntry {
   botEntriesRead?: number | null;
   createdAt: string;
   deleted?: boolean;
+  receipt?: { count: number; categories: string[] } | null;
+}
+
+/** "Stays", "Stays and Food", "Stays, Sights and Food". */
+export function listNames(names: string[]): string {
+  if (names.length <= 1) return names[0] ?? "";
+  return `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
+}
+
+/** A sorting receipt (D-201): the first sort names the pile's categories; later ones count the burst. */
+export const isReceipt = (entry: BotEntry) => entry.kind === "bot" && (entry.botCard === "sorted" || entry.botCard === "sorted-first");
+
+/** The receipt's words around the category names, which the card shows in bold. */
+export function receiptParts(entry: BotEntry): { before: string; names: string[]; after: string } | null {
+  const r = entry.receipt;
+  if (!isReceipt(entry) || !r || r.categories.length === 0) return null;
+  if (entry.botCard === "sorted-first") return { before: "I sorted this pile into ", names: r.categories, after: "." };
+  return { before: `Sorted ${r.count} new ${r.count === 1 ? "thing" : "things"} into `, names: r.categories, after: "." };
 }
 
 /** The worker hasn't finished this answer: it's waiting for the job, or the model is writing. */
@@ -42,5 +60,7 @@ export function isAnswering(entry: BotEntry, now = Date.now()): boolean {
 /** The card's text when it isn't thinking: the answer, the welcome text, or why there's no answer. */
 export function botCardText(entry: BotEntry): string {
   if (isAnswerOpen(entry)) return BOT_CARD_TEXT.failed!;
+  const parts = receiptParts(entry);
+  if (parts) return `${parts.before}${listNames(parts.names)}${parts.after}`;
   return (entry.botCard && BOT_CARD_TEXT[entry.botCard]) || entry.body || "";
 }
