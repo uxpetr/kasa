@@ -207,7 +207,8 @@ export const botUsage = pgTable(
     outputTokens: integer("output_tokens").notNull().default(0),
     // Millionths of a US dollar, from the model's list price.
     costMicros: integer("cost_micros").notNull().default(0),
-    // "answered" or "failed" (the model was called but no answer was posted).
+    // Answers: "answered" or "failed" (the model was called but no answer was posted).
+    // Sorting (P-19): "sorted" or "sort_failed". Only answers count toward the daily limit.
     outcome: text("outcome").notNull(),
     createdAt: createdAt(),
   },
@@ -255,6 +256,9 @@ export const entries = pgTable(
     botCard: text("bot_card"),
     // How many entries a pending answer reads, for its "Reading 24 entries…" step (D-199).
     botEntriesRead: integer("bot_entries_read"),
+    // When Kasa Bot sorted this entry into categories (P-19). Set once, even when nothing fit,
+    // so the bot never sorts an entry twice or undoes a member's fix.
+    sortedAt: timestamp("sorted_at", { withTimezone: true }),
     editedAt: timestamp("edited_at", { withTimezone: true }),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
     // Who deleted it, for the outline's wording (D-155); the author or the owner.
@@ -402,6 +406,8 @@ export const categories = pgTable(
       .references(() => projects.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     createdBy: actor("created_by").notNull(),
+    // Chips show in the order categories were made (P-19).
+    createdAt: createdAt(),
   },
   (t) => [uniqueIndex("categories_project_name_idx").on(t.projectId, t.name)],
 );
@@ -416,8 +422,15 @@ export const entryCategories = pgTable(
       .notNull()
       .references(() => categories.id, { onDelete: "cascade" }),
     assignedBy: actor("assigned_by").notNull(),
+    // The sorting receipt that made a bot assignment, so Undo can take it back (P-19).
+    receiptId: uuid("receipt_id").references(() => entries.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
   },
-  (t) => [primaryKey({ columns: [t.entryId, t.categoryId] }), index("entry_categories_category_idx").on(t.categoryId)],
+  (t) => [
+    primaryKey({ columns: [t.entryId, t.categoryId] }),
+    index("entry_categories_category_idx").on(t.categoryId),
+    index("entry_categories_receipt_idx").on(t.receiptId),
+  ],
 );
 
 // One project maps to one Telegram group (PRD, Messenger integrations).

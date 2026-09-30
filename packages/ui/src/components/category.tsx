@@ -20,7 +20,8 @@ export function CategoryChip({
   return (
     <button type="button" className="kasa-chip" aria-pressed={pressed} onClick={onToggle}>
       {label}
-      {count !== undefined ? <span className="kasa-chip-count">{count}</span> : null}
+      {/* A real space, so the name reads "Food 3", not "Food3". */}
+      {count !== undefined ? <> <span className="kasa-chip-count">{count}</span></> : null}
     </button>
   );
 }

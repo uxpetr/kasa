@@ -7,7 +7,7 @@ const entry = (id: string, minute: number, body = id): FeedEntry => ({
   kind: "note",
   body,
   botCard: null,
-    botEntriesRead: null,
+  botEntriesRead: null,
   createdAt: new Date(Date.UTC(2026, 8, 27, 9, minute)).toISOString(),
   author: null,
   deleted: false,
@@ -17,6 +17,8 @@ const entry = (id: string, minute: number, body = id): FeedEntry => ({
   capture: null,
   reactions: [],
   replyTo: null,
+  categories: [],
+  receipt: null,
 });
 
 describe("mergeChanges", () => {

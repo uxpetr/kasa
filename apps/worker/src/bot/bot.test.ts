@@ -52,6 +52,7 @@ describe.skipIf(!process.env.DATABASE_URL)("Kasa Bot answers (P-17)", () => {
     const prompts: string[] = [];
     const model: BotModel = {
       id: "anthropic/claude-haiku-4.5",
+      sort: stubModel.sort,
       async answer({ instructions, prompt }) {
         prompts.push(`${instructions}\n${prompt}`);
         return { text, model: "anthropic/claude-haiku-4.5", inputTokens: 2000, outputTokens: 100 };
@@ -133,6 +134,7 @@ describe.skipIf(!process.env.DATABASE_URL)("Kasa Bot answers (P-17)", () => {
     const id = await ask("@kasa anything?");
     const model: BotModel = {
       id: "stub",
+      sort: stubModel.sort,
       async answer({ prompt }) {
         seen = await card(id);
         return { text: `read ${prompt.split("\n").filter((l) => l.startsWith("#")).length}`, model: "stub", inputTokens: 0, outputTokens: 0 };
@@ -202,7 +204,7 @@ describe.skipIf(!process.env.DATABASE_URL)("Kasa Bot answers (P-17)", () => {
   });
 
   it("says it failed when the model errors, and counts the attempt", async () => {
-    const model: BotModel = { id: "anthropic/claude-haiku-4.5", answer: async () => Promise.reject(new Error("timeout")) };
+    const model: BotModel = { id: "anthropic/claude-haiku-4.5", answer: async () => Promise.reject(new Error("timeout")), sort: stubModel.sort };
     const id = await ask("@kasa hello?");
     await answerBot({ db: db(), model }, id);
     expect(await card(id)).toMatchObject({ botCard: "failed", body: null });

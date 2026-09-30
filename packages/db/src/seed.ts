@@ -1,6 +1,6 @@
 // Seeds the "Japan 2027" demo project from design/prototype/Main.dc.html.
 // Safe to re-run: it removes the previous demo project and users first.
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { createDb, requireDatabaseUrl, type Database } from "./client";
 import * as s from "./schema";
 import { seedKey, type SeedImage } from "./seed-images";
@@ -58,14 +58,16 @@ export async function seed(db: Database, now = new Date()) {
 
     const cats = await tx
       .insert(s.categories)
-      .values(["Plans", "Sights", "Tokyo"].map((name) => ({ projectId, name, createdBy: "bot" as const })))
+      // In the prototype's chip order (Main.dc.html); clock_timestamp() keeps it (P-19).
+      .values(["Sights", "Tokyo", "Plans"].map((name) => ({ projectId, name, createdBy: "bot" as const, createdAt: sql`clock_timestamp()` })))
       .returning();
     const cat = Object.fromEntries(cats.map((c) => [c.name, c.id])) as Record<"Plans" | "Sights" | "Tokyo", string>;
 
     const entry = async (values: Omit<typeof s.entries.$inferInsert, "projectId">, category: keyof typeof cat) => {
       const [row] = await tx
         .insert(s.entries)
-        .values({ projectId, ...values })
+        // Already sorted, so Kasa Bot doesn't sort the demo again (P-19).
+        .values({ projectId, sortedAt: new Date(), ...values })
         .returning();
       if (!row) throw new Error("insert failed");
       await tx.insert(s.entryCategories).values({ entryId: row.id, categoryId: cat[category], assignedBy: "bot" });

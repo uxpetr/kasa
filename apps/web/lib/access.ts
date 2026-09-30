@@ -42,3 +42,5 @@ export const canDeleteEntry = (a: Access | null, authorId: string | null, userId
 export const canManageMembers = (a: Access | null) => !!a && !a.archived && a.role === "owner";
 /** Everyone but the owner can leave, archived or not (D-169). */
 export const canLeave = (a: Access | null) => !!a && a.role !== "owner";
+/** Owners and editors change categories: move entries, rename, merge, remove, add, undo (D-201). Not while archived. */
+export const canEditCategories = canAdd;

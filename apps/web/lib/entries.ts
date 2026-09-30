@@ -1,10 +1,11 @@
 // The zen chat feed (P-03, P-04): reading pages, posting, reacting, deleting, and marking read.
 // Access: members read (viewers included); owners and editors post and react unless archived (lib/access).
 import { and, asc, count, desc, eq, gt, inArray, isNull, lt, ne, or, schema, sql, type Database } from "@kasa/db";
-import type { JobQueue } from "@kasa/jobs";
+import { sendSort, type JobQueue } from "@kasa/jobs";
 import { errorAttributes } from "@kasa/observability";
 import { BOT_MAX_CONTEXT_ENTRIES, track } from "@kasa/shared";
 import { canAdd, canDeleteEntry, canReact, canRead, projectAccess } from "./access";
+import { categoriesOf, countPosts, listCategories, RECEIPT_CARDS, receiptsOf, type Category, type CategoryChipData, type ReceiptSummary } from "./categories";
 import { log } from "./log";
 import { tagsKasa } from "./mentions";
 import { parseMentions, queueNotifications, recordNotifications } from "./notifications";
@@ -49,6 +50,10 @@ export interface FeedEntry {
   reactions: { emoji: Reaction; count: number; mine: boolean }[];
   /** What this entry replies to (D-006), shown as a small clipped print; its own replyTo is always null. */
   replyTo: FeedEntry | null;
+  /** Its category stamps, in chip order (P-19). */
+  categories: Category[];
+  /** On a sorting receipt: what it lists (D-201). */
+  receipt: ReceiptSummary | null;
 }
 
 export interface FeedPage {
@@ -58,6 +63,9 @@ export interface FeedPage {
   nextCursor: string | null;
   /** Database time before the read; pass as `since` to fetch what changed afterwards (P-06). */
   syncedAt: string;
+  /** The pile's category chips (P-19), and its live posts for "All". */
+  categories: CategoryChipData[];
+  postCount: number;
 }
 
 export interface FeedChanges {
@@ -66,6 +74,9 @@ export interface FeedChanges {
   syncedAt: string;
   /** Too much changed to list; reload the newest page instead. */
   truncated: boolean;
+  /** The pile's category chips now; they change without any entry changing, e.g. a rename. */
+  categories: CategoryChipData[];
+  postCount: number;
 }
 
 export const MAX_CHANGES = 100;
@@ -91,17 +102,25 @@ function parseCursor(cursor: unknown): { at: Date; id: string } | null | "invali
 
 const toCursor = (e: { createdAt: Date; id: string }) => `${e.createdAt.toISOString()}_${e.id}`;
 
-/** A page of the feed, newest page first; `before` pages back through history. */
+/**
+ * A page of the feed, newest page first; `before` pages back through history. With `category`,
+ * only the posts in that category and their replies (P-19).
+ */
 export async function listEntries(
   db: Database,
   userId: string,
   projectId: string,
-  options: { before?: unknown; limit?: number } = {},
+  options: { before?: unknown; limit?: number; category?: unknown } = {},
 ): Promise<Result<FeedPage>> {
   const access = isUuid(projectId) ? await projectAccess(db, userId, projectId) : null;
   if (!canRead(access)) return fail(404, "Project not found");
   const cursor = parseCursor(options.before);
   if (cursor === "invalid") return fail(400, "Invalid cursor");
+  if (options.category !== undefined && options.category !== null && !isUuid(options.category)) return fail(400, "Invalid category");
+  const category = typeof options.category === "string" ? options.category : null;
+  const inCategory = category
+    ? sql`(select ${schema.entryCategories.entryId} from ${schema.entryCategories} join ${schema.categories} on ${schema.categories.id} = ${schema.entryCategories.categoryId} where ${schema.entryCategories.categoryId} = ${category} and ${schema.categories.projectId} = ${projectId})`
+    : null;
   const limit = Math.min(Math.max(options.limit ?? PAGE_SIZE, 1), 100);
   const syncedAt = await dbNow(db);
 
@@ -112,6 +131,7 @@ export async function listEntries(
     .where(
       and(
         eq(schema.entries.projectId, projectId),
+        inCategory ? or(sql`${schema.entries.id} in ${inCategory}`, sql`${schema.entries.replyToId} in ${inCategory}`) : undefined,
         // Deleted entries stay in the feed as outlines (D-155).
         cursor
           ? or(
@@ -125,11 +145,13 @@ export async function listEntries(
     .limit(limit + 1);
 
   const page = rows.slice(0, limit);
-  const entries = await withDetails(db, page, userId);
+  const [entries, categories, postCount] = await Promise.all([withDetails(db, page, userId), listCategories(db, projectId), countPosts(db, projectId)]);
   return ok({
     entries: entries.reverse(),
     nextCursor: rows.length > limit ? toCursor(page[page.length - 1]!) : null,
     syncedAt,
+    categories,
+    postCount,
   });
 }
 
@@ -148,10 +170,11 @@ export async function listChanges(db: Database, userId: string, projectId: strin
     .where(and(eq(schema.entries.projectId, projectId), gt(schema.entries.updatedAt, new Date(at.getTime() - CHANGES_OVERLAP_MS))))
     .orderBy(asc(schema.entries.updatedAt))
     .limit(MAX_CHANGES + 1);
-  if (rows.length > MAX_CHANGES) return ok({ entries: [], syncedAt, truncated: true });
+  const [categories, postCount] = await Promise.all([listCategories(db, projectId), countPosts(db, projectId)]);
+  if (rows.length > MAX_CHANGES) return ok({ entries: [], syncedAt, truncated: true, categories, postCount });
   const entries = await withDetails(db, rows, userId);
   entries.sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id));
-  return ok({ entries, syncedAt, truncated: false });
+  return ok({ entries, syncedAt, truncated: false, categories, postCount });
 }
 
 const rowColumns = {
@@ -200,7 +223,8 @@ async function withDetails(db: Database, rows: Row[], viewerId: string, { quotes
   const ids = rows.filter((r) => !r.deletedAt).map((r) => r.id);
   if (ids.length === 0) return rows.map((r) => toFeedEntry(r));
   const quoteOf = quotes ? await quotedEntries(db, rows, viewerId) : new Map<string, FeedEntry>();
-  const [media, links, captures, pins, pinNotes, reactions] = await Promise.all([
+  const receiptIds = rows.filter((r) => !r.deletedAt && r.kind === "bot" && r.botCard && RECEIPT_CARDS.includes(r.botCard)).map((r) => r.id);
+  const [media, links, captures, pins, pinNotes, reactions, categoryOf, receiptOf] = await Promise.all([
     db
       .select({
         id: schema.entryMedia.id,
@@ -248,6 +272,8 @@ async function withDetails(db: Database, rows: Row[], viewerId: string, { quotes
       .from(schema.reactions)
       .where(inArray(schema.reactions.entryId, ids))
       .groupBy(schema.reactions.entryId, schema.reactions.emoji),
+    categoriesOf(db, ids),
+    receiptsOf(db, receiptIds),
   ]);
   const photosOf = new Map<string, FeedEntry["photos"]>();
   const screenshotOf = new Map<string, NonNullable<FeedEntry["capture"]>["screenshot"]>();
@@ -286,6 +312,8 @@ async function withDetails(db: Database, rows: Row[], viewerId: string, { quotes
           capture: captureOf.get(r.id) ?? null,
           reactions: reactionsOf.get(r.id) ?? [],
           replyTo: (r.replyToId && quoteOf.get(r.replyToId)) || null,
+          categories: categoryOf.get(r.id) ?? [],
+          receipt: receiptIds.includes(r.id) ? (receiptOf.get(r.id) ?? { count: 0, categories: [] }) : null,
         },
   );
 }
@@ -311,7 +339,8 @@ function toFeedEntry(r: Row): FeedEntry {
     id: r.id,
     kind: r.kind,
     body: r.deletedAt ? null : r.body,
-    botCard: r.deletedAt ? null : r.botCard,
+    // An undone sorting receipt keeps its card type, so the feed can leave it out (P-19).
+    botCard: r.deletedAt && !(r.kind === "bot" && r.botCard && RECEIPT_CARDS.includes(r.botCard)) ? null : r.botCard,
     botEntriesRead: r.deletedAt ? null : r.botEntriesRead,
     createdAt: r.createdAt.toISOString(),
     author: r.authorId ? { id: r.authorId, name: r.authorName ?? "" } : null,
@@ -322,6 +351,8 @@ function toFeedEntry(r: Row): FeedEntry {
     capture: null,
     reactions: [],
     replyTo: null,
+    categories: [],
+    receipt: null,
   };
 }
 
@@ -409,7 +440,8 @@ export async function createEntry(
   const kind: EntryKind = uploadIds.length ? "photo" : url ? "link" : "note";
   // Tagging @kasa in a note or caption asks Kasa Bot (P-17), unless the pile turned it off.
   // Without a queue nothing would fill in the answer, so no card is made.
-  const asksKasa = !!jobs && kind !== "link" && tagsKasa(text) && (await botMode(db, projectId)) !== "off";
+  const botOn = !!jobs && (await botMode(db, projectId)) !== "off";
+  const asksKasa = botOn && kind !== "link" && tagsKasa(text);
 
   let recipients: string[] = [];
   let botEntryId: string | null = null;
@@ -462,6 +494,8 @@ export async function createEntry(
   if (jobs) {
     try {
       if (kind === "link") await jobs.send("link.unfurl", { entryId });
+      // Posts are sorted into categories (P-19); links once they're unfurled, by the worker.
+      else if (!original && botOn) await sendSort(jobs, projectId);
       await queueNotifications(db, jobs, projectId, recipients);
     } catch (error) {
       log.error("follow-up jobs not queued", { "entry.id": entryId, "project.id": projectId, ...errorAttributes(error) });

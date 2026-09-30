@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { eq, schema } from "@kasa/db";
-import { canAdd, canArchive, canInvite, canLeave, canManageMembers, canRename, projectAccess } from "@/lib/access";
+import { canAdd, canArchive, canEditCategories, canInvite, canLeave, canManageMembers, canRename, projectAccess } from "@/lib/access";
 import { getAuth, isAuthConfigured } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { listEntries } from "@/lib/entries";
@@ -47,6 +47,7 @@ export default async function ProjectPage(props: PageProps<"/projects/[id]">) {
         manageMembers: canManageMembers(access),
         leave: canLeave(access),
         invite: canInvite(access),
+        editCategories: canEditCategories(access),
       }}
       initialPage={page.value}
     />

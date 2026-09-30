@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Chrome extension (D-158), pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** P-19 (categories) and P-20 (recommendations), then P-18 (Telegram sync, once F-17 gives it a bot); staging (F-10, which also switches on real Kasa Bot answers), F-13 (Resend), F-16 (publish the Google consent screen before inviting testers) and F-17 (a Telegram bot) before the pilot starts; then set `pilot_start` on the pilot dashboard (D-194) once the first day is fixed.
+**Next up:** P-20 (recommendations), then P-18 (Telegram sync, once F-17 gives it a bot); staging (F-10, which also switches on real Kasa Bot answers), F-13 (Resend), F-16 (publish the Google consent screen before inviting testers) and F-17 (a Telegram bot) before the pilot starts; then set `pilot_start` on the pilot dashboard (D-194) once the first day is fixed.
 **Blocked:** P-16, on OD-14 (privacy note). In phase 2: V-12 until Petr finishes the scroll story (D-189), V-12, V-14 and F-15 (media CDN) on OD-18 (clear or change the name). Real emails, including feedback emails, need F-13 (a Resend account and a sender domain from Petr).
 
 ---
@@ -232,6 +232,25 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
   - **Stay in v1:** unprompted tips (V-06, still on OD-06) and the per-pile proactivity setting (V-04).
   - **Spending:** categories and recommendations count toward the same $20 a month cap as tagged answers (D-196).
   · Petr
+- **D-201** · 2026-09-30 · **Kasa Bot categories** (P-19), Petr's answers:
+  - **The set:** Kasa Bot proposes a small set that fits the pile once it has about 5 things, and adds a category only when nothing fits, up to about 7. Members can rename and merge them.
+  - **Per post:** a post can be in **several** categories; the menu item is "Categories…" with a checklist.
+  - **What's sorted:** links, photos (by caption and nearby text; the bot never looks at images), and notes. Replies and bot cards aren't sorted; a filter shows a sorted post with its replies.
+  - **Edit:** "Sorted by Kasa Bot · Edit" opens a Categories dialog listing each category with its count, Rename, Merge into…, and Remove (its posts become uncategorized), plus New category.
+  - **Receipts:** one category reads "Sorted 3 new things into Sights. Undo"; several read "Sorted 5 new things into Sights, Food and Stays. Undo". Undo takes back the whole burst. A burst ends after **10 quiet minutes**; until then its receipt updates in place.
+  - **First sort:** "I sorted this pile into Stays, Sights, Food and Getting around. Edit", then normal receipts.
+  - **Members add categories** from the dialog and from a post's checklist, and Kasa Bot files into them too.
+  · Petr, P-19
+- **D-202** · 2026-09-30 · Categories internals (P-19):
+  - **Data:** migration 0015. `entries.sorted_at` is set once when the bot has considered a post (even if nothing fit) or a member picks its categories, so the bot never sorts a post twice or undoes a fix. `entry_categories.receipt_id` names the receipt that made a bot assignment; `created_at` on both tables orders chips (the model's order, via `clock_timestamp()`) and finds a burst's end. Seeded demo posts count as sorted.
+  - **Live updates:** triggers touch the entry and its receipt when a category is added or removed, and a category insert, rename or delete sends NOTIFY for the pile, so chips update even when no entry changes. Every feed page and change pull returns the chips and the post count for "All".
+  - **Job:** `bot.sort { projectId }` on a stately queue, one per pile, sent 5 s after a post (`sendSort`, `SORT_DELAY_MS`), and for links after unfurling. It reads only through `apps/worker/src/bot/pile.ts` (`readUnsorted`, `readCategories`, `readFixes`, all filtered by the pile's id) and asks the model for structured output (`Output.object` with a JSON schema): new category names and each post's categories by ref. Output is cleaned: known names only (case-insensitive), at most 3 per post, new ones capped at 7 in total, names up to 30 characters with a capital first letter. Up to 40 posts per call and 3 calls per job; off when the pile's Kasa Bot is off or there's no model. `bot_usage` outcomes `sorted` and `sort_failed`; only `answered` and `failed` count toward the daily answer limit. The stub files each post under its kind ("Notes", "Links", "Photos").
+  - **Undo:** removes that receipt's bot assignments, deletes bot-made categories from that burst that are now empty, and soft-deletes the receipt, which then leaves the feed (the feed also hides a receipt with nothing left in it).
+  - **API:** `GET/POST /api/projects/:id/categories`, `PATCH/DELETE /api/categories/:id` (`{ name }` or `{ mergeInto }`), `PUT /api/entries/:id/categories`, `POST /api/entries/:id/undo`, and `GET /api/projects/:id/entries?category=`. Owners and editors change categories (`canEditCategories`); viewers see chips and stamps. Up to 20 categories per pile.
+  - **UI:** chips sit under the header and stay in view while scrolling; they scroll sideways on phones. While a filter is on, a post you send stays in view with its replies until the filter changes. The entry menu now flips upward near the bottom of the screen, so all its items stay reachable.
+  - **Wording not in the design** (Petr to confirm): "Categories…", "New category", "Add", "Done", "Merge {name} into", "Remove {name}? Its posts stay in the pile.", "Couldn't undo that. Try again."
+  - **Analytics:** `bot_sorted` (`sorted`, `first`) and `category_changed` (`action`: add, move, rename, merge, remove, undo), ids and enums only.
+  · P-19
 
 ---
 
@@ -506,12 +525,12 @@ Depends on: P-07, P-17, F-17; on staging, the worker (F-10). Moved from V-07 (D-
 - [ ] `@kasa` in the group asks Kasa Bot, with the same one-pile rule, rate limit and cap as the web composer (from V-04).
 - [ ] The Telegram bot token never reaches the browser, and incoming webhooks are verified.
 
-### P-19 · Kasa Bot: categories · `in-progress` · branch `p-19-categories`
+### P-19 · Kasa Bot: categories · `done` · branch `p-19-categories`
 Depends on: P-17. Moved from V-05 (D-200).
-- [ ] New entries get a category from a pile-specific set (for example Stays, Sights, Food, Transport).
-- [ ] Filter chips above the feed; members can rename, merge, and move; the bot learns from fixes. The feed order never changes.
-- [ ] Sorting receipts are batched: one card per burst, with Undo.
-- [ ] Model spending counts toward the $20 monthly cap (D-200).
+- [x] New entries get a category from a pile-specific set (for example Stays, Sights, Food, Transport). (Kasa Bot proposes the set once a pile has 5 posts and adds one only when nothing fits, up to 7; a post can have several. Replies and bot cards aren't sorted. D-201, D-202.)
+- [x] Filter chips above the feed; members can rename, merge, and move; the bot learns from fixes. The feed order never changes. (Also add and remove, from the Categories dialog behind "Edit" and a post's Categories… checklist. Members' own choices go to the model as examples, and a post a member has sorted is never re-sorted. A filter shows the category's posts and their replies, in feed order.)
+- [x] Sorting receipts are batched: one card per burst, with Undo. (A burst ends after 10 quiet minutes; the receipt grows in place. The first sort's receipt names the categories and has Edit instead of Undo.)
+- [x] Model spending counts toward the $20 monthly cap (D-200). (Sorting is recorded in `bot_usage` and stops at the cap; it doesn't count toward the 30 answers a day.)
 
 ### P-20 · Kasa Bot: recommendations · `todo`
 Depends on: P-17. Moved from V-06 (D-200).
@@ -732,3 +751,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-29 · P-17 done: tagging `@kasa` gets a bot card answered from that pile only, with a pending card first and then the answer or a reason. There's a 30-per-day pile limit and a $20 monthly cap. Tests prove the bot can't read other piles. It uses the stub model locally and in CI; real answers switch on in F-10 (D-198). Kasa Bot cards are never tilted (D-197). A thinking state shows while it answers: a breathing k, "Reading N entries…" then "Writing an answer…", and a pill above the composer (D-199). · [#34](https://github.com/uxpetr/kasa/pull/34)
 - 2026-09-29 · Realtime fix: a blank `REALTIME_ALLOWED_ORIGINS=` in `.env` refused every live connection, so new entries and the thinking state only showed after a reload. Blank now counts as unset and falls back to `BETTER_AUTH_URL`, then `http://localhost:3000`. · [#34](https://github.com/uxpetr/kasa/pull/34)
 - 2026-09-30 · PLAN: the pilot gets Telegram two-way sync (P-18), Kasa Bot categories (P-19) and recommendations (P-20), moved from V-07, V-05 and V-06; F-17 adds a Telegram bot for staging (D-200). D-187's details are back under D-187. · [#35](https://github.com/uxpetr/kasa/pull/35)
+- 2026-09-30 · P-19 done: Kasa Bot sorts posts into categories once a pile has 5, shown as chips with counts and green stamps. A filter shows a category's posts and their replies. Each burst gets one receipt with Undo; the first names the categories. Members move posts, add, rename, merge and remove categories, and the bot learns from their choices. Sorting reads only its own pile and counts toward the $20 cap (D-201, D-202). · PR pending

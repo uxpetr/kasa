@@ -260,6 +260,8 @@
 }
 .entryMenu {
   min-width: 0;
+  /* Near the bottom of the screen the menu opens upwards, so every item stays reachable. */
+  position-try-fallbacks: flip-block;
 }
 .picker {
   display: flex;
@@ -635,4 +637,167 @@ button.reaction::after {
   height: 22px;
   border-radius: 6px;
   font-size: 12px;
+}
+
+/* Categories (P-19, D-201): chips under the header, stamps in the meta line, receipts. */
+.categoryBar {
+  position: sticky;
+  top: calc(env(safe-area-inset-top, 0px) + 72px);
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 4px 0 12px;
+  background: var(--kasa-color-table);
+}
+.chips {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 4px 2px;
+  scrollbar-width: none;
+}
+.chips > * {
+  flex-shrink: 0;
+}
+.sortedBy {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  color: var(--kasa-color-ink-muted);
+  font-size: 12px;
+}
+.sortedBy svg {
+  color: var(--kasa-color-bot);
+}
+.sortedByEdit,
+.receiptAction {
+  min-height: 24px;
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  color: var(--kasa-color-bot);
+  font-family: var(--kasa-font-body);
+  font-size: inherit;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+.receiptAction {
+  margin-left: 6px;
+  text-decoration: underline;
+}
+.sortedByEdit:focus-visible,
+.receiptAction:focus-visible {
+  outline: 2px solid var(--kasa-color-ink);
+  outline-offset: 2px;
+}
+.meta :global(.kasa-stamp) {
+  margin-left: 6px;
+  vertical-align: 1px;
+}
+.receipt {
+  font-size: 13px;
+}
+
+/* The Categories dialog and an entry's checklist. */
+.categoriesDialog {
+  width: min(480px, calc(100% - 32px));
+}
+.categoryRows {
+  display: flex;
+  flex-direction: column;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+.categoryRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: var(--kasa-hit-target);
+  border-bottom: 1px solid var(--kasa-color-line);
+}
+.categoryName {
+  font-weight: 600;
+}
+.categoryCount {
+  margin-left: 4px;
+  color: var(--kasa-color-ink-muted);
+  font-weight: 400;
+}
+.categoryActions {
+  display: flex;
+  gap: 4px;
+}
+.categoryActions button {
+  min-height: var(--kasa-hit-target);
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--kasa-color-ink-body);
+  font: 14px var(--kasa-font-body);
+  cursor: pointer;
+}
+.categoryActions button:hover,
+.categoryActions button:focus-visible {
+  background: var(--kasa-color-table-alt);
+  outline: none;
+}
+.categoryEdit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 0;
+}
+.categoryEdit input,
+.categoryEdit select,
+.newCategory input {
+  height: 40px;
+  box-sizing: border-box;
+  padding: 0 10px;
+  border: 1px solid var(--kasa-color-line-strong);
+  border-radius: 8px;
+  background: var(--kasa-color-paper);
+  color: var(--kasa-color-ink);
+  font: var(--kasa-font-size-body) var(--kasa-font-body);
+}
+.categoryEdit input {
+  flex: 1 1 140px;
+}
+.newCategory {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.newCategory input {
+  flex: 1 1 160px;
+}
+.checklist {
+  display: flex;
+  flex-direction: column;
+  margin: 0 0 16px;
+  padding: 0;
+  border: 0;
+}
+.checkItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--kasa-hit-target);
+  border-bottom: 1px solid var(--kasa-color-line);
+  cursor: pointer;
+}
+.checkItem input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--kasa-color-bot);
 }
