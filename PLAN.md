@@ -424,6 +424,11 @@ Needed by: P-18 (D-200)
 - [ ] Petr creates a Telegram bot with @BotFather for staging, and its token goes into Vercel as a sensitive variable (and into the worker in F-10).
 - [ ] Every new Telegram variable is in `.env.example` with a comment.
 
+### F-18 · Stop Neon branches filling up from previews · `todo` (waiting on Petr)
+Found in P-19: every Vercel preview made a Neon branch, and at the Free plan's 10 branches previews failed with "Resource provisioning failed". Petr deleted old branches on 2026-09-30.
+- [ ] Petr turns off Preview in the Neon integration's Deployments Configuration (Vercel → Storage → the database → Projects → kasa), keeping Production on. Neon deletes preview branches only when Vercel deletes the deployments, after 6 months by default.
+- [ ] A new preview deploys without creating a Neon branch.
+
 ---
 
 ## Phase 1: Prototype
@@ -754,3 +759,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-30 · PLAN: the pilot gets Telegram two-way sync (P-18), Kasa Bot categories (P-19) and recommendations (P-20), moved from V-07, V-05 and V-06; F-17 adds a Telegram bot for staging (D-200). D-187's details are back under D-187. · [#35](https://github.com/uxpetr/kasa/pull/35)
 - 2026-09-30 · P-19 done: Kasa Bot sorts posts into categories once a pile has 5, shown as chips with counts and green stamps. A filter shows a category's posts and their replies. Each burst gets one receipt with Undo; the first names the categories. Members move posts, add, rename, merge and remove categories, and the bot learns from their choices. Sorting reads only its own pile and counts toward the $20 cap (D-201, D-202). · [#36](https://github.com/uxpetr/kasa/pull/36)
 - 2026-09-30 · P-19: a sort charges the pile only once the sort is saved. The `bot_usage` row commits with the assignments, so a failed save leaves the posts unsorted and unbilled, and a retry is billed once (D-203). · [#36](https://github.com/uxpetr/kasa/pull/36)
+- 2026-09-30 · F-18 added: previews failed once the Neon Free plan's 10 branches were used up; Petr cleared old branches, and turning off per-preview branches is his to do. · [#36](https://github.com/uxpetr/kasa/pull/36)
