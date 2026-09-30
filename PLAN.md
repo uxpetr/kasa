@@ -251,6 +251,7 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
   - **Wording not in the design** (Petr to confirm): "Categories…", "New category", "Add", "Done", "Merge {name} into", "Remove {name}? Its posts stay in the pile.", "Couldn't undo that. Try again."
   - **Analytics:** `bot_sorted` (`sorted`, `first`) and `category_changed` (`action`: add, move, rename, merge, remove, undo), ids and enums only.
   · P-19
+- **D-203** · 2026-09-30 · A sort's `bot_usage` row (`sorted`, with its cost) commits in the same transaction as the assignments and `sorted_at`. A failed save rolls the charge back, so a pg-boss retry doesn't bill the pile twice for a sort that never landed. A model error is still `sort_failed`, outside that transaction. · P-19 bugfix
 
 ---
 
@@ -752,3 +753,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-29 · Realtime fix: a blank `REALTIME_ALLOWED_ORIGINS=` in `.env` refused every live connection, so new entries and the thinking state only showed after a reload. Blank now counts as unset and falls back to `BETTER_AUTH_URL`, then `http://localhost:3000`. · [#34](https://github.com/uxpetr/kasa/pull/34)
 - 2026-09-30 · PLAN: the pilot gets Telegram two-way sync (P-18), Kasa Bot categories (P-19) and recommendations (P-20), moved from V-07, V-05 and V-06; F-17 adds a Telegram bot for staging (D-200). D-187's details are back under D-187. · [#35](https://github.com/uxpetr/kasa/pull/35)
 - 2026-09-30 · P-19 done: Kasa Bot sorts posts into categories once a pile has 5, shown as chips with counts and green stamps. A filter shows a category's posts and their replies. Each burst gets one receipt with Undo; the first names the categories. Members move posts, add, rename, merge and remove categories, and the bot learns from their choices. Sorting reads only its own pile and counts toward the $20 cap (D-201, D-202). · [#36](https://github.com/uxpetr/kasa/pull/36)
+- 2026-09-30 · P-19: a sort charges the pile only once the sort is saved. The `bot_usage` row commits with the assignments, so a failed save leaves the posts unsorted and unbilled, and a retry is billed once (D-203). · [#36](https://github.com/uxpetr/kasa/pull/36)
