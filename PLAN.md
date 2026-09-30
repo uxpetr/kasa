@@ -506,7 +506,7 @@ Depends on: P-07, P-17, F-17; on staging, the worker (F-10). Moved from V-07 (D-
 - [ ] `@kasa` in the group asks Kasa Bot, with the same one-pile rule, rate limit and cap as the web composer (from V-04).
 - [ ] The Telegram bot token never reaches the browser, and incoming webhooks are verified.
 
-### P-19 · Kasa Bot: categories · `todo`
+### P-19 · Kasa Bot: categories · `in-progress` · branch `p-19-categories`
 Depends on: P-17. Moved from V-05 (D-200).
 - [ ] New entries get a category from a pile-specific set (for example Stays, Sights, Food, Transport).
 - [ ] Filter chips above the feed; members can rename, merge, and move; the bot learns from fixes. The feed order never changes.
