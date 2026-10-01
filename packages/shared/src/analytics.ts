@@ -16,12 +16,15 @@ export const ANALYTICS_EVENTS = [
   "feed_opened",
   "feedback_sent",
   // Kasa Bot answered a tag, or didn't: `reason` is error, no_model, paused, or limited (P-17).
+  // `ideas`: recommendations from the web on it, `more` for "More ideas" (P-20).
   "bot_answered",
   "bot_failed",
   // Kasa Bot sorted posts into categories (P-19): `sorted` entries, `first` for a pile's first sort.
   "bot_sorted",
   // A member changed categories: `action` is add, move, rename, merge, remove, or undo (P-19).
   "category_changed",
+  // A member added one of Kasa Bot's ideas to the pile as a link (P-20).
+  "idea_added",
 ] as const;
 export type AnalyticsEvent = (typeof ANALYTICS_EVENTS)[number];
 

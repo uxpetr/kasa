@@ -801,3 +801,70 @@ button.reaction::after {
   height: 18px;
   accent-color: var(--kasa-color-bot);
 }
+
+/* Kasa Bot's ideas (P-20, D-204): a small print per idea, then "Add to pile" or what became of it. */
+.ideas {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+.ideaList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.idea {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.ideaPhoto {
+  flex-shrink: 0;
+  width: 96px;
+  padding: 4px 4px 10px;
+  background: #fff;
+  transform: rotate(-2deg);
+  box-shadow: 0 1px 2px rgba(31, 29, 26, 0.1), 0 6px 14px rgba(31, 29, 26, 0.08);
+}
+.ideaPhoto img {
+  display: block;
+  width: 100%;
+  height: 64px;
+  object-fit: cover;
+}
+.ideaText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  font-size: var(--kasa-font-size-meta);
+  color: var(--kasa-color-ink-body);
+}
+.ideaTitle {
+  font-size: var(--kasa-font-size-body);
+  font-weight: 600;
+  color: var(--kasa-color-ink);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.ideaTitle:hover {
+  text-decoration: underline;
+}
+.ideaSite {
+  color: var(--kasa-color-ink-muted);
+  overflow-wrap: anywhere;
+}
+.ideaAdded {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--kasa-color-bot-stamp-text);
+}
+.ideaAdded svg {
+  color: var(--kasa-color-bot);
+}

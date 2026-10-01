@@ -225,10 +225,14 @@ export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
   const visible = entries.filter((e) => !(isReceipt(e) && (e.deleted || !receiptParts(e))));
 
   const onSent = (entry: FeedEntry) => {
-    if (filterRef.current) shownHere.current.add(entry.id);
     setReplyingTo(null);
-    setEntries((current) => [...current, entry]);
-    requestAnimationFrame(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    onAdd(entry, { scroll: true });
+  };
+  // Live sync may have brought it in first.
+  const onAdd = (entry: FeedEntry, { scroll = false } = {}) => {
+    if (filterRef.current) shownHere.current.add(entry.id);
+    setEntries((current) => (current.some((e) => e.id === entry.id) ? current : [...current, entry]));
+    if (scroll) requestAnimationFrame(() => window.scrollTo(0, document.documentElement.scrollHeight));
   };
 
   return (
@@ -252,6 +256,7 @@ export function ProjectFeed({ project, viewer, can, initialPage }: FeedProps) {
                 isOwner={viewer.role === "owner"}
                 archived={project.archived}
                 onChange={onChange}
+                onAdd={onAdd}
                 onReply={setReplyingTo}
                 onJump={jumpTo}
               />

@@ -232,6 +232,7 @@
   position: relative;
   z-index: 1;
   min-width: 0;
+  max-width: 100%;
 }
 /* No room side by side: the print sits above, tucked under the answer. */
 @media (max-width: 560px) {

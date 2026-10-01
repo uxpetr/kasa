@@ -95,7 +95,7 @@ export function formatPile(pile: Pile): string {
  */
 async function describe(db: Database, projectId: string, ids: string[]): Promise<Map<string, string>> {
   if (ids.length === 0) return new Map();
-  const [rows, links, captures, comments] = await Promise.all([
+  const [rows, links, captures, comments, ideas] = await Promise.all([
     db
       .select({ id: schema.entries.id, body: schema.entries.body })
       .from(schema.entries)
@@ -117,6 +117,13 @@ async function describe(db: Database, projectId: string, ids: string[]): Promise
       .leftJoin(schema.users, eq(schema.users.id, schema.comments.authorId))
       .where(and(eq(schema.entries.projectId, projectId), inArray(schema.comments.entryId, ids)))
       .orderBy(asc(schema.comments.createdAt)),
+    // A bot answer's ideas (P-20), so follow-up questions can refer to them.
+    db
+      .select({ entryId: schema.botIdeas.entryId, title: schema.botIdeas.title, url: schema.botIdeas.url })
+      .from(schema.botIdeas)
+      .innerJoin(schema.entries, eq(schema.entries.id, schema.botIdeas.entryId))
+      .where(and(eq(schema.entries.projectId, projectId), inArray(schema.botIdeas.entryId, ids)))
+      .orderBy(asc(schema.botIdeas.position)),
   ]);
   const linkBy = new Map(links.map((l) => [l.entryId, l]));
   const captureBy = new Map(captures.map((c) => [c.entryId, c]));
@@ -133,6 +140,8 @@ async function describe(db: Database, projectId: string, ids: string[]): Promise
       if (capture) parts.push(`Capture of ${[capture.pageTitle, capture.pageUrl].filter(Boolean).join(" · ")}`);
       if (r.body) parts.push(r.body);
       for (const c of comments.filter((c) => c.entryId === r.id)) parts.push(`${c.author ?? "Someone"} commented: ${c.body}`);
+      const own = ideas.filter((i) => i.entryId === r.id);
+      if (own.length) parts.push(`Ideas: ${own.map((i) => `${i.title} · ${i.url}`).join("; ")}`);
       return [r.id, parts.join(" ")];
     }),
   );
@@ -190,4 +199,14 @@ export async function readFixes(db: Database, projectId: string, limit = 20): Pr
     .limit(limit);
   const texts = await describe(db, projectId, [...new Set(rows.map((r) => r.entryId))]);
   return rows.map((r) => ({ text: texts.get(r.entryId) ?? "", category: r.category })).filter((f) => f.text);
+}
+
+/** Ideas Kasa Bot already gave on this question in this pile, so "More ideas" finds different ones (P-20). */
+export async function readEarlierIdeas(db: Database, projectId: string, questionId: string): Promise<{ url: string; title: string }[]> {
+  return db
+    .select({ url: schema.botIdeas.url, title: schema.botIdeas.title })
+    .from(schema.botIdeas)
+    .innerJoin(schema.entries, eq(schema.entries.id, schema.botIdeas.entryId))
+    .where(and(eq(schema.entries.projectId, projectId), eq(schema.entries.replyToId, questionId), eq(schema.entries.kind, "bot")))
+    .orderBy(asc(schema.botIdeas.createdAt), asc(schema.botIdeas.position));
 }

@@ -12,7 +12,7 @@ import { log, runJob } from "./jobs";
 import { processUpload } from "./media";
 import { sendNotifications } from "./notify";
 import { mailerFromEnv } from "./notify/mailer";
-import { unfurlEntry } from "./unfurl";
+import { fetchPreview, unfurlEntry } from "./unfurl";
 import { addressPolicyFromEnv } from "./unfurl/address";
 
 const databaseUrl = requireDatabaseUrl();
@@ -29,7 +29,14 @@ const notifyDeps = {
   unsubscribeSecret: process.env.UNSUBSCRIBE_SECRET,
   log,
 };
-const botDeps = { db, model: botModelFromEnv(process.env), log };
+const botModel = botModelFromEnv(process.env);
+const botDeps = {
+  db,
+  model: botModel,
+  log,
+  // The stub's ideas are made up, so there's no page to read (P-20).
+  preview: botModel && botModel.id !== "stub" ? (url: string, imageKey: string) => fetchPreview({ storage, log, policy }, url, imageKey) : undefined,
+};
 const feedbackDeps = { db, mailer, to: process.env.FEEDBACK_EMAIL || undefined, appUrl: notifyDeps.appUrl, log };
 
 await boss.work<JobData<"media.process">>("media.process", { localConcurrency: 2 }, async ([job]) => {
