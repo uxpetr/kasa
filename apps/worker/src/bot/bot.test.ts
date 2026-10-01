@@ -2,16 +2,19 @@ import { randomUUID } from "node:crypto";
 import { eq, schema } from "@kasa/db";
 import { createTestDatabase, type TestDatabase } from "@kasa/db/testing";
 import { setAnalyticsSink, type TrackedEvent } from "@kasa/shared";
+import { jsonSchema, tool } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { answerBot, INSTRUCTIONS } from ".";
-import { botModelFromEnv, costMicros, sdkModel, stubModel, type BotModel } from "./model";
+import { answerBot, checkIdeas, INSTRUCTIONS } from ".";
+import { botModelFromEnv, costMicros, MAX_SEARCHES, sdkModel, stubModel, type AnswerReply, type BotModel, type IdeaDraft } from "./model";
 import { formatPile, MAX_CONTEXT_CHARS, readPile } from "./pile";
 
 describe("the model (D-198)", () => {
   it("prices answers in millionths of a dollar and refuses unpriced models", () => {
     expect(costMicros({ model: "anthropic/claude-haiku-4.5", inputTokens: 10_000, outputTokens: 400 })).toBe(12_000);
     expect(costMicros({ model: "stub", inputTokens: 5, outputTokens: 5 })).toBe(0);
+    // Each web search adds $0.005 (D-204).
+    expect(costMicros({ model: "anthropic/claude-haiku-4.5", inputTokens: 10_000, outputTokens: 400, searches: 2 })).toBe(22_000);
     expect(() => sdkModel("openai/some-new-model")).toThrow(/No price/);
   });
 
@@ -22,18 +25,66 @@ describe("the model (D-198)", () => {
     expect(botModelFromEnv({ AI_GATEWAY_API_KEY: "k" })?.id).toBe("anthropic/claude-haiku-4.5");
   });
 
+  const usage = (input: number, output: number) => ({
+    inputTokens: { total: input, noCache: input, cacheRead: 0, cacheWrite: 0 },
+    outputTokens: { total: output, text: output, reasoning: 0 },
+  });
+  const done = (text: string) => ({ content: [{ type: "text" as const, text }], finishReason: { unified: "stop" as const, raw: "stop" }, usage: usage(1200, 30), warnings: [] });
+  const searchCall = (n: number) => ({
+    content: [{ type: "tool-call" as const, toolCallId: `s${n}`, toolName: "web_search", input: JSON.stringify({ query: `ramen kyoto ${n}` }) }],
+    finishReason: { unified: "tool-calls" as const, raw: "tool_use" },
+    usage: usage(1000, 20),
+    warnings: [],
+  });
+  /** Stands in for the gateway's search, which the gateway runs itself. */
+  const fakeSearch = { web_search: tool({ inputSchema: jsonSchema<{ query: string }>({ type: "object", properties: { query: { type: "string" } } }), execute: async ({ query }) => ({ results: [{ url: `https://example.com/${query.replace(/ /g, "-")}`, title: query, snippet: "" }] }) }) };
+
   it("passes instructions, prompt, and usage through the AI SDK", async () => {
-    const mock = new MockLanguageModelV4({
-      doGenerate: async () => ({
-        content: [{ type: "text", text: "  Try the ryokan near Gion.  " }],
-        finishReason: { unified: "stop", raw: "stop" },
-        usage: { inputTokens: { total: 1200, noCache: 1200, cacheRead: 0, cacheWrite: 0 }, outputTokens: { total: 30, text: 30, reasoning: 0 } },
-        warnings: [],
-      }),
-    });
-    const reply = await sdkModel("anthropic/claude-haiku-4.5", mock).answer({ instructions: "Be brief.", prompt: "Where?" });
-    expect(reply).toEqual({ text: "Try the ryokan near Gion.", model: "anthropic/claude-haiku-4.5", inputTokens: 1200, outputTokens: 30 });
+    const mock = new MockLanguageModelV4({ doGenerate: async () => done(JSON.stringify({ text: "  Try the ryokan near Gion.  ", ideas: [] })) });
+    const reply = await sdkModel("anthropic/claude-haiku-4.5", mock, fakeSearch).answer({ instructions: "Be brief.", prompt: "Where?" });
+    expect(reply).toEqual({ text: "Try the ryokan near Gion.", ideas: [], searches: 0, foundUrls: [], model: "anthropic/claude-haiku-4.5", inputTokens: 1200, outputTokens: 30 });
     expect(JSON.stringify(mock.doGenerateCalls[0]?.prompt)).toContain("Be brief.");
+  });
+
+  it("searches the web at most twice, then has to answer, and counts every search and token (D-204)", async () => {
+    let call = 0;
+    const idea = { url: "https://example.com/ramen-kyoto-1", title: "Menya Inoichi", note: "Near Gion", category: null };
+    const mock = new MockLanguageModelV4({
+      // It would search forever if it could.
+      doGenerate: async ({ tools }) => (tools?.length ? searchCall(++call) : done(JSON.stringify({ text: "Two spots:", ideas: [idea] }))),
+    });
+    const reply = await sdkModel("anthropic/claude-haiku-4.5", mock, fakeSearch).answer({ instructions: "", prompt: "suggest ramen" });
+    expect(reply.searches).toBe(MAX_SEARCHES);
+    expect(reply.foundUrls).toEqual(["https://example.com/ramen-kyoto-1", "https://example.com/ramen-kyoto-2"]);
+    expect(reply.ideas).toEqual([idea]);
+    // The third step had no search tool left to call.
+    expect(mock.doGenerateCalls[2]?.tools ?? []).toEqual([]);
+    expect(reply.inputTokens).toBeGreaterThan(1200);
+  });
+
+  it("keeps only ideas the search found, on the web, new, and up to three, with this pile's categories", () => {
+    const d = (url: string, extra: Partial<IdeaDraft> = {}) => ({ url, title: ` ${url.slice(-1)}  title `, note: "n", category: null, ...extra });
+    const found = ["https://a.example/1", "https://a.example/2", "https://a.example/3", "https://a.example/4", "https://a.example/5", "javascript:alert(1)"];
+    const ideas = checkIdeas(
+      [
+        d("https://invented.example/x"),
+        d("javascript:alert(1)"),
+        d("https://a.example/1"),
+        d("https://a.example/2", { category: "food" }),
+        d("https://a.example/2"),
+        d("https://a.example/3", { category: "Nightlife" }),
+        d("https://a.example/4"),
+        d("https://a.example/5"),
+        { url: 5, title: "x" },
+        null,
+      ],
+      { found, exclude: ["https://a.example/1"], categories: ["Food", "Stays"] },
+    );
+    expect(ideas).toEqual([
+      { url: "https://a.example/2", title: "2 title", note: "n", category: "Food" },
+      { url: "https://a.example/3", title: "3 title", note: "n", category: null },
+      { url: "https://a.example/4", title: "4 title", note: "n", category: null },
+    ]);
   });
 });
 
@@ -48,14 +99,14 @@ describe.skipIf(!process.env.DATABASE_URL)("Kasa Bot answers (P-17)", () => {
   const SECRET = "Other pile secret: the surprise party is at Café Kuro";
 
   /** A model that remembers what it was shown. */
-  function recording(text = "Gion is closest.") {
+  function recording(text = "Gion is closest.", extra: Partial<AnswerReply> = {}) {
     const prompts: string[] = [];
     const model: BotModel = {
       id: "anthropic/claude-haiku-4.5",
       sort: stubModel.sort,
       async answer({ instructions, prompt }) {
         prompts.push(`${instructions}\n${prompt}`);
-        return { text, model: "anthropic/claude-haiku-4.5", inputTokens: 2000, outputTokens: 100 };
+        return { text, ideas: [], searches: 0, foundUrls: [], model: "anthropic/claude-haiku-4.5", inputTokens: 2000, outputTokens: 100, ...extra };
       },
     };
     return { model, prompts };
@@ -126,7 +177,9 @@ describe.skipIf(!process.env.DATABASE_URL)("Kasa Bot answers (P-17)", () => {
     expect(prompts[0]).toContain("Question from Mika: @kasa which hotel is closest to Gion?");
     const [usage] = await db().select().from(schema.botUsage);
     expect(usage).toMatchObject({ projectId: pile, entryId: id, inputTokens: 2000, outputTokens: 100, costMicros: 2500, outcome: "answered" });
-    expect(events).toEqual([expect.objectContaining({ event: "bot_answered", userId: u.mika, properties: { projectId: pile, entryId: id, replyToId: expect.any(String) } })]);
+    expect(events).toEqual([
+      expect.objectContaining({ event: "bot_answered", userId: u.mika, properties: { projectId: pile, entryId: id, replyToId: expect.any(String), ideas: 0, more: false } }),
+    ]);
   });
 
   it("moves the card to writing, with how many entries it read, before the model answers (D-199)", async () => {
@@ -137,7 +190,7 @@ describe.skipIf(!process.env.DATABASE_URL)("Kasa Bot answers (P-17)", () => {
       sort: stubModel.sort,
       async answer({ prompt }) {
         seen = await card(id);
-        return { text: `read ${prompt.split("\n").filter((l) => l.startsWith("#")).length}`, model: "stub", inputTokens: 0, outputTokens: 0 };
+        return { text: `read ${prompt.split("\n").filter((l) => l.startsWith("#")).length}`, ideas: [], searches: 0, foundUrls: [], model: "stub", inputTokens: 0, outputTokens: 0 };
       },
     };
     await answerBot({ db: db(), model }, id);
@@ -279,5 +332,75 @@ describe.skipIf(!process.env.DATABASE_URL)("Kasa Bot answers (P-17)", () => {
     await db().update(schema.entries).set({ deletedAt: new Date() }).where(eq(schema.entries.id, replyToId!));
     await answerBot({ db: db(), model }, id);
     expect(await card(id)).toMatchObject({ botCard: "failed" });
+  });
+
+  describe("recommendations (P-20, D-204)", () => {
+    const found = ["https://example.com/inoichi", "https://example.com/kyoto-ramen-guide", "https://example.com/gogyo", "https://example.com/menbaka"];
+    const idea = (url: string, title: string, category: string | null = null) => ({ url, title, note: `${title}, near Gion`, category });
+    const ideas = (id: string) => db().select().from(schema.botIdeas).where(eq(schema.botIdeas.entryId, id)).orderBy(schema.botIdeas.position);
+
+    it("adds up to three ideas from the search, with pictures, and bills the searches", async () => {
+      const [food] = await db().insert(schema.categories).values({ projectId: pile, name: "Food", createdBy: "bot" }).returning();
+      const { model, prompts } = recording("Three ramen spots near the ryokan:", {
+        ideas: [idea(found[0]!, "Menya Inoichi", "food"), idea("https://invented.example/fake", "Made up"), idea(found[2]!, "Gogyo"), idea(found[3]!, "Menbaka", "Nightlife")],
+        searches: 2,
+        foundUrls: found,
+      });
+      const previews: string[] = [];
+      const preview = async (url: string, imageKey: string) => {
+        previews.push(imageKey);
+        if (url.includes("gogyo")) throw new Error("refused");
+        return { title: null, siteName: "Tabelog", imageKey, host: "example.com" };
+      };
+      const id = await ask("@kasa suggest dinner spots near the ryokan");
+      await answerBot({ db: db(), model, preview }, id);
+
+      expect(prompts[0]).toContain("Pile categories: Food");
+      expect(await card(id)).toMatchObject({ botCard: null, body: "Three ramen spots near the ryokan:" });
+      const rows = await ideas(id);
+      expect(rows.map((r) => [r.title, r.category, r.siteName])).toEqual([
+        ["Menya Inoichi", "Food", "Tabelog"],
+        // A page that couldn't be read keeps its title, without a picture.
+        ["Gogyo", null, null],
+        ["Menbaka", null, "Tabelog"],
+      ]);
+      expect(rows[0]!.imageKey).toBe(`projects/${pile}/ideas/${rows[0]!.id}.webp`);
+      expect(rows[1]!.imageKey).toBeNull();
+      expect(previews.every((k) => k.startsWith(`projects/${pile}/ideas/`))).toBe(true);
+      const [usage] = await db().select().from(schema.botUsage);
+      expect(usage).toMatchObject({ outcome: "answered", costMicros: 2500 + 2 * 5000 });
+      expect(events).toEqual([expect.objectContaining({ event: "bot_answered", properties: expect.objectContaining({ ideas: 3, more: false }) })]);
+      await db().delete(schema.categories).where(eq(schema.categories.id, food!.id));
+    });
+
+    it("gives different ideas for More ideas, on a new card for the same question", async () => {
+      const first = await ask("@kasa suggest ramen");
+      await answerBot({ db: db(), model: recording("Some:", { ideas: [idea(found[0]!, "Menya Inoichi")], foundUrls: found }).model }, first);
+      const { replyToId } = await card(first);
+      const [again] = await db().insert(schema.entries).values({ projectId: pile, authorId: null, kind: "bot", replyToId, botCard: "pending" }).returning();
+      const { model, prompts } = recording("More:", { ideas: [idea(found[0]!, "Menya Inoichi"), idea(found[1]!, "Guide")], foundUrls: found });
+      events.length = 0;
+      await answerBot({ db: db(), model }, again!.id);
+      expect(prompts[0]).toContain("They asked for more ideas");
+      expect(prompts[0]).toContain("- Menya Inoichi · https://example.com/inoichi");
+      expect((await ideas(again!.id)).map((r) => r.url)).toEqual([found[1]]);
+      expect(events).toEqual([expect.objectContaining({ event: "bot_answered", properties: expect.objectContaining({ ideas: 1, more: true }) })]);
+    });
+
+    it("tells the model to keep people out of search queries, and gives it only this pile", async () => {
+      const { model, prompts } = recording("Here:", { foundUrls: found });
+      await answerBot({ db: db(), model }, await ask("@kasa recommend somewhere like Stranger Danger's party venue"));
+      expect(prompts[0]).toContain("Never put members' names, their messages, or other personal details in a query");
+      expect(prompts[0]).not.toContain("Café Kuro");
+    });
+
+    it("lets the stub give ideas offline when asked for suggestions, and not otherwise", async () => {
+      const asked = await ask("@kasa suggest a day trip");
+      await answerBot({ db: db(), model: stubModel }, asked);
+      expect(await ideas(asked)).toHaveLength(3);
+      const plain = await ask("@kasa when do we land?");
+      await answerBot({ db: db(), model: stubModel }, plain);
+      expect(await ideas(plain)).toHaveLength(0);
+    });
   });
 });

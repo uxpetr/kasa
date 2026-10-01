@@ -9,4 +9,6 @@ export const keys = {
   thumb: (projectId: string, uploadId: string) => `projects/${projectId}/media/${uploadId}/thumb.webp`,
   /** A link preview image, re-hosted from the linked site (P-05). */
   preview: (projectId: string, entryId: string) => `projects/${projectId}/previews/${entryId}.webp`,
+  /** A Kasa Bot idea's preview image (P-20); a link added from the idea reuses it. */
+  idea: (projectId: string, ideaId: string) => `projects/${projectId}/ideas/${ideaId}.webp`,
 };

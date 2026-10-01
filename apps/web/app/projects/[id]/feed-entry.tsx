@@ -4,6 +4,7 @@ import { Fragment, useState, useSyncExternalStore, type ReactNode } from "react"
 import { Avatar, BotButton, BotCard, CategoryStamp, DeletedOutline, IndexCard, Note, Polaroid, Print, Reply, tiltFor } from "@kasa/ui";
 import { botCardText, isReceipt, receiptParts } from "@/lib/bot-cards";
 import { hasCategories, useCategories } from "./categories";
+import { BotIdeas } from "./bot-ideas";
 import { BotThinking, useIsAnswering } from "./bot-thinking";
 import type { FeedEntry } from "@/lib/entries";
 import { hostOf, previewLine } from "@/lib/preview";
@@ -81,13 +82,15 @@ interface EntryProps {
   isOwner: boolean;
   archived: boolean;
   onChange: (entry: FeedEntry) => void;
+  /** A new entry made from this one, e.g. a Kasa Bot idea added to the pile (P-20). */
+  onAdd: (entry: FeedEntry, opts?: { scroll?: boolean }) => void;
   onReply: (entry: FeedEntry) => void;
   /** Scrolls to an entry, loading older pages if needed. */
   onJump: (id: string) => void;
 }
 
 /** One entry: avatar, "Name · time", then the object, the same whatever its source (D-016). */
-export function FeedEntryView({ entry, viewerId, canAdd, isOwner, archived, onChange, onReply, onJump }: EntryProps) {
+export function FeedEntryView({ entry, viewerId, canAdd, isOwner, archived, onChange, onAdd, onReply, onJump }: EntryProps) {
   const [viewing, setViewing] = useState(false);
   const isBot = entry.kind === "bot";
   const name = isBot ? "Kasa Bot" : entry.author?.id === viewerId ? "You" : (entry.author?.name ?? "");
@@ -127,6 +130,7 @@ export function FeedEntryView({ entry, viewerId, canAdd, isOwner, archived, onCh
         actions={entry.botCard === "welcome" ? <NewProject trigger={(open) => <BotButton onClick={open}>Start a pile</BotButton>} /> : undefined}
       >
         {thinking ? <BotThinking entry={entry} /> : botCardText(entry)}
+        {!thinking && entry.ideas.length ? <BotIdeas entry={entry} canAdd={canAdd} onChange={onChange} onAdd={onAdd} /> : null}
       </BotCard>
     );
   } else if (entry.kind === "photo" && entry.photos.length > 0) {
@@ -222,6 +226,7 @@ export function FeedEntryView({ entry, viewerId, canAdd, isOwner, archived, onCh
       <div className={styles.entryBody}>
         <div className={styles.meta}>
           <span className={styles.author}>{name}</span> · <Time iso={entry.createdAt} />
+          {entry.fromBot ? " · from Kasa Bot" : null}
           {entry.categories.map((c) => (
             <CategoryStamp key={c.id}>{c.name}</CategoryStamp>
           ))}

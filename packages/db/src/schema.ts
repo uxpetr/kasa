@@ -259,6 +259,8 @@ export const entries = pgTable(
     // When Kasa Bot sorted this entry into categories (P-19). Set once, even when nothing fit,
     // so the bot never sorts an entry twice or undoes a member's fix.
     sortedAt: timestamp("sorted_at", { withTimezone: true }),
+    // A link added from one of Kasa Bot's ideas (P-20): the bot card it came from, for "from Kasa Bot".
+    suggestedBy: uuid("suggested_by").references((): AnyPgColumn => entries.id, { onDelete: "set null" }),
     editedAt: timestamp("edited_at", { withTimezone: true }),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
     // Who deleted it, for the outline's wording (D-155); the author or the owner.
@@ -274,6 +276,32 @@ export const entries = pgTable(
     index("entries_changes_idx").on(t.projectId, t.updatedAt),
     index("entries_reply_to_idx").on(t.replyToId),
   ],
+);
+
+// Kasa Bot's recommendations (P-20, D-204): up to 3 ideas from the web on an answer card.
+export const botIdeas = pgTable(
+  "bot_ideas",
+  {
+    id: id(),
+    // The bot's answer card.
+    entryId: uuid("entry_id")
+      .notNull()
+      .references(() => entries.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+    url: text("url").notNull(),
+    title: text("title").notNull(),
+    // One line on why it fits, from the bot.
+    note: text("note"),
+    siteName: text("site_name"),
+    // The page's preview image, re-hosted like a link's (P-05).
+    imageKey: text("image_key"),
+    // One of the pile's categories, by name, that an added idea is filed into (P-19).
+    category: text("category"),
+    // The link a member added from it ("Add to pile").
+    addedEntryId: uuid("added_entry_id").references(() => entries.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+  },
+  (t) => [index("bot_ideas_entry_idx").on(t.entryId)],
 );
 
 export const entryMedia = pgTable(

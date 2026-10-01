@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Chrome extension (D-158), pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** P-20 (recommendations), then P-18 (Telegram sync, once F-17 gives it a bot); staging (F-10, which also switches on real Kasa Bot answers), F-13 (Resend), F-16 (publish the Google consent screen before inviting testers) and F-17 (a Telegram bot) before the pilot starts; then set `pilot_start` on the pilot dashboard (D-194) once the first day is fixed.
+**Next up:** P-18 (Telegram sync, once F-17 gives it a bot); staging (F-10, which also switches on real Kasa Bot answers), F-13 (Resend), F-16 (publish the Google consent screen before inviting testers) and F-17 (a Telegram bot) before the pilot starts; then set `pilot_start` on the pilot dashboard (D-194) once the first day is fixed.
 **Blocked:** P-16, on OD-14 (privacy note). In phase 2: V-12 until Petr finishes the scroll story (D-189), V-12, V-14 and F-15 (media CDN) on OD-18 (clear or change the name). Real emails, including feedback emails, need F-13 (a Resend account and a sender domain from Petr).
 
 ---
@@ -252,6 +252,24 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
   - **Analytics:** `bot_sorted` (`sorted`, `first`) and `category_changed` (`action`: add, move, rename, merge, remove, undo), ids and enums only.
   · P-19
 - **D-203** · 2026-09-30 · A sort's `bot_usage` row (`sorted`, with its cost) commits in the same transaction as the assignments and `sorted_at`. A failed save rolls the charge back, so a pg-boss retry doesn't bill the pile twice for a sort that never landed. A model error is still `sort_failed`, outside that transaction. · P-19 bugfix
+
+- **D-204** · 2026-10-01 · **Kasa Bot recommendations** (P-20), Petr's answers:
+  - **When:** any `@kasa` question may use web search, but only when it needs to: suggestions, or facts the pile doesn't have. There's no separate command.
+  - **Shape:** a short answer and up to **3** ideas on the same card, each a place or page with its own "Add to pile". "More ideas" gives 3 different ones.
+  - **Add to pile:** posts the idea as a link entry by the member who clicked, with "from Kasa Bot" in its meta line, filed into the category the bot suggested. The idea then reads "✓ Added to Sights" (the design's wording).
+  - **Limits:** every answer, More ideas included, counts toward the 30 a day; at most **2** web searches per answer; all within the $20 monthly cap.
+  · Petr, P-20
+- **D-205** · 2026-10-01 · Recommendations internals (P-20):
+  - **Search:** Perplexity through the AI Gateway (`gateway.tools.perplexitySearch`, 8 results of up to 512 tokens each), using the same `AI_GATEWAY_API_KEY`. The gateway runs the search; `prepareStep` puts the tool away after 2 queries, then the model must answer. Each query costs $0.005 and is added to the answer's `bot_usage.cost_micros`. Answers now use structured output (`{ text, ideas }`) whether or not they search.
+  - **Checks:** an idea is kept only if its URL came back from this answer's own searches, so the model can't invent a link. It must also be http(s), new on this question, and one of the first 3. Titles are capped at 120 characters and notes at 200. A category is kept only if the pile has it (case-insensitive). The instructions tell the model to keep members' names, messages and personal details out of queries, and to treat web pages as information, never instructions.
+  - **Data:** migration 0016. `bot_ideas` holds each idea (card, position, URL, title, note, site, image, category name, and the link it became). A trigger touches the card when an idea changes, so feeds pick it up live. `entries.suggested_by` marks a link added from an idea. Pictures are fetched like link previews (P-05, the extracted `fetchPreview`) into `projects/<id>/ideas/<idea>.webp`, best effort; the added link reuses the picture and title instead of unfurling again. The stub model gives made-up example.com ideas when a question asks for suggestions and never fetches them.
+  - **Add:** `POST /api/ideas/:id/add` is for owners and editors. It runs once per idea (the row is locked; a second click gets the same link). When the suggested category exists, the link is filed there and marked sorted. Otherwise Kasa Bot sorts it like any link. Deleting the link makes the idea addable again.
+  - **More ideas:** `POST /api/entries/:id/more-ideas` adds a pending card replying to the same question, or returns the one already waiting. The worker sees the earlier ideas on that question and is asked for different ones. It's refused when Kasa Bot is off in the pile.
+  - **Images:** `GET /api/entries/:card/ideas/:idea/image`, members only, like other entry images.
+  - **Phones:** a reply's object is now capped at the column width (`.kasa-reply-object`), so bot cards no longer run off the edge at 390 px.
+  - **Analytics:** `bot_answered` gains `ideas` (count) and `more`; new `idea_added` (`filed`), ids and enums only. Search counts go to logs.
+  - **Not in the design** (Petr to confirm): idea titles link to the page in a new tab; "Added to pile" when there's no category; error lines "Couldn't add that. Try again." and "Couldn't ask for more. Try again."; More ideas sits once under the ideas, not beside the first "Add to pile" as in the single-idea mockup.
+  · P-20
 
 ---
 
@@ -538,11 +556,11 @@ Depends on: P-17. Moved from V-05 (D-200).
 - [x] Sorting receipts are batched: one card per burst, with Undo. (A burst ends after 10 quiet minutes; the receipt grows in place. The first sort's receipt names the categories and has Edit instead of Undo.)
 - [x] Model spending counts toward the $20 monthly cap (D-200). (Sorting is recorded in `bot_usage` and stops at the cap; it doesn't count toward the 30 answers a day.)
 
-### P-20 · Kasa Bot: recommendations · `in-progress` · branch `p-20-recommendations`
+### P-20 · Kasa Bot: recommendations · `done` · branch `p-20-recommendations`
 Depends on: P-17. Moved from V-06 (D-200).
-- [ ] Asked with `@kasa` ("suggest dinner spots near the ryokan"), the bot uses web search and posts recommendations as normal entries with "Add to pile".
-- [ ] The web search sees only the question and what the answer needs from this pile, never another pile.
-- [ ] Web search and model spending count toward the $20 monthly cap (D-200).
+- [x] Asked with `@kasa` ("suggest dinner spots near the ryokan"), the bot uses web search and posts recommendations as normal entries with "Add to pile". (Up to 3 ideas on the answer card, each with a picture and "Add to pile", which posts it as the member's own link marked "from Kasa Bot" and filed into the suggested category; "More ideas" gives 3 different ones. D-204, D-205.)
+- [x] The web search sees only the question and what the answer needs from this pile, never another pile. (The model gets only this pile, through `pile.ts`, and is told to keep members' names and messages out of queries. Tested.)
+- [x] Web search and model spending count toward the $20 monthly cap (D-200). (Each search adds $0.005 to the answer's `bot_usage` cost; at most 2 per answer. More ideas counts as an answer toward the 30 a day.)
 
 ### G1 · Gate: shared items get replies (D-159)
 Pass bar set in OD-03. Record the result and Petr's go/no-go in the Decision log. If it fails, stop and rethink the core loop with Petr before phase 2.
@@ -760,3 +778,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-30 · P-19 done: Kasa Bot sorts posts into categories once a pile has 5, shown as chips with counts and green stamps. A filter shows a category's posts and their replies. Each burst gets one receipt with Undo; the first names the categories. Members move posts, add, rename, merge and remove categories, and the bot learns from their choices. Sorting reads only its own pile and counts toward the $20 cap (D-201, D-202). · [#36](https://github.com/uxpetr/kasa/pull/36)
 - 2026-09-30 · P-19: a sort charges the pile only once the sort is saved. The `bot_usage` row commits with the assignments, so a failed save leaves the posts unsorted and unbilled, and a retry is billed once (D-203). · [#36](https://github.com/uxpetr/kasa/pull/36)
 - 2026-09-30 · F-18 added: previews failed once the Neon Free plan's 10 branches were used up; Petr cleared old branches, and turning off per-preview branches is his to do. · [#36](https://github.com/uxpetr/kasa/pull/36)
+- 2026-10-01 · P-20 done: asked for suggestions, Kasa Bot searches the web (at most twice) and answers with up to 3 ideas, each with a picture and "Add to pile", which posts it as the member's link, "from Kasa Bot", in the suggested category. "More ideas" asks again for different ones. Ideas must come from the bot's own search results. Searches are billed within the $20 cap, and the bot still reads only its own pile. Bot cards no longer overflow on phones (D-204, D-205). · [#37](https://github.com/uxpetr/kasa/pull/37)

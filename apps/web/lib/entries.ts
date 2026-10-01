@@ -54,6 +54,22 @@ export interface FeedEntry {
   categories: Category[];
   /** On a sorting receipt: what it lists (D-201). */
   receipt: ReceiptSummary | null;
+  /** On a Kasa Bot answer: its recommendations from the web (P-20). */
+  ideas: FeedIdea[];
+  /** A link a member added from one of Kasa Bot's ideas: "from Kasa Bot" (D-204). */
+  fromBot: boolean;
+}
+
+export interface FeedIdea {
+  id: string;
+  url: string;
+  title: string;
+  note: string | null;
+  siteName: string | null;
+  /** Served through /api/entries/<card id>/ideas/<id>/image. */
+  hasImage: boolean;
+  /** Once a member added it: the link, and the category it was filed into, if any. */
+  added: { entryId: string; category: string | null } | null;
 }
 
 export interface FeedPage {
@@ -191,6 +207,7 @@ const rowColumns = {
   authorId: schema.entries.authorId,
   authorName: schema.users.name,
   replyToId: schema.entries.replyToId,
+  suggestedBy: schema.entries.suggestedBy,
 };
 
 type Row = {
@@ -207,6 +224,7 @@ type Row = {
   authorId: string | null;
   authorName: string | null;
   replyToId: string | null;
+  suggestedBy: string | null;
 };
 
 async function rowById(db: Database, entryId: string): Promise<Row | undefined> {
@@ -224,7 +242,8 @@ async function withDetails(db: Database, rows: Row[], viewerId: string, { quotes
   if (ids.length === 0) return rows.map((r) => toFeedEntry(r));
   const quoteOf = quotes ? await quotedEntries(db, rows, viewerId) : new Map<string, FeedEntry>();
   const receiptIds = rows.filter((r) => !r.deletedAt && r.kind === "bot" && r.botCard && RECEIPT_CARDS.includes(r.botCard)).map((r) => r.id);
-  const [media, links, captures, pins, pinNotes, reactions, categoryOf, receiptOf] = await Promise.all([
+  const answerIds = rows.filter((r) => !r.deletedAt && r.kind === "bot" && r.botCard === null).map((r) => r.id);
+  const [media, links, captures, pins, pinNotes, reactions, categoryOf, receiptOf, ideasOf] = await Promise.all([
     db
       .select({
         id: schema.entryMedia.id,
@@ -274,6 +293,7 @@ async function withDetails(db: Database, rows: Row[], viewerId: string, { quotes
       .groupBy(schema.reactions.entryId, schema.reactions.emoji),
     categoriesOf(db, ids),
     receiptsOf(db, receiptIds),
+    ideasOn(db, answerIds),
   ]);
   const photosOf = new Map<string, FeedEntry["photos"]>();
   const screenshotOf = new Map<string, NonNullable<FeedEntry["capture"]>["screenshot"]>();
@@ -314,6 +334,7 @@ async function withDetails(db: Database, rows: Row[], viewerId: string, { quotes
           replyTo: (r.replyToId && quoteOf.get(r.replyToId)) || null,
           categories: categoryOf.get(r.id) ?? [],
           receipt: receiptIds.includes(r.id) ? (receiptOf.get(r.id) ?? { count: 0, categories: [] }) : null,
+          ideas: ideasOf.get(r.id) ?? [],
         },
   );
 }
@@ -331,6 +352,34 @@ async function quotedEntries(db: Database, rows: Row[], viewerId: string): Promi
   const sameProject = originals.filter((o) => wanted.some((r) => r.replyToId === o.id && projectOf.get(r.id) === o.projectId));
   const details = await withDetails(db, sameProject, viewerId, { quotes: false });
   return new Map(details.map((e) => [e.id, e]));
+}
+
+/** Kasa Bot answers' ideas, in order, with what became of each (P-20). */
+async function ideasOn(db: Database, cardIds: string[]): Promise<Map<string, FeedIdea[]>> {
+  if (cardIds.length === 0) return new Map();
+  const rows = await db
+    .select({
+      id: schema.botIdeas.id,
+      entryId: schema.botIdeas.entryId,
+      url: schema.botIdeas.url,
+      title: schema.botIdeas.title,
+      note: schema.botIdeas.note,
+      siteName: schema.botIdeas.siteName,
+      hasImage: sql<boolean>`${schema.botIdeas.imageKey} is not null`,
+      addedEntryId: schema.botIdeas.addedEntryId,
+      // The category the added link is in now, which may have been renamed or changed since.
+      // Spelled out: drizzle leaves columns unqualified in a one-table select.
+      addedCategory: sql<string | null>`(select c.name from entry_categories ec join categories c on c.id = ec.category_id where ec.entry_id = bot_ideas.added_entry_id order by ec.created_at limit 1)`,
+    })
+    .from(schema.botIdeas)
+    .where(inArray(schema.botIdeas.entryId, cardIds))
+    .orderBy(asc(schema.botIdeas.position));
+  const byCard = new Map<string, FeedIdea[]>();
+  for (const { entryId, addedEntryId, addedCategory, ...idea } of rows) {
+    const feedIdea: FeedIdea = { ...idea, hasImage: Boolean(idea.hasImage), added: addedEntryId ? { entryId: addedEntryId, category: addedCategory } : null };
+    byCard.set(entryId, [...(byCard.get(entryId) ?? []), feedIdea]);
+  }
+  return byCard;
 }
 
 /** The entry without its details; all a deleted entry ever shows. */
@@ -353,10 +402,48 @@ function toFeedEntry(r: Row): FeedEntry {
     replyTo: null,
     categories: [],
     receipt: null,
+    ideas: [],
+    fromBot: !r.deletedAt && r.suggestedBy !== null,
   };
 }
 
-async function botMode(db: Database, projectId: string) {
+type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
+
+/**
+ * A Kasa Bot card replying to `questionId`, "pending" until the worker answers (P-17). It says
+ * how much the bot will read, counted the way the worker reads it, for "Reading 24 entries…"
+ * (D-199). clock_timestamp() puts it after the question, which has the transaction's now().
+ */
+export async function insertPendingCard(tx: Tx | Database, projectId: string, questionId: string): Promise<string> {
+  const [readable] = await tx
+    .select({ n: count() })
+    .from(schema.entries)
+    .where(and(eq(schema.entries.projectId, projectId), isNull(schema.entries.deletedAt), or(ne(schema.entries.kind, "bot"), isNull(schema.entries.botCard))));
+  const botEntriesRead = Math.min(readable?.n ?? 0, BOT_MAX_CONTEXT_ENTRIES);
+  const [bot] = await tx
+    .insert(schema.entries)
+    .values({ projectId, authorId: null, kind: "bot", replyToId: questionId, botCard: "pending", botEntriesRead, createdAt: sql`clock_timestamp()` })
+    .returning({ id: schema.entries.id });
+  return bot!.id;
+}
+
+/** Queues the answer for a pending card, or says it failed on the card rather than leaving it pending forever. */
+export async function queueAnswer(db: Database, jobs: JobQueue, botEntryId: string, projectId: string): Promise<void> {
+  try {
+    await jobs.send("bot.answer", { entryId: botEntryId });
+  } catch (error) {
+    log.error("bot answer not queued", { "entry.id": botEntryId, "project.id": projectId, ...errorAttributes(error) });
+    await db.update(schema.entries).set({ botCard: "failed" }).where(eq(schema.entries.id, botEntryId));
+  }
+}
+
+/** One entry as the feed shows it to `viewerId`; access is the caller's to check. */
+export async function feedEntryById(db: Database, entryId: string, viewerId: string): Promise<FeedEntry | null> {
+  const row = await rowById(db, entryId);
+  return row ? (await withDetails(db, [row], viewerId))[0]! : null;
+}
+
+export async function botMode(db: Database, projectId: string) {
   const [row] = await db.select({ mode: schema.projects.botMode }).from(schema.projects).where(eq(schema.projects.id, projectId));
   return row?.mode ?? "off";
 }
@@ -461,27 +548,7 @@ export async function createEntry(
     }
     if (kind === "link") await tx.insert(schema.linkPreviews).values({ entryId: entry!.id, url: url! });
     recipients = await recordNotifications(tx, { id: entry!.id, projectId, authorId: userId }, original?.authorId ?? null, mentions.value);
-    if (asksKasa) {
-      // What the bot will read, counted the way the worker reads it, for "Reading 24 entries…" (D-199).
-      const [readable] = await tx
-        .select({ n: count() })
-        .from(schema.entries)
-        .where(
-          and(
-            eq(schema.entries.projectId, projectId),
-            isNull(schema.entries.deletedAt),
-            or(ne(schema.entries.kind, "bot"), isNull(schema.entries.botCard)),
-          ),
-        );
-      const botEntriesRead = Math.min(readable?.n ?? 0, BOT_MAX_CONTEXT_ENTRIES);
-      // The bot's reply, "pending" until the worker answers. clock_timestamp() puts it after the
-      // question, which has the transaction's now().
-      const [bot] = await tx
-        .insert(schema.entries)
-        .values({ projectId, authorId: null, kind: "bot", replyToId: entry!.id, botCard: "pending", botEntriesRead, createdAt: sql`clock_timestamp()` })
-        .returning({ id: schema.entries.id });
-      botEntryId = bot!.id;
-    }
+    if (asksKasa) botEntryId = await insertPendingCard(tx, projectId, entry!.id);
     return entry!.id;
     })
     // Two sends racing with the same image: the unique index lets only one through.
@@ -500,15 +567,7 @@ export async function createEntry(
     } catch (error) {
       log.error("follow-up jobs not queued", { "entry.id": entryId, "project.id": projectId, ...errorAttributes(error) });
     }
-    if (botEntryId) {
-      try {
-        await jobs.send("bot.answer", { entryId: botEntryId });
-      } catch (error) {
-        // Say so on the card rather than leaving it pending forever.
-        log.error("bot answer not queued", { "entry.id": botEntryId, "project.id": projectId, ...errorAttributes(error) });
-        await db.update(schema.entries).set({ botCard: "failed" }).where(eq(schema.entries.id, botEntryId));
-      }
-    }
+    if (botEntryId) await queueAnswer(db, jobs, botEntryId, projectId);
   }
   // Entry ids let the pilot dashboard join replies to what they answer (G1, docs/pilot-dashboard.md).
   await track("entry_created", userId, { projectId, entryId, kind, source: "app" });
@@ -533,10 +592,14 @@ export async function deleteEntry(db: Database, userId: string, entryId: string)
     return fail(403, access.archived ? "Project is archived" : "Only the author or the owner can delete this");
   }
   if (!row.deletedAt) {
-    await db
-      .update(schema.entries)
-      .set({ deletedAt: sql`now()`, deletedBy: userId })
-      .where(and(eq(schema.entries.id, entryId), isNull(schema.entries.deletedAt)));
+    await db.transaction(async (tx) => {
+      await tx
+        .update(schema.entries)
+        .set({ deletedAt: sql`now()`, deletedBy: userId })
+        .where(and(eq(schema.entries.id, entryId), isNull(schema.entries.deletedAt)));
+      // A deleted link from an idea makes the idea addable again (P-20).
+      if (row.suggestedBy) await tx.update(schema.botIdeas).set({ addedEntryId: null }).where(eq(schema.botIdeas.addedEntryId, entryId));
+    });
     await track("entry_deleted", userId, { projectId: row.projectId, kind: row.kind, own: row.authorId === userId });
   }
   return ok(toFeedEntry((await rowById(db, entryId))!));
@@ -607,10 +670,18 @@ export async function entryImageKey(
   db: Database,
   userId: string,
   entryId: string,
-  image: { mediaId: string } | "preview",
+  image: { mediaId: string } | { ideaId: string } | "preview",
 ): Promise<string | null> {
   const found = await entryWithAccess(db, userId, entryId);
   if (!found || found.row.deletedAt) return null;
+  if (typeof image === "object" && "ideaId" in image) {
+    if (!isUuid(image.ideaId)) return null;
+    const [row] = await db
+      .select({ key: schema.botIdeas.imageKey })
+      .from(schema.botIdeas)
+      .where(and(eq(schema.botIdeas.id, image.ideaId), eq(schema.botIdeas.entryId, entryId)));
+    return row?.key ?? null;
+  }
   if (image === "preview") {
     const [row] = await db.select({ key: schema.linkPreviews.imageKey }).from(schema.linkPreviews).where(eq(schema.linkPreviews.entryId, entryId));
     return row?.key ?? null;
