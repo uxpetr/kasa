@@ -538,7 +538,7 @@ Depends on: P-17. Moved from V-05 (D-200).
 - [x] Sorting receipts are batched: one card per burst, with Undo. (A burst ends after 10 quiet minutes; the receipt grows in place. The first sort's receipt names the categories and has Edit instead of Undo.)
 - [x] Model spending counts toward the $20 monthly cap (D-200). (Sorting is recorded in `bot_usage` and stops at the cap; it doesn't count toward the 30 answers a day.)
 
-### P-20 · Kasa Bot: recommendations · `todo`
+### P-20 · Kasa Bot: recommendations · `in-progress` · branch `p-20-recommendations`
 Depends on: P-17. Moved from V-06 (D-200).
 - [ ] Asked with `@kasa` ("suggest dinner spots near the ryokan"), the bot uses web search and posts recommendations as normal entries with "Add to pile".
 - [ ] The web search sees only the question and what the answer needs from this pile, never another pile.
