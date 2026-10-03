@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Chrome extension (D-158), pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** P-18 (Telegram sync, once F-17 gives it a bot); staging (F-10, which also switches on real Kasa Bot answers), F-13 (Resend), F-16 (publish the Google consent screen before inviting testers) and F-17 (a Telegram bot) before the pilot starts; then set `pilot_start` on the pilot dashboard (D-194) once the first day is fixed.
+**Next up:** P-18 (Telegram sync; the staging bot exists, D-206); staging (F-10, which also switches on real Kasa Bot answers), F-13 (Resend), F-16 (publish the Google consent screen before inviting testers) before the pilot starts; then set `pilot_start` on the pilot dashboard (D-194) once the first day is fixed.
 **Blocked:** P-16, on OD-14 (privacy note). In phase 2: V-12 until Petr finishes the scroll story (D-189), V-12, V-14 and F-15 (media CDN) on OD-18 (clear or change the name). Real emails, including feedback emails, need F-13 (a Resend account and a sender domain from Petr).
 
 ---
@@ -271,6 +271,8 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
   - **Not in the design** (Petr to confirm): idea titles link to the page in a new tab; "Added to pile" when there's no category; error lines "Couldn't add that. Try again." and "Couldn't ask for more. Try again."; More ideas sits once under the ideas, not beside the first "Add to pile" as in the single-idea mockup.
   · P-20
 
+- **D-206** · 2026-10-03 · The staging Telegram bot (F-17) is **@kasa_piles_bot**, made by Petr with @BotFather. In BotFather, privacy mode is off, so the bot sees every group message, which two-way sync needs, and the bot can be added to groups; P-18 should confirm both with `getMe` (`can_read_all_group_messages`, `can_join_groups`). Variables: `TELEGRAM_BOT_TOKEN` (sensitive), `TELEGRAM_WEBHOOK_SECRET` (sensitive, generated with `openssl rand -hex 32` straight into Vercel and never shown), and `TELEGRAM_BOT_USERNAME`. They're set for **Production only**: previews and local runs leave Telegram off, so they can't take over the staging bot's single webhook. Local testing of P-18 will need its own bot. · Petr, F-17
+
 ---
 
 ## Open decisions
@@ -437,10 +439,10 @@ Depends on: F-12; needed before pilot testers are invited
 - [ ] Petr publishes the "Kasa staging" OAuth consent screen, which is in Testing mode now (D-193), so that pilot testers can sign in without being listed as test users.
 - [ ] A Google account that isn't a test user can sign in on staging.
 
-### F-17 · Telegram bot for staging · `in-progress` · branch `f-17-telegram-bot`
+### F-17 · Telegram bot for staging · `done` · branch `f-17-telegram-bot`
 Needed by: P-18 (D-200)
-- [ ] Petr creates a Telegram bot with @BotFather for staging, and its token goes into Vercel as a sensitive variable (and into the worker in F-10).
-- [ ] Every new Telegram variable is in `.env.example` with a comment.
+- [x] Petr creates a Telegram bot with @BotFather for staging, and its token goes into Vercel as a sensitive variable (and into the worker in F-10). (`@kasa_piles_bot`; token, webhook secret and username are in Vercel Production. The worker gets the same values in F-10. D-206.)
+- [x] Every new Telegram variable is in `.env.example` with a comment.
 
 ### F-18 · Stop Neon branches filling up from previews · `todo` (waiting on Petr)
 Found in P-19: every Vercel preview made a Neon branch, and at the Free plan's 10 branches previews failed with "Resource provisioning failed". Petr deleted old branches on 2026-09-30.
@@ -779,3 +781,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-30 · P-19: a sort charges the pile only once the sort is saved. The `bot_usage` row commits with the assignments, so a failed save leaves the posts unsorted and unbilled, and a retry is billed once (D-203). · [#36](https://github.com/uxpetr/kasa/pull/36)
 - 2026-09-30 · F-18 added: previews failed once the Neon Free plan's 10 branches were used up; Petr cleared old branches, and turning off per-preview branches is his to do. · [#36](https://github.com/uxpetr/kasa/pull/36)
 - 2026-10-01 · P-20 done: asked for suggestions, Kasa Bot searches the web (at most twice) and answers with up to 3 ideas, each with a picture and "Add to pile", which posts it as the member's link, "from Kasa Bot", in the suggested category. "More ideas" asks again for different ones. Ideas must come from the bot's own search results. Searches are billed within the $20 cap, and the bot still reads only its own pile. Bot cards no longer overflow on phones (D-204, D-205). · [#37](https://github.com/uxpetr/kasa/pull/37)
+- 2026-10-03 · F-17 done: Petr made the staging Telegram bot, @kasa_piles_bot. Its token, a generated webhook secret and its username are in Vercel Production only, and in `.env.example` (D-206). · [#38](https://github.com/uxpetr/kasa/pull/38)
