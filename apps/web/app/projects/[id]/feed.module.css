@@ -191,6 +191,22 @@
   border-radius: 50%;
   background: var(--kasa-color-line-strong);
 }
+/* A Telegram guest (D-207): a plain initial, not a member's colour. */
+.avatarGuest {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--kasa-color-line-strong);
+  border-radius: 50%;
+  background: var(--kasa-color-paper);
+  color: var(--kasa-color-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
 .entryBody a:not([class]) {
   color: var(--kasa-color-accent);
 }

@@ -24,6 +24,13 @@
   background: var(--kasa-color-paper);
   color: var(--kasa-color-ink);
 }
+/* A link that looks like a button, e.g. one that opens Telegram. */
+a.primary {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  text-decoration: none;
+}
 .primary:focus-visible,
 .secondary:focus-visible {
   outline: 2px solid var(--kasa-color-ink);

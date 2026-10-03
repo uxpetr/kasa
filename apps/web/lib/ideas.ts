@@ -8,6 +8,7 @@ import { track } from "@kasa/shared";
 import { canAdd, canRead, projectAccess } from "./access";
 import { botMode, feedEntryById, insertPendingCard, queueAnswer, type FeedEntry } from "./entries";
 import { log } from "./log";
+import { queueTelegram } from "./telegram";
 import { fail, isUuid, ok, type Result } from "./result";
 
 /** A live Kasa Bot answer and the user's access to its pile; null for missing, deleted, or not-a-member alike. */
@@ -62,6 +63,7 @@ export async function addIdea(db: Database, userId: string, ideaId: string, jobs
   });
 
   if (result.created) {
+    if (jobs) await queueTelegram(db, jobs, projectId, result.entryId);
     if (jobs && !result.filed && (await botMode(db, projectId)) !== "off") {
       await sendSort(jobs, projectId).catch((error: unknown) => log.error("sort not queued", { "project.id": projectId, ...errorAttributes(error) }));
     }

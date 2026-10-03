@@ -4,6 +4,7 @@ import { getAuth, isAuthConfigured, isGoogleSignInConfigured } from "@/lib/auth"
 import { getDb } from "@/lib/db";
 import { listPiles } from "@/lib/piles";
 import { getStorage } from "@/lib/services";
+import { accountTelegram } from "@/lib/telegram";
 import { SignInButton } from "./auth-buttons";
 import { PilesScreen } from "./piles-screen";
 
@@ -14,7 +15,8 @@ export default async function Home() {
 
   if (session) {
     const user = { id: session.user.id, name: session.user.name };
-    return <PilesScreen user={user} piles={await listPiles({ db: getDb(), storage: getStorage() }, user.id)} />;
+    const [piles, telegram] = await Promise.all([listPiles({ db: getDb(), storage: getStorage() }, user.id), accountTelegram(getDb(), user.id)]);
+    return <PilesScreen user={user} piles={piles} telegram={telegram} />;
   }
   return (
     <main>

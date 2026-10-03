@@ -26,3 +26,22 @@ export const MAX_CATEGORY_NAME = 30;
 export const RECEIPT_BURST_MS = 10 * 60_000;
 /** The kinds Kasa Bot sorts: people's posts, not replies or bot cards. */
 export const SORTABLE_KINDS = ["note", "photo", "link", "capture", "drawing", "file", "decision"] as const;
+
+/**
+ * True when the text tags Kasa Bot: "@kasa" as a whole word, in any case (P-17). The server
+ * decides from the text itself, so a typed "@kasa" counts as much as a picked one.
+ */
+export function tagsKasa(text: string): boolean {
+  return /(^|[^\p{L}\p{N}_@.])@kasa(?![\p{L}\p{N}_])/iu.test(text);
+}
+
+/** A whole message that is one http(s) URL, or null (D-149). */
+export function soleUrl(text: string): string | null {
+  if (!/^https?:\/\/\S+$/i.test(text)) return null;
+  try {
+    const url = new URL(text);
+    return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}

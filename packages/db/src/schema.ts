@@ -261,6 +261,8 @@ export const entries = pgTable(
     sortedAt: timestamp("sorted_at", { withTimezone: true }),
     // A link added from one of Kasa Bot's ideas (P-20): the bot card it came from, for "from Kasa Bot".
     suggestedBy: uuid("suggested_by").references((): AnyPgColumn => entries.id, { onDelete: "set null" }),
+    // A Telegram group member who hasn't linked a Kasa account (P-18): their Telegram name. The author is null.
+    guestName: text("guest_name"),
     editedAt: timestamp("edited_at", { withTimezone: true }),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
     // Who deleted it, for the outline's wording (D-155); the author or the owner.
@@ -467,6 +469,8 @@ export const telegramLinks = pgTable("telegram_links", {
     .primaryKey()
     .references(() => projects.id, { onDelete: "cascade" }),
   chatId: text("chat_id").notNull().unique(),
+  // The group's name when it was linked, for "Linked to {group}" (P-18).
+  chatTitle: text("chat_title"),
   linkedBy: uuid("linked_by")
     .notNull()
     .references(() => users.id),
@@ -482,12 +486,39 @@ export const telegramMessages = pgTable(
     chatId: text("chat_id").notNull(),
     messageId: text("message_id").notNull(),
     direction: direction("direction").notNull(),
+    // An album's photos share one; they become one photo entry (P-18).
+    mediaGroupId: text("media_group_id"),
   },
   // Loop prevention relies on each Telegram message mapping to one entry.
   (t) => [
     primaryKey({ columns: [t.chatId, t.messageId] }),
     index("telegram_messages_entry_idx").on(t.entryId),
+    index("telegram_messages_media_group_idx").on(t.chatId, t.mediaGroupId),
   ],
+);
+
+// One-time codes behind "Add Kasa Bot to a group" (kind group, for a pile) and "Link Telegram"
+// (kind account) (P-18, D-207). Telegram hands the code back to the bot in /start.
+export const telegramCodes = pgTable("telegram_codes", {
+  code: text("code").primaryKey(),
+  kind: text("kind", { enum: ["group", "account"] }).notNull(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  projectId: uuid("project_id").references(() => projects.id, { onDelete: "cascade" }),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  usedAt: timestamp("used_at", { withTimezone: true }),
+});
+
+// Guests the bot has already told how to link their account, once per group (D-207).
+export const telegramGuestHints = pgTable(
+  "telegram_guest_hints",
+  {
+    chatId: text("chat_id").notNull(),
+    telegramUserId: text("telegram_user_id").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.chatId, t.telegramUserId] })],
 );
 
 export const telegramIdentities = pgTable("telegram_identities", {

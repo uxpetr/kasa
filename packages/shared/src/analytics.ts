@@ -25,6 +25,9 @@ export const ANALYTICS_EVENTS = [
   "category_changed",
   // A member added one of Kasa Bot's ideas to the pile as a link (P-20).
   "idea_added",
+  // A pile was linked to a Telegram group, or a Kasa account to a Telegram account: `kind` group or account (P-18).
+  "telegram_linked",
+  "telegram_unlinked",
 ] as const;
 export type AnalyticsEvent = (typeof ANALYTICS_EVENTS)[number];
 
