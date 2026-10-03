@@ -3,13 +3,14 @@
 import { and, asc, count, desc, eq, gt, inArray, isNull, lt, ne, or, schema, sql, type Database } from "@kasa/db";
 import { sendSort, type JobQueue } from "@kasa/jobs";
 import { errorAttributes } from "@kasa/observability";
-import { BOT_MAX_CONTEXT_ENTRIES, track } from "@kasa/shared";
+import { BOT_MAX_CONTEXT_ENTRIES, soleUrl, track } from "@kasa/shared";
 import { canAdd, canDeleteEntry, canReact, canRead, projectAccess } from "./access";
 import { categoriesOf, countPosts, listCategories, RECEIPT_CARDS, receiptsOf, type Category, type CategoryChipData, type ReceiptSummary } from "./categories";
 import { log } from "./log";
 import { tagsKasa } from "./mentions";
 import { parseMentions, queueNotifications, recordNotifications } from "./notifications";
 import { isReaction, REACTIONS, type Reaction } from "./reactions";
+import { queueTelegram } from "./telegram";
 import { fail, isUuid, ok, type Result } from "./result";
 
 export const PAGE_SIZE = 30;
@@ -58,6 +59,10 @@ export interface FeedEntry {
   ideas: FeedIdea[];
   /** A link a member added from one of Kasa Bot's ideas: "from Kasa Bot" (D-204). */
   fromBot: boolean;
+  /** Where it was posted; "telegram" shows "via Telegram" (P-18). */
+  source: "app" | "extension" | "telegram";
+  /** A Telegram group member without a linked Kasa account: their Telegram name. `author` is null. */
+  guest: string | null;
 }
 
 export interface FeedIdea {
@@ -208,6 +213,8 @@ const rowColumns = {
   authorName: schema.users.name,
   replyToId: schema.entries.replyToId,
   suggestedBy: schema.entries.suggestedBy,
+  source: schema.entries.source,
+  guestName: schema.entries.guestName,
 };
 
 type Row = {
@@ -225,6 +232,8 @@ type Row = {
   authorName: string | null;
   replyToId: string | null;
   suggestedBy: string | null;
+  source: FeedEntry["source"];
+  guestName: string | null;
 };
 
 async function rowById(db: Database, entryId: string): Promise<Row | undefined> {
@@ -404,6 +413,8 @@ function toFeedEntry(r: Row): FeedEntry {
     receipt: null,
     ideas: [],
     fromBot: !r.deletedAt && r.suggestedBy !== null,
+    source: r.source,
+    guest: r.guestName,
   };
 }
 
@@ -448,16 +459,7 @@ export async function botMode(db: Database, projectId: string) {
   return row?.mode ?? "off";
 }
 
-/** A whole message that is one http(s) URL, or null (D-149). */
-export function soleUrl(text: string): string | null {
-  if (!/^https?:\/\/\S+$/i.test(text)) return null;
-  try {
-    const url = new URL(text);
-    return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : null;
-  } catch {
-    return null;
-  }
-}
+export { soleUrl } from "@kasa/shared";
 
 /**
  * Posts from the app composer: images make one Photo entry with the text as caption (D-150);
@@ -568,6 +570,7 @@ export async function createEntry(
       log.error("follow-up jobs not queued", { "entry.id": entryId, "project.id": projectId, ...errorAttributes(error) });
     }
     if (botEntryId) await queueAnswer(db, jobs, botEntryId, projectId);
+    await queueTelegram(db, jobs, projectId, entryId);
   }
   // Entry ids let the pilot dashboard join replies to what they answer (G1, docs/pilot-dashboard.md).
   await track("entry_created", userId, { projectId, entryId, kind, source: "app" });

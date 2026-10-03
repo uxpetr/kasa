@@ -7,6 +7,7 @@ import { Avatar } from "@kasa/ui";
 import type { FeedProps } from "./project-feed";
 import controls from "../../controls.module.css";
 import styles from "./feed.module.css";
+import { useTelegramDialog } from "./telegram-dialog";
 
 type Member = { id: string; name: string; role: "owner" | "editor" | "viewer" };
 
@@ -31,6 +32,7 @@ export function ProjectHeader({ project, viewer, can }: Pick<FeedProps, "project
   const [inviteLink, setInviteLink] = useState<string | null | undefined>(undefined);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [openTelegram, telegramDialog] = useTelegramDialog(project.id);
 
   async function inviteRequest(method: "GET" | "POST" | "DELETE") {
     setPending(true);
@@ -151,6 +153,18 @@ export function ProjectHeader({ project, viewer, can }: Pick<FeedProps, "project
             Invite people
           </button>
         ) : null}
+        {can.telegram ? (
+          <button
+            type="button"
+            role="menuitem" className={controls.menuItem}
+            onClick={() => {
+              closeMenu();
+              openTelegram();
+            }}
+          >
+            Telegram…
+          </button>
+        ) : null}
         {can.rename ? (
           <button
             type="button"
@@ -242,6 +256,8 @@ export function ProjectHeader({ project, viewer, can }: Pick<FeedProps, "project
           </button>
         </div>
       </dialog>
+
+      {telegramDialog}
 
       <dialog ref={invite} className={controls.dialog} aria-labelledby="invite-title" onClose={() => setCopied(false)}>
         <h2 id="invite-title">Invite people</h2>

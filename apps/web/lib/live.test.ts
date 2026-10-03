@@ -21,6 +21,8 @@ const entry = (id: string, minute: number, body = id): FeedEntry => ({
   receipt: null,
   ideas: [],
   fromBot: false,
+  source: "app",
+  guest: null,
 });
 
 describe("mergeChanges", () => {

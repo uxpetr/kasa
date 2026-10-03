@@ -31,7 +31,7 @@ export const nounFor = (entry: FeedEntry) => NOUN[entry.kind];
 /** "Mika's note", "your photo", "Kasa Bot's message": the object's accessible name. */
 export function objectLabel(entry: FeedEntry, viewerId: string): string {
   if (entry.kind === "bot") return "Kasa Bot's message";
-  const owner = entry.author?.id === viewerId ? "your" : `${entry.author?.name ?? "someone"}'s`;
+  const owner = entry.author?.id === viewerId ? "your" : `${entry.author?.name ?? entry.guest ?? "someone"}'s`;
   return `${owner} ${nounFor(entry)}`;
 }
 

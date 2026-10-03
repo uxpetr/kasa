@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Chrome extension (D-158), pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** P-18 (Telegram sync; the staging bot exists, D-206); staging (F-10, which also switches on real Kasa Bot answers), F-13 (Resend), F-16 (publish the Google consent screen before inviting testers) before the pilot starts; then set `pilot_start` on the pilot dashboard (D-194) once the first day is fixed.
+**Next up:** the prototype's features are built. Before the pilot: staging (F-10, which also switches on real Kasa Bot answers and Telegram), F-13 (Resend), F-16 (publish the Google consent screen before inviting testers) before the pilot starts; then set `pilot_start` on the pilot dashboard (D-194) once the first day is fixed.
 **Blocked:** P-16, on OD-14 (privacy note). In phase 2: V-12 until Petr finishes the scroll story (D-189), V-12, V-14 and F-15 (media CDN) on OD-18 (clear or change the name). Real emails, including feedback emails, need F-13 (a Resend account and a sender domain from Petr).
 
 ---
@@ -273,6 +273,27 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
 
 - **D-206** · 2026-10-03 · The staging Telegram bot (F-17) is **@kasa_piles_bot**, made by Petr with @BotFather. In BotFather, privacy mode is off, so the bot sees every group message, which two-way sync needs, and the bot can be added to groups; P-18 should confirm both with `getMe` (`can_read_all_group_messages`, `can_join_groups`). Variables: `TELEGRAM_BOT_TOKEN` (sensitive), `TELEGRAM_WEBHOOK_SECRET` (sensitive, generated with `openssl rand -hex 32` straight into Vercel and never shown), and `TELEGRAM_BOT_USERNAME`. They're set for **Production only**: previews and local runs leave Telegram off, so they can't take over the staging bot's single webhook. Local testing of P-18 will need its own bot. · Petr, F-17
 
+- **D-207** · 2026-10-03 · **Telegram sync** (P-18), Petr's answers:
+  - **Link a group:** the owner opens "Telegram…" in the pile menu and taps "Add Kasa Bot to a group"; Telegram opens, they pick the group, the bot joins and says it's linked, and the dialog shows "Linked to {group}" with Unlink.
+  - **Link an account:** "Link Telegram" in the account menu opens the bot; pressing Start links it. The first time an unlinked person posts in a linked group, the bot replies once with how to link.
+  - **In Telegram:** Telegram's own kinds, name first: a photo with caption "Mika: caption", a link as "Mika: https://…" with Telegram's preview, a note as "Mika: text", replies as Telegram replies, Kasa Bot's answers as "Kasa Bot: …" with its ideas as links.
+  - **What goes to Telegram:** links, photos, notes and replies from the app, and Kasa Bot's answers. Not sorting receipts, the welcome card, or failed or limited bot cards.
+  - **Guests:** "Kenji (guest) · via Telegram" with a plain initial avatar; they aren't members and get no access to the app.
+  - **Viewers:** a linked viewer's group messages land under their name.
+  - **@kasa:** anyone in the group can ask, guests included; same one pile, 30 a day and $20 cap.
+  - **Edits:** editing a Telegram message updates its entry.
+  · Petr, P-18
+- **D-208** · 2026-10-03 · Telegram internals (P-18):
+  - **Bot API:** a small client on `fetch` (`apps/worker/src/telegram/api.ts`) instead of grammY (D-107 proposed it): Kasa uses eight methods, and tests swap in a fake. Only the worker calls Telegram.
+  - **In:** the web app's `POST /api/telegram/webhook` checks `X-Telegram-Bot-Api-Secret-Token` against `TELEGRAM_WEBHOOK_SECRET` in constant time and queues `telegram.update`; a queueing failure returns 500, so Telegram retries. Locally, `TELEGRAM_POLLING=true` makes the worker poll `getUpdates` into the same job (a separate test bot; a bot with a webhook can't be polled). The worker ignores every group that isn't linked, except a `/start` code. Images (largest photo size, or an image sent as a file) are downloaded and processed like app uploads (F-06). An album's photos join one entry, under a per-album lock. A lone URL is a link and gets unfurled; posts are sorted (P-19); `@kasa` makes a pending card as in the app.
+  - **Who:** a sender whose linked Kasa account is a member of the pile posts as that member; anyone else is a guest, stored as `entries.guest_name` with a null author. Kasa Bot sees guests as "Name (guest)".
+  - **Out:** `telegram.send { entryId }` is queued by every writer of entries when the pile is linked (`sendTelegram`/`queueTelegram`: the composer, Add to pile, and finished bot answers). Both Telegram queues run one job at a time, so order holds. The worker skips deleted entries, entries from Telegram, and bot cards that aren't finished answers. A reply quotes the original's Telegram message when there is one. Telegram's 403 or "chat not found" ends the link; 429 throws, so pg-boss retries.
+  - **Data:** migration 0017. `telegram_codes` holds one-time codes (16 random bytes, 1 hour, used once; group codes work only while their maker owns the pile). `telegram_links.chat_title`, `telegram_messages.media_group_id`, `entries.guest_name`, and `telegram_guest_hints` (one hint per person per group). A group upgraded to a supergroup follows its new chat id. One Telegram account maps to one Kasa account; the newest link wins.
+  - **Not done:** notification emails for replies and mentions from Telegram; reactions; the bot leaving the group on Unlink (it stays, silent, until someone removes it).
+  - **Analytics:** `telegram_linked` and `telegram_unlinked` (`kind` group or account); `entry_created` with `source: telegram` and `guest`.
+  - **Wording not in the design** (Petr to confirm): the bot's messages in Telegram ("Linked to the {pile} pile in Kasa. Posts here go to the pile, and the pile's posts come here."; "This group is already linked to another Kasa pile."; "That pile is already linked to another group. Unlink it in Kasa first."; "That link has expired. Get a new one in Kasa."; "Done. Your Telegram is linked to {name} in Kasa."; "Hi! I'm Kasa Bot. To link your Telegram, open Kasa and choose Link Telegram in your account menu."; the guest hint "{name}, I added this to {pile} as a guest. To post as yourself, open Kasa and choose Link Telegram in your account menu."); in the app, "Unlink Telegram", "Couldn't make a link. Try again.", "Couldn't unlink. Try again.", "Couldn't open Telegram. Try again."
+  · P-18
+
 ---
 
 ## Open decisions
@@ -407,6 +428,7 @@ Depends on: F-03; needed by F-06 and P-06
 - [ ] Worker env also includes `FEEDBACK_EMAIL` (`petr.andrianov@gmail.com`), so pilot feedback is emailed (D-182, from F-14).
 - [ ] Kasa Bot answers for real (D-198): Petr creates an AI Gateway key on his personal Vercel team, and the worker gets it as `AI_GATEWAY_API_KEY`, with `KASA_BOT_MODEL` unset (Claude Haiku 4.5). Check the gateway's monthly free credit and that the model id works. A tag on staging gets a real answer.
 - [ ] Worker env also has `POSTHOG_API_KEY`, because `bot_answered` and `bot_failed` are sent from the worker (D-198, changing D-183's "the worker sends no events").
+- [ ] Telegram goes live (P-18, D-208): the worker gets `TELEGRAM_BOT_TOKEN` and `TELEGRAM_BOT_USERNAME` with the staging values (D-206). Run `pnpm --filter @kasa/worker telegram:setup` with those and `TELEGRAM_WEBHOOK_SECRET` and `BETTER_AUTH_URL`; it must report privacy mode off and set the webhook. Then link a test group and check both directions, a photo album, a reply, `@kasa`, and a guest.
 
 ### F-11 · Seed media in local storage · `done` · branch `f-11-seed-media`
 Depends on: F-06
@@ -541,15 +563,15 @@ Depends on: P-03, P-07; on staging, the worker (F-10)
 - [x] Cost guardrails: a per-pile rate limit, plus a spending cap of **$20 a month** across all piles during the pilot. At the cap, the bot stops answering and says so on a bot card. The wording is Petr's to confirm in this task. (30 answers per pile in any 24 hours; the cap counts list-price cost per calendar month in UTC. Petr approved the card wording, D-198.)
 - [x] Analytics: `bot_answered` and `bot_failed` with ids only. The model and token counts go in logs, not in PostHog. (`bot_failed` also has a `reason` enum.)
 
-### P-18 · Telegram two-way sync · `in-progress` · branch `p-18-telegram`
+### P-18 · Telegram two-way sync · `done` · branch `p-18-telegram`
 Depends on: P-07, P-17, F-17; on staging, the worker (F-10). Moved from V-07 (D-200).
-- [ ] The owner links a Telegram group from pile settings; one pile maps to one group.
-- [ ] Members link their Telegram account in settings; unlinked senders show as guests.
-- [ ] Kasa to Telegram: new entries post with image, link, and note; bot answers post like any other entry.
-- [ ] Telegram to Kasa: messages, photos, and links land in the feed with a "via Telegram" meta line.
-- [ ] Replies map both ways; synced messages never loop.
-- [ ] `@kasa` in the group asks Kasa Bot, with the same one-pile rule, rate limit and cap as the web composer (from V-04).
-- [ ] The Telegram bot token never reaches the browser, and incoming webhooks are verified.
+- [x] The owner links a Telegram group from pile settings; one pile maps to one group. (Pile menu → "Telegram…" → "Add Kasa Bot to a group" opens Telegram's group picker with a one-time code; the dialog then shows "Linked to {group}" with Unlink. D-207, D-208.)
+- [x] Members link their Telegram account in settings; unlinked senders show as guests. ("Link Telegram" in the account menu; guests show as "Kenji (guest)" and get one hint in the group on how to link.)
+- [x] Kasa to Telegram: new entries post with image, link, and note; bot answers post like any other entry. (As Telegram's own kinds with the name first, "Mika: …"; photos and albums as photos; Kasa Bot's answers with their ideas. Not receipts or the welcome card.)
+- [x] Telegram to Kasa: messages, photos, and links land in the feed with a "via Telegram" meta line. (Albums become one photo entry; edits update the note or caption. Stickers, voice and files that aren't images stay in Telegram.)
+- [x] Replies map both ways; synced messages never loop. (Every message is mapped to its entry once; entries from Telegram are never sent back.)
+- [x] `@kasa` in the group asks Kasa Bot, with the same one-pile rule, rate limit and cap as the web composer (from V-04). (Anyone in the group, guests included; `@kasa_piles_bot` works too.)
+- [x] The Telegram bot token never reaches the browser, and incoming webhooks are verified. (The token is only in the worker's Bot API client and the server-side availability check; the webhook compares Telegram's secret header in constant time. Tested with a fake Bot API; the live check is in F-10.)
 
 ### P-19 · Kasa Bot: categories · `done` · branch `p-19-categories`
 Depends on: P-17. Moved from V-05 (D-200).
@@ -782,3 +804,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-09-30 · F-18 added: previews failed once the Neon Free plan's 10 branches were used up; Petr cleared old branches, and turning off per-preview branches is his to do. · [#36](https://github.com/uxpetr/kasa/pull/36)
 - 2026-10-01 · P-20 done: asked for suggestions, Kasa Bot searches the web (at most twice) and answers with up to 3 ideas, each with a picture and "Add to pile", which posts it as the member's link, "from Kasa Bot", in the suggested category. "More ideas" asks again for different ones. Ideas must come from the bot's own search results. Searches are billed within the $20 cap, and the bot still reads only its own pile. Bot cards no longer overflow on phones (D-204, D-205). · [#37](https://github.com/uxpetr/kasa/pull/37)
 - 2026-10-03 · F-17 done: Petr made the staging Telegram bot, @kasa_piles_bot. Its token, a generated webhook secret and its username are in Vercel Production only, and in `.env.example` (D-206). · [#38](https://github.com/uxpetr/kasa/pull/38)
+- 2026-10-03 · P-18 done: Telegram two-way sync. The owner links a group from the pile menu, and people link their Telegram from the account menu. Group messages, photos (albums as one entry), links, replies and edits land in the pile "via Telegram", with unlinked senders as guests. The pile's posts, replies and Kasa Bot's answers go to the group with the name first. `@kasa` works in the group. Webhooks are verified; nothing loops; unlinked groups are ignored (D-207, D-208). Live on staging with F-10. · [#39](https://github.com/uxpetr/kasa/pull/39)

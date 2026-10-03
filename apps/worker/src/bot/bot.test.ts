@@ -182,6 +182,20 @@ describe.skipIf(!process.env.DATABASE_URL)("Kasa Bot answers (P-17)", () => {
     ]);
   });
 
+  it("sends the answer to the pile's Telegram group when it has one (P-18)", async () => {
+    const { model } = recording();
+    const sent: { name: string; payload: unknown }[] = [];
+    const queue = { send: async (name: string, payload: unknown) => void sent.push({ name, payload }) } as never;
+    const unlinked = await ask("@kasa hi?");
+    await answerBot({ db: db(), model, queue }, unlinked);
+    expect(sent).toEqual([]);
+    await db().insert(schema.telegramLinks).values({ projectId: pile, chatId: "-100123", linkedBy: u.mika });
+    const linked = await ask("@kasa hi again?");
+    await answerBot({ db: db(), model, queue }, linked);
+    expect(sent).toEqual([{ name: "telegram.send", payload: { entryId: linked } }]);
+    await db().delete(schema.telegramLinks).where(eq(schema.telegramLinks.projectId, pile));
+  });
+
   it("moves the card to writing, with how many entries it read, before the model answers (D-199)", async () => {
     let seen: { botCard: string | null; botEntriesRead: number | null } | undefined;
     const id = await ask("@kasa anything?");

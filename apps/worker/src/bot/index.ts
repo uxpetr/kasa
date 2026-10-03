@@ -3,6 +3,7 @@
 // each one a page the search found (P-20, D-204). "More ideas" is another card on the same question.
 import { randomUUID } from "node:crypto";
 import { and, count, eq, gte, inArray, isNull, schema, sql, type Database } from "@kasa/db";
+import { sendTelegram, type JobQueue } from "@kasa/jobs";
 import { keys } from "@kasa/media";
 import type { Logger } from "@kasa/observability";
 import { track } from "@kasa/shared";
@@ -95,6 +96,8 @@ export interface BotDeps {
   now?: () => Date;
   dailyLimit?: number;
   monthlyCapMicros?: number;
+  /** For posting the answer to the pile's Telegram group, if it has one (P-18). */
+  queue?: JobQueue;
   /** Reads an idea's page and stores its image at `imageKey`, like a link (P-05); without it, ideas have no picture. */
   preview?: (url: string, imageKey: string) => Promise<Preview>;
 }
@@ -214,6 +217,11 @@ export async function answerBot(deps: BotDeps, botEntryId: string): Promise<void
     if (done && ideas.length) await tx.insert(schema.botIdeas).values(ideas.map((idea, position) => ({ ...idea, entryId: card.id, position })));
   });
   await track("bot_answered", userId, { ...ids, ideas: ideas.length, more });
+  // Answers go to the pile's Telegram group like any entry (P-18).
+  if (deps.queue) {
+    const [linked] = await db.select({ chatId: schema.telegramLinks.chatId }).from(schema.telegramLinks).where(eq(schema.telegramLinks.projectId, card.projectId));
+    if (linked) await sendTelegram(deps.queue, card.id).catch((error: unknown) => deps.log?.error("telegram send not queued", { "entry.id": card.id, error: (error as Error).message }));
+  }
 }
 
 /** Each idea's site name and picture, best effort: an idea whose page can't be read keeps its title and note. */

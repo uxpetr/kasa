@@ -7,6 +7,7 @@ import { getDb } from "@/lib/db";
 import { listEntries } from "@/lib/entries";
 import { emailsMuted } from "@/lib/notifications";
 import { isUuid } from "@/lib/result";
+import { telegramBot } from "@/lib/telegram";
 import { ProjectFeed } from "./project-feed";
 
 export async function generateMetadata(props: PageProps<"/projects/[id]">) {
@@ -48,6 +49,8 @@ export default async function ProjectPage(props: PageProps<"/projects/[id]">) {
         leave: canLeave(access),
         invite: canInvite(access),
         editCategories: canEditCategories(access),
+        // Linking a group (P-18): the owner, when Telegram is set up here.
+        telegram: telegramBot() !== null && access.role === "owner",
       }}
       initialPage={page.value}
     />

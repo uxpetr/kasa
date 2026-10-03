@@ -54,6 +54,7 @@ export async function readPile(db: Database, projectId: string): Promise<Pile | 
         replyToId: schema.entries.replyToId,
         createdAt: schema.entries.createdAt,
         author: schema.users.name,
+        guestName: schema.entries.guestName,
       })
       .from(schema.entries)
       .leftJoin(schema.users, eq(schema.users.id, schema.entries.authorId))
@@ -70,7 +71,7 @@ export async function readPile(db: Database, projectId: string): Promise<Pile | 
     return {
       ref: refs.get(r.id)!,
       at: r.createdAt,
-      author: r.kind === "bot" ? "Kasa Bot" : (r.author ?? "Someone who left"),
+      author: r.kind === "bot" ? "Kasa Bot" : (r.author ?? (r.guestName ? `${r.guestName} (guest)` : "Someone who left")),
       kind: r.kind,
       text: texts.get(r.id) ?? "",
       ...(replyTo ? { replyTo } : {}),

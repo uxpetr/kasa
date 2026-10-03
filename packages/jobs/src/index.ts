@@ -13,12 +13,16 @@ export interface JobPayloads {
   "bot.answer": { entryId: string };
   /** Sorts a pile's new posts into categories (P-19); stately, so a burst is one job. */
   "bot.sort": { projectId: string };
+  /** One update from Telegram, as the webhook received it (P-18). */
+  "telegram.update": { update: Record<string, unknown> };
+  /** Posts an entry to its pile's Telegram group, if it has one (P-18). */
+  "telegram.send": { entryId: string };
 }
 export type JobName = keyof JobPayloads;
 
 /** What's stored: the payload plus the sender's trace context, so the job continues its trace (D-137). */
 export type JobData<N extends JobName> = JobPayloads[N] & { _trace?: TraceCarrier };
-export const JOB_NAMES = ["media.process", "link.unfurl", "notify.send", "feedback.send", "bot.answer", "bot.sort"] as const satisfies readonly JobName[];
+export const JOB_NAMES = ["media.process", "link.unfurl", "notify.send", "feedback.send", "bot.answer", "bot.sort", "telegram.update", "telegram.send"] as const satisfies readonly JobName[];
 
 export interface SendOptions {
   /** Don't run before this moment. */
@@ -86,4 +90,12 @@ export const SORT_DELAY_MS = 5_000;
 /** Queues sorting for a pile; while one waits, more sends are no-ops. */
 export function sendSort(queue: JobQueue, projectId: string, now = new Date()): Promise<void> {
   return queue.send("bot.sort", { projectId }, { singletonKey: projectId, startAfter: new Date(now.getTime() + SORT_DELAY_MS) });
+}
+
+/**
+ * Queues an entry for the pile's Telegram group (P-18). Every writer of entries that may go to
+ * Telegram calls this; the worker decides whether it does (linked pile, kind, not from Telegram).
+ */
+export function sendTelegram(queue: JobQueue, entryId: string): Promise<void> {
+  return queue.send("telegram.send", { entryId });
 }

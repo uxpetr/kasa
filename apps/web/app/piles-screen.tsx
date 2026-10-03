@@ -7,7 +7,15 @@ import { RelativeTime } from "./relative-time";
 import styles from "./piles.module.css";
 
 /** "Your piles" (P-02, design/prototype/Projects.dc.html). */
-export function PilesScreen({ user, piles }: { user: { id: string; name: string }; piles: Pile[] }) {
+export function PilesScreen({
+  user,
+  piles,
+  telegram,
+}: {
+  user: { id: string; name: string };
+  piles: Pile[];
+  telegram: { available: boolean; linked: boolean };
+}) {
   const active = piles.filter((p) => !p.archivedAt);
   const archived = piles.filter((p) => p.archivedAt);
 
@@ -17,7 +25,7 @@ export function PilesScreen({ user, piles }: { user: { id: string; name: string 
         <div className={styles.logo}>kasa</div>
         <div className={styles.headerActions}>
           <NewProject />
-          <AccountMenu user={user} />
+          <AccountMenu user={user} telegram={telegram} />
         </div>
       </header>
       <h1 className={styles.title}>Your piles</h1>

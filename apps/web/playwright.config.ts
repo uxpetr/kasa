@@ -6,6 +6,7 @@ import { PILOT_ADMIN_EMAIL } from "./e2e/support/pilot";
 Object.assign(process.env, { ...loadEnv("test", "../..", ""), ...process.env });
 
 const port = 3100;
+export const E2E_TELEGRAM_SECRET = "e2e-telegram-webhook-secret";
 // Its own realtime port, so a running `pnpm dev` (3200) doesn't get in the way.
 const realtimePort = 3201;
 process.env.REALTIME_SECRET ||= "e2e-realtime-secret";
@@ -31,6 +32,10 @@ export default defineConfig({
         // Never send test events to PostHog, even if the local .env has a key.
         POSTHOG_API_KEY: "",
         PILOT_ADMIN_EMAILS: PILOT_ADMIN_EMAIL,
+        // Telegram looks set up to the app (P-18); the worker has no token, so nothing reaches Telegram.
+        TELEGRAM_BOT_TOKEN: "e2e-not-a-token",
+        TELEGRAM_BOT_USERNAME: "kasa_e2e_bot",
+        TELEGRAM_WEBHOOK_SECRET: E2E_TELEGRAM_SECRET,
       },
       url: `http://localhost:${port}`,
       reuseExistingServer: !process.env.CI,
@@ -48,7 +53,7 @@ export default defineConfig({
     {
       command: "pnpm --filter @kasa/worker start",
       // Never real emails or model calls from tests, even if the local .env has keys.
-      env: { UNFURL_LOOPBACK_ONLY: "1", RESEND_API_KEY: "", FEEDBACK_EMAIL: "", KASA_BOT_MODEL: "stub", KASA_BOT_STUB_DELAY_MS: "1500", AI_GATEWAY_API_KEY: "" },
+      env: { UNFURL_LOOPBACK_ONLY: "1", RESEND_API_KEY: "", FEEDBACK_EMAIL: "", KASA_BOT_MODEL: "stub", KASA_BOT_STUB_DELAY_MS: "1500", AI_GATEWAY_API_KEY: "", TELEGRAM_BOT_TOKEN: "" },
       wait: { stdout: /worker started/ },
       reuseExistingServer: !process.env.CI,
       gracefulShutdown: { signal: "SIGTERM", timeout: 5000 },
