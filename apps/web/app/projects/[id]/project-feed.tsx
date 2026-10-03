@@ -17,7 +17,7 @@ import styles from "./feed.module.css";
 export interface FeedProps {
   project: { id: string; name: string; archived: boolean };
   viewer: { id: string; name: string; role: "owner" | "editor" | "viewer"; emailsMuted: boolean };
-  can: { post: boolean; rename: boolean; archive: boolean; manageMembers: boolean; leave: boolean; invite: boolean; editCategories: boolean };
+  can: { post: boolean; rename: boolean; archive: boolean; manageMembers: boolean; leave: boolean; invite: boolean; editCategories: boolean; telegram: boolean };
   initialPage: FeedPage;
 }
 

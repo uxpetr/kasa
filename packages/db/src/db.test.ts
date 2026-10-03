@@ -31,7 +31,7 @@ describe.skipIf(!baseUrl)("database", () => {
       [
         "accounts", "bot_ideas", "captures", "categories", "comments", "bot_usage", "entries", "entry_categories", "entry_media", "feedback",
         "invites", "link_previews", "memberships", "notifications", "pins", "project_passes", "projects",
-        "reactions", "sessions", "subscriptions", "telegram_identities", "telegram_links",
+        "reactions", "sessions", "subscriptions", "telegram_codes", "telegram_guest_hints", "telegram_identities", "telegram_links",
         "telegram_messages", "uploads", "users", "verifications",
       ].sort(),
     );

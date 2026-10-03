@@ -93,7 +93,8 @@ interface EntryProps {
 export function FeedEntryView({ entry, viewerId, canAdd, isOwner, archived, onChange, onAdd, onReply, onJump }: EntryProps) {
   const [viewing, setViewing] = useState(false);
   const isBot = entry.kind === "bot";
-  const name = isBot ? "Kasa Bot" : entry.author?.id === viewerId ? "You" : (entry.author?.name ?? "");
+  // A Telegram group member who hasn't linked Kasa shows by their Telegram name (D-207).
+  const name = isBot ? "Kasa Bot" : entry.author?.id === viewerId ? "You" : entry.guest ? `${entry.guest} (guest)` : (entry.author?.name ?? "");
   // Kasa Bot's cards are never tilted (D-197); everything else gets a stable hand-placed tilt.
   const rotate = isBot ? 0 : tiltFor(entry.id);
   const thinking = useIsAnswering(entry);
@@ -111,7 +112,7 @@ export function FeedEntryView({ entry, viewerId, canAdd, isOwner, archived, onCh
   }
 
   const label = objectLabel(entry, viewerId);
-  const photoAlt = entry.body ? entry.body : `Photo from ${entry.author?.name ?? "someone"}`;
+  const photoAlt = entry.body ? entry.body : `Photo from ${entry.author?.name ?? entry.guest ?? "someone"}`;
 
   let object: ReactNode;
   if (entry.kind === "note" || entry.kind === "decision") {
@@ -220,12 +221,17 @@ export function FeedEntryView({ entry, viewerId, canAdd, isOwner, archived, onCh
         </span>
       ) : entry.author ? (
         <Avatar person={entry.author} size={36} />
+      ) : entry.guest ? (
+        <span className={styles.avatarGuest} aria-hidden="true">
+          {entry.guest.trim().charAt(0).toUpperCase()}
+        </span>
       ) : (
         <span className={styles.avatarBlank} aria-hidden="true" />
       )}
       <div className={styles.entryBody}>
         <div className={styles.meta}>
           <span className={styles.author}>{name}</span> · <Time iso={entry.createdAt} />
+          {entry.source === "telegram" ? " · via Telegram" : null}
           {entry.fromBot ? " · from Kasa Bot" : null}
           {entry.categories.map((c) => (
             <CategoryStamp key={c.id}>{c.name}</CategoryStamp>

@@ -14,6 +14,8 @@ import { sendNotifications } from "./notify";
 import { mailerFromEnv } from "./notify/mailer";
 import { fetchPreview, unfurlEntry } from "./unfurl";
 import { addressPolicyFromEnv } from "./unfurl/address";
+import { handleUpdate, pollUpdates, sendEntry, telegramFromEnv } from "./telegram";
+import type { TgUpdate } from "./telegram/api";
 
 const databaseUrl = requireDatabaseUrl();
 const { db, close } = createDb(databaseUrl, { max: 5 });
@@ -30,10 +32,12 @@ const notifyDeps = {
   log,
 };
 const botModel = botModelFromEnv(process.env);
+const telegram = telegramFromEnv(process.env);
 const botDeps = {
   db,
   model: botModel,
   log,
+  queue,
   // The stub's ideas are made up, so there's no page to read (P-20).
   preview: botModel && botModel.id !== "stub" ? (url: string, imageKey: string) => fetchPreview({ storage, log, policy }, url, imageKey) : undefined,
 };
@@ -71,14 +75,29 @@ await boss.work<JobData<"bot.sort">>("bot.sort", async ([job]) => {
     });
 });
 
+// Telegram jobs run one at a time, so messages keep their order both ways (P-18).
+if (telegram) {
+  const telegramDeps = { db, storage, queue, log, api: telegram.api, botUsername: telegram.botUsername };
+  await boss.work<JobData<"telegram.update">>("telegram.update", async ([job]) => {
+    if (job) await runJob("telegram.update", job.id, job.data, () => handleUpdate(telegramDeps, job.data.update as unknown as TgUpdate));
+  });
+  await boss.work<JobData<"telegram.send">>("telegram.send", async ([job]) => {
+    if (job) await runJob("telegram.send", job.id, job.data, () => sendEntry(telegramDeps, job.data.entryId));
+  });
+}
+const stopPolling = new AbortController();
+if (telegram?.polling) void pollUpdates(telegram.api, queue, log, stopPolling.signal);
+
 log.info("worker started", {
-  jobs: "media.process,link.unfurl,notify.send,feedback.send,bot.answer,bot.sort",
+  jobs: "media.process,link.unfurl,notify.send,feedback.send,bot.answer,bot.sort" + (telegram ? ",telegram.update,telegram.send" : ""),
+  telegram: telegram ? (telegram.polling ? "polling" : "webhook") : "off",
   unfurl_policy: policy,
   mailer: mailer.kind,
   bot_model: botDeps.model?.id ?? "none",
 });
 
 async function shutdown() {
+  stopPolling.abort();
   await boss.stop({ graceful: true, timeout: 20_000 });
   await close();
   await telemetry.shutdown();
