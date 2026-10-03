@@ -437,7 +437,7 @@ Depends on: F-12; needed before pilot testers are invited
 - [ ] Petr publishes the "Kasa staging" OAuth consent screen, which is in Testing mode now (D-193), so that pilot testers can sign in without being listed as test users.
 - [ ] A Google account that isn't a test user can sign in on staging.
 
-### F-17 · Telegram bot for staging · `todo` (waiting on Petr)
+### F-17 · Telegram bot for staging · `in-progress` · branch `f-17-telegram-bot`
 Needed by: P-18 (D-200)
 - [ ] Petr creates a Telegram bot with @BotFather for staging, and its token goes into Vercel as a sensitive variable (and into the worker in F-10).
 - [ ] Every new Telegram variable is in `.env.example` with a comment.
