@@ -541,7 +541,7 @@ Depends on: P-03, P-07; on staging, the worker (F-10)
 - [x] Cost guardrails: a per-pile rate limit, plus a spending cap of **$20 a month** across all piles during the pilot. At the cap, the bot stops answering and says so on a bot card. The wording is Petr's to confirm in this task. (30 answers per pile in any 24 hours; the cap counts list-price cost per calendar month in UTC. Petr approved the card wording, D-198.)
 - [x] Analytics: `bot_answered` and `bot_failed` with ids only. The model and token counts go in logs, not in PostHog. (`bot_failed` also has a `reason` enum.)
 
-### P-18 · Telegram two-way sync · `todo`
+### P-18 · Telegram two-way sync · `in-progress` · branch `p-18-telegram`
 Depends on: P-07, P-17, F-17; on staging, the worker (F-10). Moved from V-07 (D-200).
 - [ ] The owner links a Telegram group from pile settings; one pile maps to one group.
 - [ ] Members link their Telegram account in settings; unlinked senders show as guests.
