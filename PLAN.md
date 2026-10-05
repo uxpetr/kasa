@@ -482,6 +482,13 @@ Asked for by Petr on 2026-10-05: one page with the key views, with limited inter
 - [x] Menus, dialogs, replying, posting a note, category filters and the photo viewer work; nothing reaches the database or another user. (A service worker scoped to `/design/` answers every `/api` request from a stub; D-210.)
 - [x] A check covers that every view renders. (`e2e/design-views.spec.ts`, which also fails if any `/api` request skips the preview worker.)
 
+### F-20 · Split PLAN.md · `in-progress` · branch `f-20-split-plan`
+Asked for by Petr on 2026-10-05: PLAN.md reached 135 KB (about 35,000 tokens), and every session reads it whole. More than half was the Decision log.
+- [ ] The Decision log moves to `docs/decisions.md` and the Progress log to `docs/progress.md`, unchanged and still append-only; IDs stay the same.
+- [ ] Finished and dropped tasks keep their heading line in PLAN.md; their full text moves to `docs/done-tasks.md`. Finished tasks with criteria still open stay in full.
+- [ ] "How agents use this file", CLAUDE.md and `design/DESIGN_LOG.md` point at the new files.
+- [ ] Nothing is lost: every decision, progress line and task line is in one of the files.
+
 ---
 
 ## Phase 1: Prototype
