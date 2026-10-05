@@ -9,12 +9,12 @@ Petr's design decisions, written down as they're made in the prototype. Claude C
 
 Do this at the start of a session, before picking a task, for every entry with status `new`:
 
-1. Add one Decision log entry to `PLAN.md` per decision, with source "Petr, design log DL-xxx".
+1. Add one entry to `docs/decisions.md` per decision, with source "Petr, design log DL-xxx", and update the next free ID in `PLAN.md`.
 2. Update the affected tasks named in **Affects**: rewrite acceptance criteria, split tasks, or add new ones with the next free IDs. Keep any work already done.
 3. Add every **Open** question to Open decisions, and block the tasks that depend on it.
 4. Technical choices the entry leaves open (libraries, indexing, schema) are yours to make when you build the task. Log them as usual.
 5. Set the entry's status to `folded` and list what it became, for example `folded → D-184, D-185, V-03a, V-03b, OD-10`.
-6. Commit the design log and `PLAN.md` changes together, on their own, before starting other work.
+6. Commit the design log, `PLAN.md` and `docs/decisions.md` changes together, on their own, before starting other work.
 
 Never edit the decision text of an entry. If the plan can't follow an entry, add an Open question instead.
 
