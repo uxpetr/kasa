@@ -471,6 +471,13 @@ Found in P-19: every Vercel preview made a Neon branch, and at the Free plan's 1
 - [ ] Petr turns off Preview in the Neon integration's Deployments Configuration (Vercel → Storage → the database → Projects → kasa), keeping Production on. Neon deletes preview branches only when Vercel deletes the deployments, after 6 months by default.
 - [ ] A new preview deploys without creating a Neon branch.
 
+### F-19 · Views preview for design changes · `in progress` · branch `f-19-views`
+Asked for by Petr on 2026-10-05: one page with the key views, with limited interactivity, to check how changes to tokens and components look across the app.
+- [ ] `/design/views` shows the real app views, not copies, with sample data: Your piles, a pile feed with every content type, the feed's states (empty, viewer, archived), the invite page, and the unsubscribe page.
+- [ ] Each view can be seen at phone and desktop width.
+- [ ] Menus, dialogs, replying, posting a note, category filters and the photo viewer work; nothing reaches the database or another user.
+- [ ] A check covers that every view renders.
+
 ---
 
 ## Phase 1: Prototype
