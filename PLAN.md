@@ -468,10 +468,10 @@ Needed by: P-18 (D-200)
 - [x] Petr creates a Telegram bot with @BotFather for staging, and its token goes into Vercel as a sensitive variable (and into the worker in F-10). (`@kasa_piles_bot`; token, webhook secret and username are in Vercel Production. The worker gets the same values in F-10. D-206.)
 - [x] Every new Telegram variable is in `.env.example` with a comment.
 
-### F-18 · Stop Neon branches filling up from previews · `todo` (waiting on Petr)
+### F-18 · Stop Neon branches filling up from previews · `done`
 Found in P-19: every Vercel preview made a Neon branch, and at the Free plan's 10 branches previews failed with "Resource provisioning failed". Petr deleted old branches on 2026-09-30.
-- [ ] Petr turns off Preview in the Neon integration's Deployments Configuration (Vercel → Storage → the database → Projects → kasa), keeping Production on. Neon deletes preview branches only when Vercel deletes the deployments, after 6 months by default.
-- [ ] A new preview deploys without creating a Neon branch.
+- [x] Petr turns off Preview in the Neon integration's Deployments Configuration (Vercel → Storage → the database → Projects → kasa), keeping Production on. Neon deletes preview branches only when Vercel deletes the deployments, after 6 months by default.
+- [x] A new preview deploys without creating a Neon branch. (Petr turned Preview off on 2026-10-05. The F-19 previews since then deployed normally and skipped migrations; one at 15:29 that day, while the setting was changing, failed before its build like the branch-limit failures. Checked from Vercel, not the Neon console.)
 
 ### F-19 · Views preview for design changes · `done` · branch `f-19-views`
 Asked for by Petr on 2026-10-05: one page with the key views, with limited interactivity, to check how changes to tokens and components look across the app.
@@ -821,3 +821,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-10-03 · P-18 done: Telegram two-way sync. The owner links a group from the pile menu, and people link their Telegram from the account menu. Group messages, photos (albums as one entry), links, replies and edits land in the pile "via Telegram", with unlinked senders as guests. The pile's posts, replies and Kasa Bot's answers go to the group with the name first. `@kasa` works in the group. Webhooks are verified; nothing loops; unlinked groups are ignored (D-207, D-208). Live on staging with F-10. · [#39](https://github.com/uxpetr/kasa/pull/39)
 - 2026-10-05 · F-13 blocked on OD-18: no sender domain yet, and Petr chose to buy one with the final name (D-209). · [#40](https://github.com/uxpetr/kasa/pull/40)
 - 2026-10-05 · F-19 done: `/design/views` shows the real views with sample data at phone and desktop width, for checking token and component changes; a service worker scoped to `/design/` keeps every request inside the preview (D-210). Found P-21 (paper clip over the sticky header). · [#41](https://github.com/uxpetr/kasa/pull/41)
+- 2026-10-05 · F-18 done: Petr turned off Neon branches for Vercel previews; new previews deploy without one. · [#41](https://github.com/uxpetr/kasa/pull/41)
