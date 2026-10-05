@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Chrome extension (D-158), pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** the prototype's features are built. Before the pilot: staging (F-10, which also switches on real Kasa Bot answers and Telegram), F-16 (publish the Google consent screen before inviting testers) before the pilot starts; then set `pilot_start` on the pilot dashboard (D-194) once the first day is fixed.
+**Next up:** the prototype's features are built. Before the pilot: staging (F-10, which also switches on real Kasa Bot answers and Telegram), F-16 (publish the Google consent screen before inviting testers) before the pilot starts; then set `pilot_start` on the pilot dashboard (D-194) once the first day is fixed. The next build task Claude can take is P-21 (paper clip over the sticky header). `/design/views` previews the key views for design changes (F-19).
 **Blocked:** P-16, on OD-14 (privacy note). In phase 2: V-12 until Petr finishes the scroll story (D-189), V-12, V-14 and F-15 (media CDN) on OD-18 (clear or change the name). F-13 (Resend) is blocked on OD-18 too: there's no sender domain until the name is settled (D-209), so the pilot runs without emails, including feedback emails.
 
 ---
@@ -293,6 +293,8 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
   - **Analytics:** `telegram_linked` and `telegram_unlinked` (`kind` group or account); `entry_created` with `source: telegram` and `guest`.
   - **Wording not in the design** (Petr to confirm): the bot's messages in Telegram ("Linked to the {pile} pile in Kasa. Posts here go to the pile, and the pile's posts come here."; "This group is already linked to another Kasa pile."; "That pile is already linked to another group. Unlink it in Kasa first."; "That link has expired. Get a new one in Kasa."; "Done. Your Telegram is linked to {name} in Kasa."; "Hi! I'm Kasa Bot. To link your Telegram, open Kasa and choose Link Telegram in your account menu."; the guest hint "{name}, I added this to {pile} as a guest. To post as yourself, open Kasa and choose Link Telegram in your account menu."); in the app, "Unlink Telegram", "Couldn't make a link. Try again.", "Couldn't unlink. Try again.", "Couldn't open Telegram. Try again."
   · P-18
+- **D-209** · 2026-10-05 · **Sender domain** (F-13): Petr has no domain yet, and Resend without one only sends from `onboarding@resend.dev` to the account's own address. Petr chose to wait for the product name (OD-18) and buy its domain then, for email, the media CDN (F-15) and the app, rather than a neutral domain now. F-13 is blocked on OD-18; until then the pilot runs without reply, mention and feedback emails (feedback is still stored and listed at `/feedback`). Resend's free plan (3,000 emails a month, 100 a day, checked 2026-10-05) is enough for the pilot. · Petr, F-13 (added in F-19's PR; #40 cited it but its edit missed)
+- **D-210** · 2026-10-05 · **Views preview** (F-19): `/design/views` frames the real view components (not copies) with sample data from `app/design/views/fixtures.ts`, at phone (390px) and desktop (1280px) width, so token and component changes show across the app after a reload. Each view is its own page at `/design/views/<view>`. A service worker (`public/design-views-sw.js`) registered with the scope `/design/` sends every `/api` request from those pages to a stub at `/design/views/api`, which answers from the sample data and imports no database, auth, storage or queue code; its scope means it never sees the app's own pages. The views wait for the worker before mounting, and app links (`/`, `/projects/…`) go to the matching view. It keeps no state: posting a note, reacting, deleting and adding an idea work for that page load; uploads, renames and category edits answer "Not available in the preview". Like `/design`, it's public and not indexed. · F-19
 
 ---
 
@@ -471,12 +473,12 @@ Found in P-19: every Vercel preview made a Neon branch, and at the Free plan's 1
 - [ ] Petr turns off Preview in the Neon integration's Deployments Configuration (Vercel → Storage → the database → Projects → kasa), keeping Production on. Neon deletes preview branches only when Vercel deletes the deployments, after 6 months by default.
 - [ ] A new preview deploys without creating a Neon branch.
 
-### F-19 · Views preview for design changes · `in progress` · branch `f-19-views`
+### F-19 · Views preview for design changes · `done` · branch `f-19-views`
 Asked for by Petr on 2026-10-05: one page with the key views, with limited interactivity, to check how changes to tokens and components look across the app.
-- [ ] `/design/views` shows the real app views, not copies, with sample data: Your piles, a pile feed with every content type, the feed's states (empty, viewer, archived), the invite page, and the unsubscribe page.
-- [ ] Each view can be seen at phone and desktop width.
-- [ ] Menus, dialogs, replying, posting a note, category filters and the photo viewer work; nothing reaches the database or another user.
-- [ ] A check covers that every view renders.
+- [x] `/design/views` shows the real app views, not copies, with sample data: Your piles, a pile feed with every content type, the feed's states (empty, viewer, archived), the invite page, and the unsubscribe page. (Also Kasa Bot answering, first run, and an expired invite; D-210.)
+- [x] Each view can be seen at phone and desktop width. (Framed at 390px and 1280px, scaled to fit; each also opens on its own.)
+- [x] Menus, dialogs, replying, posting a note, category filters and the photo viewer work; nothing reaches the database or another user. (A service worker scoped to `/design/` answers every `/api` request from a stub; D-210.)
+- [x] A check covers that every view renders. (`e2e/design-views.spec.ts`, which also fails if any `/api` request skips the preview worker.)
 
 ---
 
@@ -592,6 +594,11 @@ Depends on: P-17. Moved from V-06 (D-200).
 - [x] Asked with `@kasa` ("suggest dinner spots near the ryokan"), the bot uses web search and posts recommendations as normal entries with "Add to pile". (Up to 3 ideas on the answer card, each with a picture and "Add to pile", which posts it as the member's own link marked "from Kasa Bot" and filed into the suggested category; "More ideas" gives 3 different ones. D-204, D-205.)
 - [x] The web search sees only the question and what the answer needs from this pile, never another pile. (The model gets only this pile, through `pile.ts`, and is told to keep members' names and messages out of queries. Tested.)
 - [x] Web search and model spending count toward the $20 monthly cap (D-200). (Each search adds $0.005 to the answer's `bot_usage` cost; at most 2 per answer. More ideas counts as an answer toward the 30 a day.)
+
+### P-21 · Paper clip shows over the sticky header · `todo`
+Found in F-19: scrolling the feed, a reply's paper clip is drawn over the sticky header and the category bar. `.kasa-clip` and the header both have `z-index: 2`, and the clip comes later in the page.
+- [ ] Scrolled under the header or the category bar, objects and their clips stay behind them, at phone and desktop width.
+- [ ] A check covers it.
 
 ### G1 · Gate: shared items get replies (D-159)
 Pass bar set in OD-03. Record the result and Petr's go/no-go in the Decision log. If it fails, stop and rethink the core loop with Petr before phase 2.
@@ -813,3 +820,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-10-03 · F-17 done: Petr made the staging Telegram bot, @kasa_piles_bot. Its token, a generated webhook secret and its username are in Vercel Production only, and in `.env.example` (D-206). · [#38](https://github.com/uxpetr/kasa/pull/38)
 - 2026-10-03 · P-18 done: Telegram two-way sync. The owner links a group from the pile menu, and people link their Telegram from the account menu. Group messages, photos (albums as one entry), links, replies and edits land in the pile "via Telegram", with unlinked senders as guests. The pile's posts, replies and Kasa Bot's answers go to the group with the name first. `@kasa` works in the group. Webhooks are verified; nothing loops; unlinked groups are ignored (D-207, D-208). Live on staging with F-10. · [#39](https://github.com/uxpetr/kasa/pull/39)
 - 2026-10-05 · F-13 blocked on OD-18: no sender domain yet, and Petr chose to buy one with the final name (D-209). · [#40](https://github.com/uxpetr/kasa/pull/40)
+- 2026-10-05 · F-19 done: `/design/views` shows the real views with sample data at phone and desktop width, for checking token and component changes; a service worker scoped to `/design/` keeps every request inside the preview (D-210). Found P-21 (paper clip over the sticky header).

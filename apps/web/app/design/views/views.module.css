@@ -1,0 +1,199 @@
+.page {
+  box-sizing: border-box;
+  max-width: 1880px;
+  margin: 0 auto;
+  padding: 40px 32px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+@media (max-width: 720px) {
+  .page {
+    padding: 28px 16px 48px;
+  }
+}
+
+.header h1 {
+  margin: 0;
+  font: 500 44px/1.05 var(--kasa-font-display);
+  letter-spacing: -1px;
+}
+.header p {
+  margin: 10px 0 0;
+  font-size: var(--kasa-font-size-body);
+  color: var(--kasa-color-ink-body);
+}
+.header a,
+.design {
+  color: var(--kasa-color-ink-muted);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+}
+
+.nav {
+  position: sticky;
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
+}
+.nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+@media (max-width: 900px) {
+  .nav {
+    position: static;
+  }
+  .nav ul {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}
+.nav a {
+  display: block;
+  padding: 7px 12px;
+  border-radius: var(--kasa-radius-chip, 999px);
+  color: var(--kasa-color-ink-body);
+  text-decoration: none;
+  font-size: var(--kasa-font-size-body);
+}
+.nav a:hover {
+  background: var(--kasa-color-table-alt);
+}
+.nav a[aria-current="page"] {
+  background: var(--kasa-color-ink);
+  color: var(--kasa-color-paper);
+}
+.nav a:focus-visible,
+.segmented button:focus-visible,
+.action:focus-visible {
+  outline: 2px solid var(--kasa-color-accent);
+  outline-offset: 2px;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px 24px;
+}
+.toolbar h2 {
+  margin: 0;
+  font: 600 var(--kasa-font-size-card-title) / 1.2 var(--kasa-font-display);
+}
+.toolbar p {
+  margin: 6px 0 0;
+  max-width: 70ch;
+  font-size: var(--kasa-font-size-body);
+  line-height: 1.5;
+  color: var(--kasa-color-ink-body);
+}
+.design {
+  white-space: nowrap;
+  font-size: var(--kasa-font-size-meta);
+}
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.segmented {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--kasa-color-line-strong);
+  border-radius: 999px;
+  background: var(--kasa-color-paper);
+}
+.segmented button {
+  border: 0;
+  background: none;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: var(--kasa-font-size-meta);
+  color: var(--kasa-color-ink-body);
+  cursor: pointer;
+}
+.segmented button[aria-pressed="true"] {
+  background: var(--kasa-color-ink);
+  color: var(--kasa-color-paper);
+}
+.action {
+  display: inline-block;
+  padding: 7px 14px;
+  border: 1px solid var(--kasa-color-line-strong);
+  border-radius: 999px;
+  background: var(--kasa-color-paper);
+  font: inherit;
+  font-size: var(--kasa-font-size-meta);
+  color: var(--kasa-color-ink);
+  text-decoration: none;
+  cursor: pointer;
+}
+.action:hover {
+  border-color: var(--kasa-color-ink-muted);
+}
+
+.frames {
+  display: grid;
+  gap: 28px;
+  align-items: start;
+}
+.frames[data-mode="both"] {
+  grid-template-columns: minmax(0, 390px) minmax(0, 1fr);
+}
+@media (max-width: 1100px) {
+  .frames[data-mode="both"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.frame {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.frame figcaption {
+  font-size: var(--kasa-font-size-meta);
+  color: var(--kasa-color-ink-muted);
+}
+.screenBox {
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--kasa-color-line-strong);
+  border-radius: 14px;
+  background: var(--kasa-color-table);
+  box-shadow: 0 1px 2px rgba(31, 29, 26, 0.06), 0 8px 24px rgba(31, 29, 26, 0.06);
+}
+.frame[data-device="phone"] .screenBox {
+  border-radius: 28px;
+}
+.screen {
+  display: block;
+  border: 0;
+  transform-origin: 0 0;
+}
