@@ -54,4 +54,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-10-05 · F-18 done: Petr turned off Neon branches for Vercel previews; new previews deploy without one. · [#41](https://github.com/uxpetr/kasa/pull/41)
 - 2026-10-05 · P-22 built, waiting on Petr's iPhone check: Kasa can be added to the iPhone home screen (manifest, "k" icon, full screen with safe areas); waiting on Petr's iPhone check (D-211). Found P-23 (jump to a reply's original fails locally). · [#42](https://github.com/uxpetr/kasa/pull/42)
 - 2026-10-05 · P-22 done: Petr checked Kasa from the iPhone home screen on staging: sign-in, piles, notes and invites work; photos wait for the staging worker (moved to F-10). · [#43](https://github.com/uxpetr/kasa/pull/43)
-- 2026-10-05 · F-20 done: PLAN.md split into the plan (31 KB, down from 135 KB), `docs/decisions.md`, `docs/progress.md` and `docs/done-tasks.md`; nothing removed (D-212).
+- 2026-10-05 · F-20 done: PLAN.md split into the plan (31 KB, down from 135 KB), `docs/decisions.md`, `docs/progress.md` and `docs/done-tasks.md`; nothing removed (D-212). · [#44](https://github.com/uxpetr/kasa/pull/44)
