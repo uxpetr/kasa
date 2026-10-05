@@ -600,6 +600,14 @@ Found in F-19: scrolling the feed, a reply's paper clip is drawn over the sticky
 - [ ] Scrolled under the header or the category bar, objects and their clips stay behind them, at phone and desktop width.
 - [ ] A check covers it.
 
+### P-22 · Kasa on the iPhone home screen · `in progress` · branch `p-22-home-screen`
+Petr's choice on 2026-10-05 (D-211): test Kasa on phones with a small group as a home-screen web app, before any native app (M-01).
+- [ ] A web app manifest: name "Kasa", opens Your piles, full screen without Safari's bars, in the table colour.
+- [ ] The icon is a lowercase "k" in Fraunces, ink on the table colour (D-211), as the home-screen icon, the manifest icons and the favicon.
+- [ ] The pages fill the screen and keep their controls clear of the notch and the home bar.
+- [ ] A check covers the manifest and icons.
+- [ ] Petr checks on an iPhone: Add to Home Screen, sign in with Google from the home-screen app, open a pile, post a note and a photo, and open an invite link.
+
 ### G1 · Gate: shared items get replies (D-159)
 Pass bar set in OD-03. Record the result and Petr's go/no-go in the Decision log. If it fails, stop and rethink the core loop with Petr before phase 2.
 
