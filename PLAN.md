@@ -439,7 +439,7 @@ Depends on: F-05, F-09
 - [x] `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` set in the Vercel project (not in the repo); the staging callback URL added to the Google OAuth client. (A separate "Kasa staging" client, D-193.)
 - [x] Sign in and out on staging works end to end. (Petr, 2026-09-29, on https://kasa-zeta-rouge.vercel.app. He landed in his personal pile with the welcome card.)
 
-### F-13 · Email sending on staging and production · `todo`
+### F-13 · Email sending on staging and production · `in progress` · branch `f-13-resend`
 Depends on: P-12, F-10
 - [ ] Petr creates a Resend account and verifies a sender domain he controls (D-163).
 - [ ] `RESEND_API_KEY`, `EMAIL_FROM`, and `UNSUBSCRIBE_SECRET` set for the worker, and `UNSUBSCRIBE_SECRET` for the web app, in each environment (not in the repo).
