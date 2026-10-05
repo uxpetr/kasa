@@ -54,8 +54,8 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Chrome extension (D-158), pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** the prototype's features are built. Before the pilot: staging (F-10, which also switches on real Kasa Bot answers and Telegram), F-13 (Resend), F-16 (publish the Google consent screen before inviting testers) before the pilot starts; then set `pilot_start` on the pilot dashboard (D-194) once the first day is fixed.
-**Blocked:** P-16, on OD-14 (privacy note). In phase 2: V-12 until Petr finishes the scroll story (D-189), V-12, V-14 and F-15 (media CDN) on OD-18 (clear or change the name). Real emails, including feedback emails, need F-13 (a Resend account and a sender domain from Petr).
+**Next up:** the prototype's features are built. Before the pilot: staging (F-10, which also switches on real Kasa Bot answers and Telegram), F-16 (publish the Google consent screen before inviting testers) before the pilot starts; then set `pilot_start` on the pilot dashboard (D-194) once the first day is fixed.
+**Blocked:** P-16, on OD-14 (privacy note). In phase 2: V-12 until Petr finishes the scroll story (D-189), V-12, V-14 and F-15 (media CDN) on OD-18 (clear or change the name). F-13 (Resend) is blocked on OD-18 too: there's no sender domain until the name is settled (D-209), so the pilot runs without emails, including feedback emails.
 
 ---
 
@@ -439,8 +439,8 @@ Depends on: F-05, F-09
 - [x] `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` set in the Vercel project (not in the repo); the staging callback URL added to the Google OAuth client. (A separate "Kasa staging" client, D-193.)
 - [x] Sign in and out on staging works end to end. (Petr, 2026-09-29, on https://kasa-zeta-rouge.vercel.app. He landed in his personal pile with the welcome card.)
 
-### F-13 · Email sending on staging and production · `in progress` · branch `f-13-resend`
-Depends on: P-12, F-10
+### F-13 · Email sending on staging and production · `blocked` (OD-18, D-209)
+Depends on: P-12, F-10; OD-18 (the product name, so there is a sender domain, D-209)
 - [ ] Petr creates a Resend account and verifies a sender domain he controls (D-163).
 - [ ] `RESEND_API_KEY`, `EMAIL_FROM`, and `UNSUBSCRIBE_SECRET` set for the worker, and `UNSUBSCRIBE_SECRET` for the web app, in each environment (not in the repo).
 - [ ] A reply on staging sends a real email whose unsubscribe link and one-click header both mute the project.
@@ -805,3 +805,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-10-01 · P-20 done: asked for suggestions, Kasa Bot searches the web (at most twice) and answers with up to 3 ideas, each with a picture and "Add to pile", which posts it as the member's link, "from Kasa Bot", in the suggested category. "More ideas" asks again for different ones. Ideas must come from the bot's own search results. Searches are billed within the $20 cap, and the bot still reads only its own pile. Bot cards no longer overflow on phones (D-204, D-205). · [#37](https://github.com/uxpetr/kasa/pull/37)
 - 2026-10-03 · F-17 done: Petr made the staging Telegram bot, @kasa_piles_bot. Its token, a generated webhook secret and its username are in Vercel Production only, and in `.env.example` (D-206). · [#38](https://github.com/uxpetr/kasa/pull/38)
 - 2026-10-03 · P-18 done: Telegram two-way sync. The owner links a group from the pile menu, and people link their Telegram from the account menu. Group messages, photos (albums as one entry), links, replies and edits land in the pile "via Telegram", with unlinked senders as guests. The pile's posts, replies and Kasa Bot's answers go to the group with the name first. `@kasa` works in the group. Webhooks are verified; nothing loops; unlinked groups are ignored (D-207, D-208). Live on staging with F-10. · [#39](https://github.com/uxpetr/kasa/pull/39)
+- 2026-10-05 · F-13 blocked on OD-18: no sender domain yet, and Petr chose to buy one with the final name (D-209).
