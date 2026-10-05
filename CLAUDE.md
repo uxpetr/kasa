@@ -10,11 +10,11 @@ You are building Kasa. `PLAN.md` in the repo root is the living plan and the sou
 1. Read `PLAN.md` from top to bottom before doing anything else.
 2. Fold every `new` entry in `design/DESIGN_LOG.md` into `PLAN.md`, following the steps at the top of that file, and commit it on its own before other work.
 3. Follow its "How agents use this file" loop exactly: pick the next unblocked task, claim it, build it, meet the Definition of Done, then update `PLAN.md` in the same PR.
-4. After every task, update `PLAN.md`: task status and ticked criteria, one line in the Progress log, any technical choices in the Decision log, and Current status.
+4. After every task, update `PLAN.md`: task status and ticked criteria, and Current status. Add one line to `docs/progress.md` and any technical choices to `docs/decisions.md` (the next free ID is under Decision log in `PLAN.md`). Move a finished task's text to `docs/done-tasks.md`, keeping its heading line in `PLAN.md`.
 
 ## Hard rules
 
-- Don't make product, pricing, copy, or UX decisions. If something isn't settled in the PRD or the Decision log, mark the task `blocked`, add the question to Open decisions, and stop.
+- Don't make product, pricing, copy, or UX decisions. If something isn't settled in the PRD or `docs/decisions.md`, mark the task `blocked`, add the question to Open decisions, and stop.
 - Never delete tasks or log entries; mark them `dropped` or supersede them.
 - Stay inside the current task's scope. Log new work as new tasks.
 - Merge only PRs with green CI (`main` is not protected, D-118).
