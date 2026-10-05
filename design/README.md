@@ -27,6 +27,11 @@ Each `.dc.html` file is one screen. They're written for the design canvas runtim
 
 Flow in the prototype: Projects → Main (project menu, search, dialogs) → the v2 extension screens at the end.
 
+## Previews in the app
+
+- `/design`: every `@kasa/ui` component, drawn from the tokens.
+- `/design/views`: the real app views with sample data, at phone and desktop width, for checking token and component changes across the app (F-19, D-210). Menus, dialogs, replying and posting work; nothing is saved. With `pnpm dev` running, the frames update as you save a component or its CSS. After editing `tokens.json`, run `pnpm --filter @kasa/ui tokens` and they update too. New views and new sample content are added in `apps/web/app/design/views/`.
+
 ## Design log (`DESIGN_LOG.md`)
 
 Petr's design decisions from the prototype. Each `new` entry gets folded into `PLAN.md` at the start of a session, following the steps at the top of the log, and then marked `folded` with what it became.
