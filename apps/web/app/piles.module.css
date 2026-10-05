@@ -6,7 +6,9 @@
   box-sizing: border-box;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 32px clamp(16px, 8vw, 120px) 64px;
+  /* Clear of the notch and the home bar on phones (P-22). */
+  padding: calc(32px + env(safe-area-inset-top, 0px)) max(clamp(16px, 8vw, 120px), env(safe-area-inset-right, 0px))
+    calc(64px + env(safe-area-inset-bottom, 0px)) max(clamp(16px, 8vw, 120px), env(safe-area-inset-left, 0px));
 }
 .header {
   display: flex;

@@ -40,6 +40,10 @@ Petr's design decisions from the prototype. Each `new` entry gets folded into `P
 
 Colours, fonts, radii, the one object shadow, the CTA gradient and glow, and the rotation limit. Use these for `packages/ui`.
 
+## App icon (`icon/`)
+
+`kasa-icon.svg`: a lowercase "k" in Fraunces 600 as a path, ink on the table colour (D-211). It's the home-screen icon and favicon; the PNGs in `apps/web/app/apple-icon.png` and `apps/web/public/icons/` are exported from it at 180, 192 and 512 px. Not the final mark: the mascot (OD-08) and the name (OD-18) are still open.
+
 ## Mascot (`mascot/`)
 
 SVG and PNG exports. Round 2 (smooth white creature on pine) is the current direction; the final silhouette is still open (OD-08 in `PLAN.md`).

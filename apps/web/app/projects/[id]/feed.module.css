@@ -6,18 +6,22 @@
   max-width: 800px;
   min-height: 100dvh;
   margin: 0 auto;
-  padding: 0 16px;
+  /* Clear of the notch in landscape (P-22). */
+  padding: 0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
 }
 
 .header {
   position: sticky;
-  top: env(safe-area-inset-top, 0px);
+  top: 0;
   z-index: 2;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  height: 72px;
+  /* Covers the status bar area too, so nothing shows through above it (P-22). */
+  box-sizing: border-box;
+  height: calc(72px + env(safe-area-inset-top, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
   background: var(--kasa-color-table);
 }
 .title {

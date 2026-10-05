@@ -6,7 +6,9 @@
   box-sizing: border-box;
   max-width: 560px;
   margin: 0 auto;
-  padding: 64px 24px;
+  /* Clear of the notch and the home bar on phones (P-22). */
+  padding: calc(64px + env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px))
+    calc(64px + env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px));
 }
 .logo {
   margin: 0 0 24px;

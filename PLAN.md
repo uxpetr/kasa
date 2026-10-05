@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Chrome extension (D-158), pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** the prototype's features are built. Before the pilot: staging (F-10, which also switches on real Kasa Bot answers and Telegram), F-16 (publish the Google consent screen before inviting testers) before the pilot starts; then set `pilot_start` on the pilot dashboard (D-194) once the first day is fixed. The next build task Claude can take is P-21 (paper clip over the sticky header). `/design/views` previews the key views for design changes (F-19).
+**Next up:** the prototype's features are built. Before the pilot: staging (F-10, which also switches on real Kasa Bot answers and Telegram), F-16 (publish the Google consent screen before inviting testers) before the pilot starts; then set `pilot_start` on the pilot dashboard (D-194) once the first day is fixed. Petr checks P-22 (Kasa on the iPhone home screen) on an iPhone before inviting phone testers. The next build tasks Claude can take are P-21 (paper clip over the sticky header) and P-23 (jump to a reply's original). `/design/views` previews the key views for design changes (F-19).
 **Blocked:** P-16, on OD-14 (privacy note). In phase 2: V-12 until Petr finishes the scroll story (D-189), V-12, V-14 and F-15 (media CDN) on OD-18 (clear or change the name). F-13 (Resend) is blocked on OD-18 too: there's no sender domain until the name is settled (D-209), so the pilot runs without emails, including feedback emails.
 
 ---
@@ -295,6 +295,7 @@ Append-only. Product decisions come from the PRD and Petr; technical ones from a
   · P-18
 - **D-209** · 2026-10-05 · **Sender domain** (F-13): Petr has no domain yet, and Resend without one only sends from `onboarding@resend.dev` to the account's own address. Petr chose to wait for the product name (OD-18) and buy its domain then, for email, the media CDN (F-15) and the app, rather than a neutral domain now. F-13 is blocked on OD-18; until then the pilot runs without reply, mention and feedback emails (feedback is still stored and listed at `/feedback`). Resend's free plan (3,000 emails a month, 100 a day, checked 2026-10-05) is enough for the pilot. · Petr, F-13 (added in F-19's PR; #40 cited it but its edit missed)
 - **D-210** · 2026-10-05 · **Views preview** (F-19): `/design/views` frames the real view components (not copies) with sample data from `app/design/views/fixtures.ts`, at phone (390px) and desktop (1280px) width, so token and component changes show across the app after a reload. Each view is its own page at `/design/views/<view>`. A service worker (`public/design-views-sw.js`) registered with the scope `/design/` sends every `/api` request from those pages to a stub at `/design/views/api`, which answers from the sample data and imports no database, auth, storage or queue code; its scope means it never sees the app's own pages. The views wait for the worker before mounting, and app links (`/`, `/projects/…`) go to the matching view. It keeps no state: posting a note, reacting, deleting and adding an idea work for that page load; uploads, renames and category edits answer "Not available in the preview". Like `/design`, it's public and not indexed. · F-19
+- **D-211** · 2026-10-05 · **Phones for the pilot** (P-22): Petr chose a home-screen web app over a native iOS app (TestFlight) for testing Kasa on phones with a small group now, moving part of phase 4 (M-01) ahead of G3: it takes a day or two, has no App Store, Apple account or review, and every deploy reaches testers at once. Not possible this way: the iPhone share sheet into Kasa, and push notifications without more work. The icon is a lowercase "k" in Fraunces (600, opsz 30), ink `#1F1D1A` on the table colour `#FBFAF7`; it doesn't settle the mascot (OD-08). The home-screen name is "Kasa" until OD-18. iOS keeps a home-screen app's cookies apart from Safari's, so testers sign in once inside the app. · Petr, P-22
 
 ---
 
@@ -600,13 +601,18 @@ Found in F-19: scrolling the feed, a reply's paper clip is drawn over the sticky
 - [ ] Scrolled under the header or the category bar, objects and their clips stay behind them, at phone and desktop width.
 - [ ] A check covers it.
 
-### P-22 · Kasa on the iPhone home screen · `in progress` · branch `p-22-home-screen`
+### P-22 · Kasa on the iPhone home screen · `in-progress` (waiting on Petr's iPhone check) · branch `p-22-home-screen`
 Petr's choice on 2026-10-05 (D-211): test Kasa on phones with a small group as a home-screen web app, before any native app (M-01).
-- [ ] A web app manifest: name "Kasa", opens Your piles, full screen without Safari's bars, in the table colour.
-- [ ] The icon is a lowercase "k" in Fraunces, ink on the table colour (D-211), as the home-screen icon, the manifest icons and the favicon.
-- [ ] The pages fill the screen and keep their controls clear of the notch and the home bar.
-- [ ] A check covers the manifest and icons.
+- [x] A web app manifest: name "Kasa", opens Your piles, full screen without Safari's bars, in the table colour. (`app/manifest.ts`; theme colour from the tokens.)
+- [x] The icon is a lowercase "k" in Fraunces, ink on the table colour (D-211), as the home-screen icon, the manifest icons and the favicon. (Source `design/icon/kasa-icon.svg`, the glyph as a path; PNGs at 180, 192 and 512.)
+- [x] The pages fill the screen and keep their controls clear of the notch and the home bar. (`viewport-fit=cover`; safe-area padding on Your piles, the feed, invite, unsubscribe and feedback pages. Not checkable on a desktop browser, so it's part of Petr's iPhone check.)
+- [x] A check covers the manifest and icons. (`e2e/home-screen.spec.ts`)
 - [ ] Petr checks on an iPhone: Add to Home Screen, sign in with Google from the home-screen app, open a pile, post a note and a photo, and open an invite link.
+
+### P-23 · Jumping to a reply's original sometimes doesn't stay there · `todo`
+Found in P-22: `replies.spec.ts` "tapping the clipped print jumps to the original, loading older entries if needed" fails every time on Petr's Mac, on `main` too, and passes in CI. The original loads but isn't scrolled into view. Likely a race: once older entries load, the top sentinel's "load older" runs and restores the previous scroll position after the jump.
+- [ ] Find the cause and fix it, so the jump lands on the original every time.
+- [ ] The test passes locally and in CI.
 
 ### G1 · Gate: shared items get replies (D-159)
 Pass bar set in OD-03. Record the result and Petr's go/no-go in the Decision log. If it fails, stop and rethink the core loop with Petr before phase 2.
@@ -830,3 +836,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-10-05 · F-13 blocked on OD-18: no sender domain yet, and Petr chose to buy one with the final name (D-209). · [#40](https://github.com/uxpetr/kasa/pull/40)
 - 2026-10-05 · F-19 done: `/design/views` shows the real views with sample data at phone and desktop width, for checking token and component changes; a service worker scoped to `/design/` keeps every request inside the preview (D-210). Found P-21 (paper clip over the sticky header). · [#41](https://github.com/uxpetr/kasa/pull/41)
 - 2026-10-05 · F-18 done: Petr turned off Neon branches for Vercel previews; new previews deploy without one. · [#41](https://github.com/uxpetr/kasa/pull/41)
+- 2026-10-05 · P-22 built, waiting on Petr's iPhone check: Kasa can be added to the iPhone home screen (manifest, "k" icon, full screen with safe areas); waiting on Petr's iPhone check (D-211). Found P-23 (jump to a reply's original fails locally).
