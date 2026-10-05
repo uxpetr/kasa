@@ -54,7 +54,7 @@ Follow this loop for every task. It's short on purpose; don't skip steps.
 | 3. v2 | Chrome extension (D-158), pins on live sites, presence, export, WhatsApp if the idea flies | `todo` | G3: users ask for phone capture |
 | 4. Mobile | iOS and Android with share-sheet capture | `todo` | none |
 
-**Next up:** the prototype's features are built. Before the pilot: staging (F-10, which also switches on real Kasa Bot answers and Telegram), F-16 (publish the Google consent screen before inviting testers) before the pilot starts; then set `pilot_start` on the pilot dashboard (D-194) once the first day is fixed. Petr checks P-22 (Kasa on the iPhone home screen) on an iPhone before inviting phone testers. The next build tasks Claude can take are P-21 (paper clip over the sticky header) and P-23 (jump to a reply's original). `/design/views` previews the key views for design changes (F-19).
+**Next up:** the prototype's features are built. Before the pilot: staging (F-10, which also switches on real Kasa Bot answers and Telegram), F-16 (publish the Google consent screen before inviting testers) before the pilot starts; then set `pilot_start` on the pilot dashboard (D-194) once the first day is fixed. Kasa works from the iPhone home screen (P-22); photos on staging wait for the worker (F-10). The next build tasks Claude can take are P-21 (paper clip over the sticky header) and P-23 (jump to a reply's original). `/design/views` previews the key views for design changes (F-19).
 **Blocked:** P-16, on OD-14 (privacy note). In phase 2: V-12 until Petr finishes the scroll story (D-189), V-12, V-14 and F-15 (media CDN) on OD-18 (clear or change the name). F-13 (Resend) is blocked on OD-18 too: there's no sender domain until the name is settled (D-209), so the pilot runs without emails, including feedback emails.
 
 ---
@@ -431,6 +431,7 @@ Depends on: F-03; needed by F-06 and P-06
 - [ ] Worker env also includes `FEEDBACK_EMAIL` (`petr.andrianov@gmail.com`), so pilot feedback is emailed (D-182, from F-14).
 - [ ] Kasa Bot answers for real (D-198): Petr creates an AI Gateway key on his personal Vercel team, and the worker gets it as `AI_GATEWAY_API_KEY`, with `KASA_BOT_MODEL` unset (Claude Haiku 4.5). Check the gateway's monthly free credit and that the model id works. A tag on staging gets a real answer.
 - [ ] Worker env also has `POSTHOG_API_KEY`, because `bot_answered` and `bot_failed` are sent from the worker (D-198, changing D-183's "the worker sends no events").
+- [ ] Photos post on staging, including from the iPhone home-screen app (P-22): until the worker runs there, uploads reach storage but never finish processing, and the composer gives up with "Upload is taking too long".
 - [ ] Telegram goes live (P-18, D-208): the worker gets `TELEGRAM_BOT_TOKEN` and `TELEGRAM_BOT_USERNAME` with the staging values (D-206). Run `pnpm --filter @kasa/worker telegram:setup` with those and `TELEGRAM_WEBHOOK_SECRET` and `BETTER_AUTH_URL`; it must report privacy mode off and set the webhook. Then link a test group and check both directions, a photo album, a reply, `@kasa`, and a guest.
 
 ### F-11 · Seed media in local storage · `done` · branch `f-11-seed-media`
@@ -601,13 +602,13 @@ Found in F-19: scrolling the feed, a reply's paper clip is drawn over the sticky
 - [ ] Scrolled under the header or the category bar, objects and their clips stay behind them, at phone and desktop width.
 - [ ] A check covers it.
 
-### P-22 · Kasa on the iPhone home screen · `in-progress` (waiting on Petr's iPhone check) · branch `p-22-home-screen`
+### P-22 · Kasa on the iPhone home screen · `done` · branch `p-22-home-screen`
 Petr's choice on 2026-10-05 (D-211): test Kasa on phones with a small group as a home-screen web app, before any native app (M-01).
 - [x] A web app manifest: name "Kasa", opens Your piles, full screen without Safari's bars, in the table colour. (`app/manifest.ts`; theme colour from the tokens.)
 - [x] The icon is a lowercase "k" in Fraunces, ink on the table colour (D-211), as the home-screen icon, the manifest icons and the favicon. (Source `design/icon/kasa-icon.svg`, the glyph as a path; PNGs at 180, 192 and 512.)
 - [x] The pages fill the screen and keep their controls clear of the notch and the home bar. (`viewport-fit=cover`; safe-area padding on Your piles, the feed, invite, unsubscribe and feedback pages. Not checkable on a desktop browser, so it's part of Petr's iPhone check.)
 - [x] A check covers the manifest and icons. (`e2e/home-screen.spec.ts`)
-- [ ] Petr checks on an iPhone: Add to Home Screen, sign in with Google from the home-screen app, open a pile, post a note and a photo, and open an invite link.
+- [x] Petr checks on an iPhone: Add to Home Screen, sign in with Google from the home-screen app, open a pile, post a note and a photo, and open an invite link. (2026-10-05 on staging: all work, and a second person joined by invite and posted. Photos stop at "Upload is taking too long" on every device, because staging has no worker to process uploads yet; that check moved to F-10.)
 
 ### P-23 · Jumping to a reply's original sometimes doesn't stay there · `todo`
 Found in P-22: `replies.spec.ts` "tapping the clipped print jumps to the original, loading older entries if needed" fails every time on Petr's Mac, on `main` too, and passes in CI. The original loads but isn't scrolled into view. Likely a race: once older entries load, the top sentinel's "load older" runs and restores the previous scroll position after the jump.
@@ -837,3 +838,4 @@ Append one line per finished task: `date · task ID · what shipped · PR link`.
 - 2026-10-05 · F-19 done: `/design/views` shows the real views with sample data at phone and desktop width, for checking token and component changes; a service worker scoped to `/design/` keeps every request inside the preview (D-210). Found P-21 (paper clip over the sticky header). · [#41](https://github.com/uxpetr/kasa/pull/41)
 - 2026-10-05 · F-18 done: Petr turned off Neon branches for Vercel previews; new previews deploy without one. · [#41](https://github.com/uxpetr/kasa/pull/41)
 - 2026-10-05 · P-22 built, waiting on Petr's iPhone check: Kasa can be added to the iPhone home screen (manifest, "k" icon, full screen with safe areas); waiting on Petr's iPhone check (D-211). Found P-23 (jump to a reply's original fails locally). · [#42](https://github.com/uxpetr/kasa/pull/42)
+- 2026-10-05 · P-22 done: Petr checked Kasa from the iPhone home screen on staging: sign-in, piles, notes and invites work; photos wait for the staging worker (moved to F-10).
